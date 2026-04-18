@@ -3,7 +3,20 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   ssr: false,
+
   css: [
     '@/assets/scss/main.scss'
-  ]
+  ],
+
+  modules: ['nuxt-auth-utils'],
+  vite: {
+    optimizeDeps: {
+      include: [
+          'bootstrap'
+      ]
+    }
+  },
+  experimental: {
+    serverAppConfig: false,
+  }
 })
