@@ -57,6 +57,8 @@ import Search from "~/components/icons/search.vue";
 
 definePageMeta({
   layout: 'admin',
+  middleware: 'auth',
+  authRole: 'ADMIN'
 })
 
 let users = ref(await axios.get('/api/admin/users/list')).value.data

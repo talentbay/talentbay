@@ -29,6 +29,8 @@ const route = useRoute()
 const id = route.params.id
 definePageMeta({
   layout: 'admin',
+  middleware: 'auth',
+  authRole: 'ADMIN'
 })
 
 let user = ref(await axios.get(`/api/admin/users/${id}`)).value.data
