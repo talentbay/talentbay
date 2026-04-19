@@ -10,11 +10,16 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.4.4",
+    "@nuxthub/core": "^0.10.7",
     "axios": "^1.15.0",
     "bootstrap": "^5.3.8",
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
     "nuxt": "^4.4.2",
     "nuxt-auth-utils": "^0.5.29",
     "pinia": "^3.0.4",
+    "postgres": "^3.4.9",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"
   },

@@ -2,10 +2,10 @@
   <div class="row">
     <div class="col justify-content-center text-center">
       <div class="btn-group-vertical">
-        <button class="btn btn-outline-secondary" @click="loginWithPopup('google')">
+        <button class="btn btn-outline-secondary" :style="btnStyle" @click="loginWithPopup('google')">
           <google-icon />
           Sign in with Google</button>
-        <button class="btn btn-outline-secondary" @click="loginWithPopup('github')">
+        <button class="btn btn-outline-secondary" :style="btnStyle" @click="loginWithPopup('github')">
           <git-icon />
           Sign in with GitHub</button>
       </div>
@@ -14,8 +14,13 @@
 </template>
 
 <script setup lang="ts">
+const { fetch: refreshSession } = useUserSession()
 import GoogleIcon from '~/components/icons/google.vue'
 import GitIcon from '~/components/icons/github.vue'
+
+const props = defineProps(['color'])
+const btnStyle = props.color ? `border-color: ${props.color}; color: ${props.color}` : ''
+const imgStyle = props.color ? `fill: ${props.color}` : ''
 
 const loginWithPopup = (provider: string) => {
   const url = `/api/auth/${provider}`

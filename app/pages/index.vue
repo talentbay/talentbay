@@ -1,26 +1,14 @@
 <template>
-  <article class="container">
-    <Top></Top>
-    <div class="row">
-      <div class="col">This is text</div>
-      <div class="col">{{ text.data }}</div>
-    </div>
-    <div class="row">
-      <div class="col">
-        <code>
-          {{ user }}
-        </code>
-      </div>
-    </div>
-    <login></login>
-  </article>
+  <div>
+    <Lead></Lead>
+    Logged in: {{user}}
+  </div>
 </template>
 
 <script setup lang="ts">
 import axios from 'axios'
 import { ref } from 'vue'
-import Top from '~/components/top.vue'
-import Login from '~/components/login.vue'
+import Lead from '~/components/index/lead.vue'
 
 let text = ref(await axios.get('/api/test'))
 const { loggedIn, user, session, fetch: refreshSession, clear, openInPopup } = useUserSession()
@@ -28,7 +16,4 @@ const { loggedIn, user, session, fetch: refreshSession, clear, openInPopup } = u
 </script>
 
 <style lang="scss" scoped>
-.container {
-  max-width: 100% !important;
-}
 </style>

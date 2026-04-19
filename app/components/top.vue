@@ -1,10 +1,10 @@
 <template>
   <header class="row">
-    <div class="col-2"><logo /></div>
-    <div class="col">{{ loggedIn}}</div>
+    <div class="col-2"><a href="/" class="logo"><logo /></a></div>
+    <div class="col"></div>
     <div class="col-2 text-end">
       <button class="header-btn" data-bs-toggle="modal" data-bs-target="#loginModal" v-if="!loggedIn"><login-icon /></button>
-      <button class="header-btn" v-if="loggedIn"><profile-icon /></button>
+      <button class="header-btn" v-if="loggedIn"><a href="/user/profile"><profile-icon /></a></button>
       <button class="header-btn" @click="clear" v-if="loggedIn"><logout-icon /></button>
     </div>
     <div class="modal" id="loginModal" tabindex="-1">
@@ -51,9 +51,6 @@ header {
       }
     }
   }
-  .col {
-    background: burlywood;
-  }
 }
 .header-btn {
   margin: 0;
@@ -64,5 +61,10 @@ header {
     height: 1rem;
     width: 1rem;
   }
+}
+
+.logo {
+  color: black;
+  text-decoration: none !important;
 }
 </style>

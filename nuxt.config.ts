@@ -8,15 +8,25 @@ export default defineNuxtConfig({
     '@/assets/scss/main.scss'
   ],
 
-  modules: ['nuxt-auth-utils'],
+  modules: ['nuxt-auth-utils', '@nuxthub/core'],
   vite: {
     optimizeDeps: {
       include: [
           'bootstrap'
       ]
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: '@use "@/assets/scss/variables.scss" as *;'
+        }
+      }
     }
   },
   experimental: {
     serverAppConfig: false,
+  },
+  hub: {
+    db: 'postgresql'
   }
 })
