@@ -10,3 +10,20 @@ $generic-color-3: #005c5f;
 $generic-color-4: #085561;
 $generic-color-5: #214f5e;
 $generic-color-6: #2f4858;
+//--------------------------------------
+:root {
+  --color-primary: #0A2540;
+  --color-accent: #00D4AA;
+  --color-secondary: #14446B;
+  --color-bg: #F8F9FA;
+  --color-text: #0A2540;
+  --color-text-secondary: #6B7280;
+  --color-success: #00C853;
+  --color-warning: #FFAB00;
+  --color-error: #FF5252;
+  --color-border: #E5E7EB;
+  --font-heading: 'Inter', sans-serif;
+  --font-body: 'Source Serif 4', serif;
+  --gradient-primary: linear-gradient(135deg, #0A2540 0%, #14446B 100%);
+  --gradient-accent: linear-gradient(90deg, #00D4AA 0%, #00B894 100%);
+}

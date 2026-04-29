@@ -14,16 +14,18 @@
       <p>Email: <input type="text" v-model="user.email"></p>
       <p>Provider: <input type="text" v-model="user.provider"></p>
       <p>ProviderID: <input type="text" v-model="user.providerID"></p>
+      <p>Password: <input type="text" v-model="user.password"></p>
       <p>createdAt: {{ user.createdAt }}</p>
       <button @click="update">Update</button>
+      <button @click="del">Delete</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import { ref } from 'vue'
 import axios from 'axios'
-import {diff} from '~/components/utils/diff'
+import { diff } from '~/components/utils/diff'
 
 const route = useRoute()
 const id = route.params.id
@@ -33,11 +35,15 @@ definePageMeta({
   authRole: 'ADMIN'
 })
 
-let user = ref(await axios.get(`/api/admin/users/${id}`)).value.data
+let user = ref(await axios.get(`/api/v1/admin/users/${id}`)).value.data
 let userBase = {...user}
 
 async function update() {
-  await axios.patch(`/api/admin/users/${id}`, diff(userBase, user))
+  await axios.patch(`/api/v1/admin/users/${id}`, diff(userBase, user))
+}
+
+async function del() {
+  await axios.delete(`/api/v1/admin/users/${id}`)
 }
 </script>
 

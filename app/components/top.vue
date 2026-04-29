@@ -1,7 +1,9 @@
 <template>
   <header class="row">
-    <div class="col-2"><a href="/" class="logo"><logo /></a></div>
-    <div class="col"></div>
+    <div class="col-3"><a href="/" class="logo"><logo /></a></div>
+    <div class="col align-content-center text-end">
+      <a href="/whitepaper">Whitepaper</a>
+    </div>
     <div class="col-2 text-end">
       <button class="header-btn" data-bs-toggle="modal" data-bs-target="#loginModal" v-if="!loggedIn"><login-icon /></button>
       <button class="header-btn" v-if="loggedIn"><a href="/user/profile"><profile-icon /></a></button>
@@ -49,6 +51,13 @@ header {
         height: 1rem;
         width: 1rem;
       }
+    }
+  }
+
+  a {
+    color: var(--color-primary);
+    &:hover {
+      color: var(--color-accent);
     }
   }
 }

@@ -61,7 +61,7 @@ definePageMeta({
   authRole: 'ADMIN'
 })
 
-let users = ref(await axios.get('/api/admin/users/list')).value.data
+let users = ref(await axios.get('/api/v1/admin/users/list')).value.data
 const router = useRouter()
 
 function goTo(id: number) {

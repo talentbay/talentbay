@@ -1,9 +1,8 @@
 <template>
   <span class="logo-primary">
     <ship2 />
-    <h1>PURE</h1>
+    <h1>TalentBay</h1>
   </span>
-
 </template>
 
 <script setup lang="ts">
@@ -14,11 +13,11 @@ import Ship2 from "~/components/icons/ship2.vue"
 .logo-primary {
   display: inline-flex;
   align-items: baseline;
-  color: $primary-color;
+  color: var(--color-primary);
   svg {
     width: calc(1.375rem + 1vw);;
     height: calc(1.375rem + 1vw);
-    fill: $primary-color;
+    fill: var(--color-primary);
   }
 }
 </style>

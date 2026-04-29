@@ -10,6 +10,9 @@
       <li :class="{active: isActive('/ktulhu/orgs')}"><a href="/ktulhu/orgs">
         <Orgs />
       </a></li>
+      <li :class="{active: isActive('/ktulhu/users/test')}"><a href="/ktulhu/orgs">
+        <Test />
+      </a></li>
     </ul>
   </nav>
 </template>
@@ -18,6 +21,8 @@
   import Users from  '@/components/icons/users.vue'
   import Orgs from  '@/components/icons/orgs.vue'
   import Home from  '@/components/icons/home.vue'
+  import Test from  '@/components/icons/test.vue'
+
   const route = useRoute()
 
   function isActive (path: string) {

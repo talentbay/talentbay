@@ -21,7 +21,8 @@ export const users = pgTable('users', {
     email: text().notNull().unique(),
     provider: text().notNull(),
     providerID: text().notNull(),
-    avatar: text().notNull(),
+    avatar: text(),
     createdAt: timestamp().notNull().defaultNow(),
+    password: text(),
     profile: jsonb('profile').$type<Profile>()
 })

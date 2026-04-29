@@ -23,7 +23,7 @@ const btnStyle = props.color ? `border-color: ${props.color}; color: ${props.col
 const imgStyle = props.color ? `fill: ${props.color}` : ''
 
 const loginWithPopup = (provider: string) => {
-  const url = `/api/auth/${provider}`
+  const url = `/api/v1/auth/${provider}`
   const name = 'auth'
 
   // Параметры окна
