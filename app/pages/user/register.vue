@@ -1,6 +1,6 @@
 <template>
   <div class="register-page">
-    <navbar />
+    <AuthNav title="Create your account"/>
 
     <!-- Steps -->
     <div class="steps-indicator">
@@ -162,7 +162,7 @@
     </form>
 
     <div class="auth-footer">
-      <p>Already have an account? <NuxtLink to="/login" class="link">Sign In</NuxtLink></p>
+      <p>Already have an account? <NuxtLink to="/user/login" class="link">Sign In</NuxtLink></p>
     </div>
   </div>
 </template>

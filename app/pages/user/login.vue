@@ -1,6 +1,6 @@
 <template>
   <div class="login-page">
-    <navbar />
+    <AuthNav title="Welcome back" />
 
     <!-- Tabs -->
     <div class="auth-tabs">
@@ -74,15 +74,19 @@
 
       <div class="wallet-options">
         <button class="wallet-btn" @click="connectWallet('metamask')">
-          <img src="/wallets/metamask.svg" alt="MetaMask" class="wallet-icon" />
+<!--          <img src="/wallets/metamask.svg" alt="MetaMask" class="wallet-icon" />-->
           MetaMask
         </button>
         <button class="wallet-btn" @click="connectWallet('walletconnect')">
+<!--
           <img src="/wallets/walletconnect.svg" alt="WalletConnect" class="wallet-icon" />
+-->
           WalletConnect
         </button>
         <button class="wallet-btn" @click="connectWallet('coinbase')">
+<!--
           <img src="/wallets/coinbase.svg" alt="Coinbase" class="wallet-icon" />
+-->
           Coinbase Wallet
         </button>
       </div>
@@ -94,7 +98,7 @@
     </div>
 
     <div class="auth-footer">
-      <p>Don't have an account? <NuxtLink to="/register" class="link">Sign Up</NuxtLink></p>
+      <p>Don't have an account? <NuxtLink to="/user/register" class="link">Sign Up</NuxtLink></p>
     </div>
   </div>
 </template>
@@ -102,6 +106,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { getIcon } from '@/components/utils/global.ts'
+import AuthNav from "~/components/AuthNav.vue";
 
 definePageMeta({ layout: 'auth' })
 
