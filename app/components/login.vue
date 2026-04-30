@@ -2,10 +2,10 @@
   <div class="row">
     <div class="col justify-content-center text-center">
       <div class="btn-group-vertical">
-        <button class="btn btn-outline-secondary" :style="btnStyle" @click="loginWithPopup('google')">
+        <button class="btn btn-outline-secondary btn-accent" :style="btnStyle" @click="loginWithPopup('google')">
           <google-icon />
           Sign in with Google</button>
-        <button class="btn btn-outline-secondary" :style="btnStyle" @click="loginWithPopup('github')">
+        <button class="btn btn-outline-secondary btn-accent" :style="btnStyle" @click="loginWithPopup('github')">
           <git-icon />
           Sign in with GitHub</button>
       </div>

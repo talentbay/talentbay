@@ -2,6 +2,48 @@
 $font-family-sans-serif: 'Exo 2', system-ui, -apple-system, sans-serif;
 @import 'bootstrap/scss/bootstrap';
 
-h1, h2, h3, h4, h5, h6 {
-  color: var(--color-primary);
+
+.globe-arc-network-v2 {
+  background-color: transparent;
+
+  background-image:
+          /* 1. Свечения в узлах — крупные, размытые (ореолы) */
+          repeating-radial-gradient(
+                  circle at 100% 100%,
+                  transparent 0px,
+                  transparent 17px,
+                  rgba(0, 212, 170, 0.1) 18px,
+                  rgba(0, 212, 170, 0.2) 19px,
+                  rgba(0, 212, 170, 0.1) 21px,
+                  transparent 22px,
+                  transparent 40px
+          ),
+            /* 2. Яркие точки в узлах */
+          repeating-radial-gradient(
+                  circle at 100% 100%,
+                  transparent 0px,
+                  transparent 19px,
+                  rgba(0, 212, 170, 0.5) 19.5px,
+                  rgba(0, 212, 170, 0.6) 20px,
+                  transparent 20.5px,
+                  transparent 40px
+          ),
+            /* 3. Меридианы */
+          repeating-conic-gradient(
+                  from -45deg at 100% 100%,
+                  rgba(0, 212, 170, 0.15) 0deg,
+                  rgba(0, 212, 170, 0.15) 0.8deg,
+                  transparent 0.8deg,
+                  transparent 4deg
+          ),
+            /* 4. Параллели */
+          repeating-radial-gradient(
+                  circle at 100% 100%,
+                  rgba(0, 212, 170, 0.15) 0px,
+                  rgba(0, 212, 170, 0.15) 1.5px,
+                  transparent 1.5px,
+                  transparent 20px
+          );
+
+  /* Свечение в узлах будет видно сквозь линии, так как слои идут первыми */
 }

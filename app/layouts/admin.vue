@@ -1,47 +1,45 @@
 <template>
-  <article class="container">
-    <Top></Top>
-    <div class="row contents">
-      <div class="col-1 menu">
-        <admin-nav />
-      </div>
-      <div class="col">
-        <div class="row justify-content-center">
-          <div class="col text-center">
-            <Admin class="admin-logo" />
-            <h3>GOD MODE</h3>
-          </div>
-        </div>
-        <slot></slot>
-      </div>
+  <div class="admin-layout">
+    <AdminSidebar />
+    <div class="admin-main">
+      <AdminHeader />
+      <main class="admin-content">
+        <slot />
+      </main>
     </div>
-  </article>
+  </div>
 </template>
 
-<script setup lang="ts">
-import Top from '~/components/top.vue'
-import AdminNav from "~/components/admin-nav.vue";
-import Admin from "~/components/icons/admin.vue";
+<script setup>
 </script>
 
-<style scoped lang="scss">
-.container {
-  max-width: 100% !important;
-  height: 100vh;
+<style lang="scss" scoped>
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
 }
-.admin-logo {
-  width: 5rem;
-  height: 5rem;
-  fill: $app-accent-color;
+
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 260px;
+  transition: margin-left 0.3s;
 }
-h3 {
-  color: $app-accent-color;
-  margin-bottom: 2rem;
+
+.admin-content {
+  flex: 1;
+  padding: 32px;
 }
-.contents {
-  height: 90%;
-}
-.menu {
-  padding-left: 0;
+
+@media (max-width: 1024px) {
+  .admin-main {
+    margin-left: 0;
+  }
+
+  .admin-content {
+    padding: 20px;
+  }
 }
 </style>

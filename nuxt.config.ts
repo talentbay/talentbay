@@ -8,7 +8,10 @@ export default defineNuxtConfig({
     '@/assets/scss/main.scss'
   ],
 
-  modules: ['nuxt-auth-utils', '@nuxthub/core'],
+  modules: [
+      'nuxt-auth-utils',
+      '@nuxthub/core',
+  ],
   vite: {
     optimizeDeps: {
       include: [

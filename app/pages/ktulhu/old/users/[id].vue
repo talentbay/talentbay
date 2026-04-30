@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import axios from 'axios'
-import { diff } from '~/components/utils/diff'
+import { diff } from '~/components/utils/global'
 
 const route = useRoute()
 const id = route.params.id

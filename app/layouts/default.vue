@@ -1,12 +1,12 @@
 <template>
   <article class="container">
-    <Top></Top>
+    <nav-bar></nav-bar>
     <slot></slot>
   </article>
 </template>
 
 <script setup lang="ts">
-import Top from '~/components/top.vue'
+import NavBar from '~/components/navbar.vue'
 </script>
 
 <style scoped lang="scss">

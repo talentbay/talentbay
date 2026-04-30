@@ -6,7 +6,7 @@
 
       <h3>White Paper v.2.0</h3>
 
-      <blockquote>"No Borders."</blockquote>
+      <blockquote class="blockquote"><p>"No Borders."</p></blockquote>
 
       <hr/>
 
@@ -285,7 +285,9 @@
 
       <hr/>
 
-      <blockquote>TalentBay — no borders. Only opportunities.</blockquote>
+      <blockquote class="blockquote">
+        <p>TalentBay — no borders. Only opportunities.</p>
+      </blockquote>
     </div>
   </div>
 </template>
@@ -297,5 +299,8 @@
 <style scoped lang="scss">
   .content {
     margin-top: 4rem;
+    h2 {
+      color: var(--color-accent);
+    }
   }
 </style>

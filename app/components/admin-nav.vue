@@ -4,7 +4,7 @@
       <li :class="{active: isActive('/ktulhu')}"><a href="/ktulhu">
         <Home />
       </a></li>
-      <li :class="{active: isActive('/ktulhu/users')}"><a href="/ktulhu/users">
+      <li :class="{active: isActive('/ktulhu/users')}"><a href="/ktulhu/old/users">
         <Users />
       </a></li>
       <li :class="{active: isActive('/ktulhu/orgs')}"><a href="/ktulhu/orgs">
