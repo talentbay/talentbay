@@ -6,7 +6,7 @@ import {
     Briefcase, Share2, Grid, MapPin, Layers, ExternalLink, LogInIcon, LogOut,
     Link, CircleUser, Shield, LayoutDashboard, Building, Coins, BarChart3, Settings,
     Menu, Bell, ChevronDown, ChevronLeft, ChevronRight,
-    TrendingDown, ShieldAlert, X,
+    TrendingDown, ShieldAlert, X, Mail, Eye, EyeOff, User, ArrowLeft, Check
 } from 'lucide-vue-next'
 
 export default defineNuxtPlugin((nuxtApp) => {
@@ -59,6 +59,12 @@ export default defineNuxtPlugin((nuxtApp) => {
         ChevronRightIcon: ChevronRight,
         TrendingDownIcon: TrendingDown,
         XIcon: X,
+        MailIcon: Mail,
+        EyeIcon: Eye,
+        EyeOffIcon: EyeOff,
+        UserIcon: User,
+        ArrowLeftIcon: ArrowLeft,
+        CheckIcon: Check,
     }
 
     Object.entries(icons).forEach(([name, component]) => {
