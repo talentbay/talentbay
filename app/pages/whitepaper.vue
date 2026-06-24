@@ -12,9 +12,9 @@
 
       <h2>1. Introduction</h2>
       <p>The labor market is undergoing a fundamental transformation. Remote work has become the new norm, and technology enables professionals to perform tasks from anywhere in the world. However, the recruitment industry has yet to catch up with these changes: job seekers are left guessing about the real cost of living in another country, employers lack tools for seamless cross-border hiring, and the job search process itself remains tied to geographic and currency barriers.</p>
-      <p>TalentBay is a next-generation centralized platform that connects talented professionals and employers worldwide, focusing on remote work and cryptocurrency payments. We don't just find vacancies — we provide job seekers with a complete picture of their future life: from rental and transportation costs to visa requirements and climate conditions.</p>
-      <p>TalentBay does not act as a payment intermediary between job seekers and employers — the parties agree on payment terms and methods independently. However, we support and actively promote cryptocurrency as the preferred, modern, and borderless method of compensation.</p>
-      <p>Our ICO is aimed at raising funds to scale the platform, and the TLB token will become a key instrument for accessing TalentBay's premium features.</p>
+      <p>TalentBay DMCC is a next-generation centralized platform that connects talented professionals and employers worldwide, focusing on remote work and cryptocurrency payments. We don't just find vacancies — we provide job seekers with a complete picture of their future life: from rental and transportation costs to visa requirements and climate conditions.</p>
+      <p>TalentBay DMCC does not act as a payment intermediary between job seekers and employers — the parties agree on payment terms and methods independently. However, we support and actively promote cryptocurrency as the preferred, modern, and borderless method of compensation.</p>
+      <p>Our ICO is aimed at raising funds to scale the platform, and the TLB token will become a key instrument for accessing TalentBay DMCC's premium features.</p>
 
       <hr/>
 
@@ -37,9 +37,9 @@
 
       <hr/>
 
-      <h2>3. Solution: The TalentBay Platform</h2>
+      <h2>3. Solution: The TalentBay DMCC Platform</h2>
 
-      <p>TalentBay is a centralized ecosystem that covers the entire cycle of "find a job — evaluate the location — plan the move." We do not interfere in the relationship between parties after hiring, but we provide the most comprehensive information and tools for making informed decisions.</p>
+      <p>TalentBay DMCC is a centralized ecosystem that covers the entire cycle of "find a job — evaluate the location — plan the move." We do not interfere in the relationship between parties after hiring, but we provide the most comprehensive information and tools for making informed decisions.</p>
 
       <h4>3.1 Global Search Without Geographic Limitations</h4>
 
@@ -56,7 +56,7 @@
 
       <h4>3.2 Relocation and Cost-of-Living Calculator</h4>
 
-      <p>TalentBay's pride — a built-in analytical module aggregating data from multiple sources (Numbeo, Expatistan, government portals, community data). In one click, a job seeker receives:</p>
+      <p>TalentBay DMCC's pride — a built-in analytical module aggregating data from multiple sources (Numbeo, Expatistan, government portals, community data). In one click, a job seeker receives:</p>
       <ul>
         <li>Relocation cost estimate: airfare, visa fees, shipment of belongings, temporary housing for the initial period.</li>
         <li>Monthly budget: housing rent by district, utilities, transportation (public/private), food (home/dining out), health insurance, connectivity.</li>
@@ -75,7 +75,7 @@
 
       <h4>3.4 Cryptocurrency as the Preferred Payment Method</h4>
 
-      <p>TalentBay does not process payments between job seekers and employers — the parties negotiate terms directly. However, we:</p>
+      <p>TalentBay DMCC does not process payments between job seekers and employers — the parties negotiate terms directly. However, we:</p>
       <ul>
         <li>Educational content: the platform contains a knowledge base on how to use cryptocurrency for receiving salaries, which wallets and exchanges to choose, and how to minimize fees.</li>
         <li>Competence verification: employers willing to pay in cryptocurrency receive a special badge on their profile, attracting an advanced audience of job seekers.</li>
@@ -85,7 +85,7 @@
 
       <h4>3.5 Transparency and Trust</h4>
 
-      <p>TalentBay implements a verification and review system:</p>
+      <p>TalentBay DMCC implements a verification and review system:</p>
       <ul>
         <li>employer identity verification (KYC for businesses);</li>
         <li>job seeker competence checks (tests, portfolios);</li>
@@ -97,13 +97,13 @@
 
       <blockquote>"No Borders."</blockquote>
 
-      <p>We believe that talent should not be limited by country of birth, language, or passport regime. TalentBay gives every professional the freedom to choose where to live and work, and every business — access to the best talent on the planet without bureaucratic barriers. Cryptocurrency in this picture is not just a payment tool but a symbol of financial freedom, consistent with the spirit of our project.</p>
+      <p>We believe that talent should not be limited by country of birth, language, or passport regime. TalentBay DMCC gives every professional the freedom to choose where to live and work, and every business — access to the best talent on the planet without bureaucratic barriers. Cryptocurrency in this picture is not just a payment tool but a symbol of financial freedom, consistent with the spirit of our project.</p>
 
       <hr/>
 
       <h2>5. Business Model</h2>
 
-      <p>TalentBay is a centralized commercial platform. Monetization is built on several levels:</p>
+      <p>TalentBay DMCC is a centralized commercial platform. Monetization is built on several levels:</p>
 
       <table class="table">
         <thead>
@@ -135,7 +135,7 @@
 
       <h2>6. Technology Architecture</h2>
 
-      <p>TalentBay is a centralized platform with a modern technology stack:</p>
+      <p>TalentBay DMCC is a centralized platform with a modern technology stack:</p>
       <ul>
         <li>Backend: Distributed microservice architecture deployed in the cloud.</li>
         <li>Frontend: Progressive Web Application (PWA) on Vue/Nuxt.js, mobile applications on Flutter.</li>
@@ -153,7 +153,7 @@
       <p><b>Standard:</b> ERC-20 (primary network), BEP-20 (secondary)</p>
       <p><b>Total Supply:</b> 500,000,000 TLB (fixed)</p>
 
-      <p>The TLB token is a <b>utility token</b> of the TalentBay platform. It is not an investment instrument and does not confer rights to company equity or dividends. Key functions:</p>
+      <p>The TLB token is a <b>utility token</b> of the TalentBay DMCC platform. It is not an investment instrument and does not confer rights to company equity or dividends. Key functions:</p>
 
       <table class="table">
         <thead>
@@ -169,7 +169,7 @@
           </tr>
           <tr>
             <td>Staking</td>
-            <td>Users can lock TLB to obtain TalentBay Pro status and access exclusive features</td>
+            <td>Users can lock TLB to obtain TalentBay DMCC Pro status and access exclusive features</td>
           </tr>
           <tr>
             <td>Exclusive Content</td>
@@ -231,13 +231,13 @@
       Q2 2026 — Web3 wallet integration, verification of crypto-friendly employers, staking program.
       Q3 2026 — Corporate licenses and API for HR systems, launch of educational crypto section.
       Q4 2026 — Global coverage: 200+ cities, multilingual support, integration with government migration portals.
-      2027 — TalentBay becomes the standard for international remote recruitment.
+      2027 — TalentBay DMCC becomes the standard for international remote recruitment.
 
       <hr/>
 
       <h2>9. Team</h2>
 
-      <p>TalentBay was founded by experts in HR-tech, financial technology, and global mobility.</p>
+      <p>TalentBay DMCC was founded by experts in HR-tech, financial technology, and global mobility.</p>
       <ul>
         <li>Maria K. — CTO & Co-founder. Technical leader with experience in building high-load platforms, previously Senior Architect at an HR-tech company.</li>
         <li>Alexey R. — CEO & Co-founder. 12 years in international recruitment, ex-Development Director at a top-5 European HR holding.</li>
@@ -264,7 +264,7 @@
 
       <h4>Risk Mitigation Measures</h4>
       <p>Slowdown of the remote work trend Focus on highly skilled professionals, for whom remote work has become an irreversible norm
-      Regulatory pressure on cryptocurrencies TalentBay is a centralized platform with full KYC/AML compliance; the TLB token is not used for payments between parties
+      Regulatory pressure on cryptocurrencies TalentBay DMCC is a centralized platform with full KYC/AML compliance; the TLB token is not used for payments between parties
       Low quality of location data Combination of verified API sources and a verified community; algorithms for anomaly detection
       High competition Deep niche specialization (relocation + cryptocurrency), aggressive marketing, unique AI product
       Token volatility TLB is a utility token for internal services, not positioned as a store of value</p>
@@ -273,20 +273,20 @@
 
       <h2>12. Conclusion</h2>
 
-      <p>TalentBay reimagines global recruitment by putting freedom of movement and financial independence at the forefront. We are building a platform where a professional from Argentina can find a job at an Estonian startup while continuing to live in Portugal — and know exactly how much money they will have left after all expenses. And cryptocurrency becomes the natural and seamless payment method in a world without borders.</p>
+      <p>TalentBay DMCC reimagines global recruitment by putting freedom of movement and financial independence at the forefront. We are building a platform where a professional from Argentina can find a job at an Estonian startup while continuing to live in Portugal — and know exactly how much money they will have left after all expenses. And cryptocurrency becomes the natural and seamless payment method in a world without borders.</p>
 
-      <p>Join the TalentBay ICO to build a future where talent knows no borders, together.</p>
+      <p>Join the TalentBay DMCC ICO to build a future where talent knows no borders, together.</p>
 
       <hr/>
 
       <h2>Disclaimer</h2>
 
-      <code>This document is for informational purposes only and does not constitute an offer to sell securities, investment advice, or a solicitation to act. TLB tokens are utility tokens of the TalentBay platform and do not grant rights to company equity, dividends, or participation in business management. The purchase of tokens involves high risks, including the possible total loss of funds. Before participating in the ICO, it is strongly recommended to review the full terms and conditions published on the official website and consult with independent financial and legal professionals.</code>
+      <code>This document is for informational purposes only and does not constitute an offer to sell securities, investment advice, or a solicitation to act. TLB tokens are utility tokens of the TalentBay DMCC platform and do not grant rights to company equity, dividends, or participation in business management. The purchase of tokens involves high risks, including the possible total loss of funds. Before participating in the ICO, it is strongly recommended to review the full terms and conditions published on the official website and consult with independent financial and legal professionals.</code>
 
       <hr/>
 
       <blockquote class="blockquote">
-        <p>TalentBay — no borders. Only opportunities.</p>
+        <p>TalentBay DMCC — no borders. Only opportunities.</p>
       </blockquote>
     </div>
   </div>

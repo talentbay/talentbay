@@ -5,7 +5,7 @@ Status: Accepted
 
 ## Context
 
-TalentBay materials include Web3, token, and pre-ICO narratives, but the current codebase does not contain Web3 product functionality. The practical first product needs to be usable before token mechanics are introduced.
+TalentBay DMCC materials include Web3, token, and pre-ICO narratives, but the current codebase does not contain Web3 product functionality. The practical first product needs to be usable before token mechanics are introduced.
 
 ## Decision
 

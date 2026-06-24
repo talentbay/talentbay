@@ -3,7 +3,7 @@
     <div class="container">
       <a href="/" class="navbar-brand">
         <ship2 class="brand-icon" />
-        <span class="brand-text">TalentBay</span>
+        <span class="brand-text">TalentBay DMCC</span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>

@@ -11,7 +11,7 @@ The current codebase already uses `nuxt-auth-utils` with Google and GitHub OAuth
 
 Use OAuth-first authentication for MVP.
 
-TalentBay stores local user records, roles, profiles, and provider links in PostgreSQL.
+TalentBay DMCC stores local user records, roles, profiles, and provider links in PostgreSQL.
 
 Local password login is not part of the first MVP.
 

@@ -4,7 +4,7 @@ Last updated: 2026-06-09
 
 ## Decision
 
-TalentBay MVP uses OAuth-first authentication.
+TalentBay DMCC MVP uses OAuth-first authentication.
 
 Local password-based auth is not part of the first MVP unless a specific product requirement appears.
 
@@ -18,9 +18,9 @@ OAuth reduces the need to implement:
 - Brute-force protection for password login.
 - MFA flows.
 
-OAuth does not remove the need for TalentBay authorization.
+OAuth does not remove the need for TalentBay DMCC authorization.
 
-TalentBay still owns:
+TalentBay DMCC still owns:
 
 - Local user record.
 - Roles.
@@ -57,10 +57,10 @@ Admin server middleware:
 ```text
 OAuth login
   -> provider returns identity
-  -> TalentBay finds or creates local user in Postgres
-  -> TalentBay stores provider account link
+  -> TalentBay DMCC finds or creates local user in Postgres
+  -> TalentBay DMCC stores provider account link
   -> user completes onboarding
-  -> TalentBay assigns role/profile
+  -> TalentBay DMCC assigns role/profile
   -> API checks session and permissions server-side
 ```
 

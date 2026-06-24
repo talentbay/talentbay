@@ -3,7 +3,7 @@
     <div class="container">
       <div class="row">
         <div class="col-md-4">
-          <span class="brand-text">TalentBay</span>
+          <span class="brand-text">TalentBay DMCC</span>
           <p class="footer-desc mt-2">No Borders. Only Opportunities.</p>
         </div>
         <div class="col-md-4">
@@ -25,7 +25,7 @@
         </div>
       </div>
       <div class="footer-bottom mt-4 pt-4">
-        <p class="mb-0">© 2026 TalentBay. All rights reserved.</p>
+        <p class="mb-0">© 2026 TalentBay DMCC. All rights reserved.</p>
       </div>
     </div>
   </footer>

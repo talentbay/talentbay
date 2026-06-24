@@ -6,7 +6,7 @@ This document is not legal advice. It records project boundaries for engineering
 
 ## Scope Boundary
 
-The first TalentBay MVP is a SaaS/job board with relocation calculation.
+The first TalentBay DMCC MVP is a SaaS/job board with relocation calculation.
 
 The first MVP should not handle:
 

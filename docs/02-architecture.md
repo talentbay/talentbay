@@ -4,7 +4,7 @@ Last updated: 2026-06-09
 
 ## Current Architecture
 
-TalentBay is currently a Nuxt fullstack application:
+TalentBay DMCC is currently a Nuxt fullstack application:
 
 - Frontend lives in `app/`.
 - Server API lives in `server/api/`.
@@ -111,7 +111,7 @@ OAuth-first:
 
 - Google/GitHub for MVP.
 - Local password auth is not required for MVP.
-- TalentBay still owns local user records, roles, profiles, and permissions.
+- TalentBay DMCC still owns local user records, roles, profiles, and permissions.
 
 See [04-auth-and-roles.md](04-auth-and-roles.md).
 

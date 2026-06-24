@@ -2,7 +2,7 @@
   <aside class="sidebar" :class="{ collapsed: isCollapsed }">
     <div class="sidebar-brand">
       <component :is="getIcon('zap')" class="brand-icon" />
-      <span v-if="!isCollapsed" class="brand-text">TalentBay Admin</span>
+      <span v-if="!isCollapsed" class="brand-text">TalentBay DMCC Admin</span>
     </div>
 
     <nav class="sidebar-nav">

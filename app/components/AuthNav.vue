@@ -3,7 +3,7 @@
     <div class="col">
       <a href="/" class="navbar-brand">
         <ship2 class="brand-icon" />
-        <span class="brand-text">TalentBay</span>
+        <span class="brand-text">TalentBay DMCC</span>
       </a>
     </div>
     <div class="col text-center">

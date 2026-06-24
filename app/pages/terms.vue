@@ -9,15 +9,15 @@
 
           <div class="legal-body">
             <h2>1. Introduction</h2>
-            <p>Welcome to TalentBay ("Company", "we", "our", "us"). These Terms of Service ("Terms") govern your access to and use of the TalentBay website, platform, and services (collectively, the "Services").</p>
+            <p>Welcome to TalentBay DMCC ("Company", "we", "our", "us"). These Terms of Service ("Terms") govern your access to and use of the TalentBay DMCC website, platform, and services (collectively, the "Services").</p>
             <p>By accessing or using our Services, you agree to be bound by these Terms. If you do not agree, please do not use our Services.</p>
 
             <h2>2. Definitions</h2>
-            <p><strong>"Platform"</strong> refers to the TalentBay website and all associated services.</p>
+            <p><strong>"Platform"</strong> refers to the TalentBay DMCC website and all associated services.</p>
             <p><strong>"User"</strong> means any individual or entity that accesses or uses the Platform.</p>
             <p><strong>"Job Seeker"</strong> refers to a User who creates a profile to search for employment opportunities.</p>
             <p><strong>"Employer"</strong> refers to a User who posts job vacancies or searches for candidates.</p>
-            <p><strong>"TLB Token"</strong> means the utility token issued by TalentBay for use within the Platform ecosystem.</p>
+            <p><strong>"TLB Token"</strong> means the utility token issued by TalentBay DMCC for use within the Platform ecosystem.</p>
 
             <h2>3. Eligibility</h2>
             <p>You must be at least 18 years old to use our Services. By using the Services, you represent and warrant that you meet this requirement.</p>
@@ -27,7 +27,7 @@
             <p>You are responsible for safeguarding your account credentials. You agree to notify us immediately of any unauthorized use of your account.</p>
 
             <h2>5. Platform Services</h2>
-            <p>TalentBay provides a platform that connects Job Seekers and Employers globally. Our Services include:</p>
+            <p>TalentBay DMCC provides a platform that connects Job Seekers and Employers globally. Our Services include:</p>
             <ul>
               <li>Job search and matching functionality</li>
               <li>Cost of living and relocation calculators</li>
@@ -38,14 +38,14 @@
 
             <h2>6. Payment and Tokens</h2>
             <h3>6.1 Payment Independence</h3>
-            <p>TalentBay is not a payment intermediary. All payment arrangements between Job Seekers and Employers are negotiated independently by the parties.</p>
+            <p>TalentBay DMCC is not a payment intermediary. All payment arrangements between Job Seekers and Employers are negotiated independently by the parties.</p>
 
             <h3>6.2 TLB Token</h3>
-            <p>The TLB token is a utility token designed for use within the TalentBay ecosystem. It can be used to pay for premium services, access exclusive content, and participate in platform governance features.</p>
-            <p>TLB tokens do not represent ownership, equity, or any form of investment in TalentBay. They are not securities and should not be purchased with the expectation of profit.</p>
+            <p>The TLB token is a utility token designed for use within the TalentBay DMCC ecosystem. It can be used to pay for premium services, access exclusive content, and participate in platform governance features.</p>
+            <p>TLB tokens do not represent ownership, equity, or any form of investment in TalentBay DMCC. They are not securities and should not be purchased with the expectation of profit.</p>
 
             <h3>6.3 Cryptocurrency Risks</h3>
-            <p>You acknowledge that cryptocurrency transactions carry inherent risks, including but not limited to price volatility, technical failures, and regulatory changes. TalentBay is not responsible for any losses incurred through cryptocurrency transactions.</p>
+            <p>You acknowledge that cryptocurrency transactions carry inherent risks, including but not limited to price volatility, technical failures, and regulatory changes. TalentBay DMCC is not responsible for any losses incurred through cryptocurrency transactions.</p>
 
             <h2>7. User Conduct</h2>
             <p>You agree not to:</p>
@@ -59,19 +59,19 @@
             </ul>
 
             <h2>8. Intellectual Property</h2>
-            <p>All content, features, and functionality of the Platform, including but not limited to text, graphics, logos, icons, and software, are the exclusive property of TalentBay and are protected by international copyright and trademark laws.</p>
+            <p>All content, features, and functionality of the Platform, including but not limited to text, graphics, logos, icons, and software, are the exclusive property of TalentBay DMCC and are protected by international copyright and trademark laws.</p>
 
             <h2>9. Privacy</h2>
             <p>Your use of the Platform is also governed by our Privacy Policy. Please review our Privacy Policy to understand how we collect, use, and protect your personal information.</p>
 
             <h2>10. Disclaimer of Warranties</h2>
-            <p>The Platform is provided on an "AS IS" and "AS AVAILABLE" basis. TalentBay makes no warranties, express or implied, regarding the accuracy, reliability, or availability of the Platform.</p>
+            <p>The Platform is provided on an "AS IS" and "AS AVAILABLE" basis. TalentBay DMCC makes no warranties, express or implied, regarding the accuracy, reliability, or availability of the Platform.</p>
 
             <h2>11. Limitation of Liability</h2>
-            <p>To the fullest extent permitted by law, TalentBay shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform.</p>
+            <p>To the fullest extent permitted by law, TalentBay DMCC shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform.</p>
 
             <h2>12. Indemnification</h2>
-            <p>You agree to indemnify and hold harmless TalentBay and its officers, directors, employees, and agents from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.</p>
+            <p>You agree to indemnify and hold harmless TalentBay DMCC and its officers, directors, employees, and agents from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.</p>
 
             <h2>13. Modifications to Terms</h2>
             <p>We reserve the right to modify these Terms at any time. We will notify Users of material changes by posting a notice on the Platform or sending an email. Continued use of the Platform after changes constitutes acceptance of the modified Terms.</p>
@@ -80,7 +80,7 @@
             <p>We may terminate or suspend your account at any time, without prior notice, for conduct that we believe violates these Terms or is harmful to other Users, us, or third parties.</p>
 
             <h2>15. Governing Law</h2>
-            <p>These Terms shall be governed by and construed in accordance with the laws of the jurisdiction where TalentBay is registered, without regard to its conflict of law provisions.</p>
+            <p>These Terms shall be governed by and construed in accordance with the laws of the jurisdiction where TalentBay DMCC is registered, without regard to its conflict of law provisions.</p>
 
             <h2>16. Contact Information</h2>
             <p>For questions about these Terms, please contact us at:</p>
@@ -90,7 +90,7 @@
             </ul>
 
             <div class="legal-footer mt-5 pt-4">
-              <p class="text-muted">© 2026 TalentBay. All rights reserved.</p>
+              <p class="text-muted">© 2026 TalentBay DMCC. All rights reserved.</p>
             </div>
           </div>
         </div>

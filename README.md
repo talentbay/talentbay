@@ -1,6 +1,6 @@
-# TalentBay
+# TalentBay DMCC
 
-TalentBay is an early-stage SaaS/job board product for international hiring and relocation planning.
+TalentBay DMCC is an early-stage SaaS/job board product for international hiring and relocation planning.
 
 The current MVP direction is intentionally Web2-first: vacancies, candidate/company accounts, admin tools, and a relocation calculator that helps candidates understand approximate net income after taxes and living costs.
 
