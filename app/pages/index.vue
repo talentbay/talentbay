@@ -81,7 +81,7 @@
           <div class="col-lg-6">
             <p class="overline text-teal">TOKENOMICS</p>
             <h2 class="section-title">TLB Token</h2>
-            <p class="body-text">Utility token powering the TalentBay ecosystem. Pay for premium services, stake for Pro status, and earn rewards.</p>
+            <p class="body-text">Utility token powering the TalentBay DMCC ecosystem. Pay for premium services, stake for Pro status, and earn rewards.</p>
             <div class="token-highlights mt-4">
               <div class="token-highlight">
                 <span class="highlight-label">Pre-ICO Price</span>

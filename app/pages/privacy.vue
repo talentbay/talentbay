@@ -10,8 +10,8 @@
 
           <div class="legal-body">
             <h2>1. Introduction</h2>
-            <p>TalentBay ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform and services.</p>
-            <p>Please read this policy carefully. By using the TalentBay platform, you consent to the practices described in this policy.</p>
+            <p>TalentBay DMCC ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform and services.</p>
+            <p>Please read this policy carefully. By using the TalentBay DMCC platform, you consent to the practices described in this policy.</p>
 
             <h2>2. Information We Collect</h2>
 
@@ -95,7 +95,7 @@
             <p>To exercise these rights, please contact us at <a href="mailto:privacy@talentbay.io">privacy@talentbay.io</a>.</p>
 
             <h2>8. International Data Transfers</h2>
-            <p>TalentBay operates globally. Your data may be transferred to and processed in countries other than your country of residence. We ensure appropriate safeguards are in place for such transfers.</p>
+            <p>TalentBay DMCC operates globally. Your data may be transferred to and processed in countries other than your country of residence. We ensure appropriate safeguards are in place for such transfers.</p>
 
             <h2>9. Children's Privacy</h2>
             <p>Our Services are not directed to individuals under 18 years of age. We do not knowingly collect information from children. If we become aware that a minor has provided us with personal data, we will delete it.</p>
@@ -115,7 +115,7 @@
             </ul>
 
             <div class="legal-footer mt-5 pt-4">
-              <p class="text-muted">© 2026 TalentBay. All rights reserved.</p>
+              <p class="text-muted">© 2026 TalentBay DMCC. All rights reserved.</p>
             </div>
           </div>
         </div>

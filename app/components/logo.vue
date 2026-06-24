@@ -1,7 +1,7 @@
 <template>
   <span class="logo-primary">
     <ship2 />
-    <h1>TalentBay</h1>
+    <h1>TalentBay DMCC</h1>
   </span>
 </template>
 

@@ -4,7 +4,7 @@ Last updated: 2026-06-09
 
 ## Product Thesis
 
-TalentBay should help candidates and companies make international hiring decisions with less uncertainty.
+TalentBay DMCC should help candidates and companies make international hiring decisions with less uncertainty.
 
 The first practical product is a Web2 SaaS/job board where a candidate can:
 
