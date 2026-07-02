@@ -7,20 +7,20 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.4.4",
-    "@nuxthub/core": "^0.10.7",
     "@vueuse/core": "^14.2.1",
-    "axios": "^1.15.0",
     "bootstrap": "^5.3.8",
-    "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "lucide-vue-next": "^1.0.0",
     "nuxt": "^4.4.2",
     "nuxt-auth-utils": "^0.5.29",
-    "nuxt-feather-icons": "1.4.2",
     "pinia": "^3.0.4",
     "postgres": "^3.4.9",
     "vue": "^3.5.32",
@@ -29,8 +29,10 @@
   "devDependencies": {
     "@types/bootstrap": "^5.2.10",
     "@types/node": "^25.6.0",
+    "drizzle-kit": "^0.31.10",
     "sass": "1.77.6",
     "sass-loader": "^16.0.7",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vue-tsc": "^2.1.10"
   }
 }

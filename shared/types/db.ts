@@ -1,4 +1,4 @@
-import { users } from '@nuxthub/db/schema'
+import type { users } from '#server/db/schema'
 
 // User type
 export type User = typeof users.$inferSelect

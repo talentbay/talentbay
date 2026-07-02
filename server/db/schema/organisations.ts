@@ -1,6 +1,6 @@
 import {pgTable, text, serial, timestamp, pgEnum, jsonb, integer} from 'drizzle-orm/pg-core'
-import { users } from '#server/db/schema/users'
-import { vacancies } from '#server/db/schema/vacancies'
+import { users } from './users'
+import { vacancies } from './vacancies'
 import { relations } from 'drizzle-orm'
 
 export const organisations = pgTable('organisations', {

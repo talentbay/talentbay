@@ -7,10 +7,10 @@ export default defineOAuthGitHubEventHandler({
     },
     async onSuccess(event, { user }) {
         const userData = await isRegistered({
-            providerID: user.id,
+            providerID: String(user.id),
             name: user.name,
             avatar: user.avatar_url,
-            email: user.email,
+            email: user.email ?? '',
             provider: 'GITHUB',
         })
 

@@ -1,22 +1,24 @@
-import { db, schema } from '@nuxthub/db'
+import { db, schema } from '#server/db'
 import { eq } from 'drizzle-orm'
+import type { NewUser, User } from '#shared/types/db'
 
-// @ts-ignore
-export async function isRegistered(userData) {
-    const user = await db.query.users.findFirst({
-        // @ts-ignore
-        where: (users,
-                { eq }) => eq(users.providerID, userData.providerID),
+export async function isRegistered(userData: NewUser): Promise<User> {
+    const existing = await db.query.users.findFirst({
+        where: eq(schema.users.providerID, userData.providerID),
     })
-    if (user) {
-        return user
-    } else {
-        const result = await db
-            .insert(schema.users)
-            .values({
-                ...userData
-            })
-            .returning()
-        return user
+
+    if (existing) {
+        return existing
     }
+
+    const [created] = await db
+        .insert(schema.users)
+        .values(userData)
+        .returning()
+
+    if (!created) {
+        throw createError({ statusCode: 500, statusMessage: 'Failed to create user' })
+    }
+
+    return created
 }

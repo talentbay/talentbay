@@ -10,7 +10,6 @@ export default defineNuxtConfig({
 
   modules: [
       'nuxt-auth-utils',
-      '@nuxthub/core',
   ],
   vite: {
     optimizeDeps: {
@@ -29,7 +28,4 @@ export default defineNuxtConfig({
   experimental: {
     serverAppConfig: false,
   },
-  hub: {
-    db: 'postgresql'
-  }
 })
