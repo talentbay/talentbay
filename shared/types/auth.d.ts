@@ -10,4 +10,10 @@ declare module '#auth-utils' {
   }
 }
 
+declare module '#app' {
+  interface PageMeta {
+    authRole?: SessionUser['role']
+  }
+}
+
 export {}

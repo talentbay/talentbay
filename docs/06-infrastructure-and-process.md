@@ -1,30 +1,35 @@
 # Infrastructure and Process
 
-Last updated: 2026-06-09
+Last updated: 2026-07-23
 
-## Current Assumptions
+## Current State
 
 - Main repository is GitHub.
 - Deployment target is Vercel.
 - Budget before pre-ICO is limited.
 - MVP should avoid infrastructure that requires dedicated DevOps work.
+- CI runs typecheck, lint, unit tests and production build.
+- Vercel is not connected to this local repository through the available account.
+- No production PostgreSQL connection is available yet.
 
 ## Recommended MVP Infrastructure
 
 ### Hosting
 
-Use Vercel for Nuxt deployment:
+Use a new Vercel project in the intended owner account:
 
 - Pull Request -> Preview Deployment.
 - `main` -> Production Deployment.
 
-For the first MVP, preview and production are enough. A separate staging environment can be added after the team, budget, or release risk grows.
+For the first MVP, PR Preview and Production are enough. A separate staging environment can be added after the team, budget or release risk grows.
+
+Creating the Vercel project, binding `talentbay.org` and performing the first production deployment are explicit external changes. They require the correct account connection and release confirmation.
 
 ### Database
 
 Use managed PostgreSQL:
 
-- Neon, Vercel Marketplace Postgres provider, Supabase, or another managed Postgres.
+- Neon is the current preferred first option; another managed PostgreSQL provider can be selected if account/region/limits make it unsuitable.
 
 Criteria:
 
@@ -66,15 +71,16 @@ Recommended:
 
 ## CI Baseline
 
-Expected checks:
+Implemented checks:
 
 - Install dependencies.
 - Typecheck.
 - Lint.
 - Build.
-- Later: unit tests and smoke tests.
+- Unit tests.
+- Production build.
 
-Current package scripts do not include typecheck/lint/tests yet.
+HTTP smoke verification is currently manual and should become an automated post-deploy check.
 
 ## Release Policy
 
@@ -94,4 +100,3 @@ Docs should be updated when:
 - Auth/data model changes.
 - Legal/compliance boundaries change.
 - Deployment process changes.
-

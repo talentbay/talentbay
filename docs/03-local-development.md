@@ -1,86 +1,81 @@
 # Local Development
 
-Last updated: 2026-06-09
+Last updated: 2026-07-23
 
 ## Requirements
 
-- Node.js compatible with Nuxt 4.
-- pnpm.
-- OAuth credentials for enabled providers.
-- Local or remote PostgreSQL-compatible database depending on the selected setup.
+- Node.js 22.
+- pnpm 10.33.0.
+- PostgreSQL for authenticated and admin workflows.
+- Google/GitHub OAuth applications for real sign-in.
 
-The repo currently contains `pnpm-lock.yaml`, so pnpm is the expected package manager.
+The versions are recorded in `package.json` and `.mise.toml`.
 
-## Install
+## Setup
 
 ```bash
 pnpm install
-```
-
-Nuxt runs `nuxt prepare` during postinstall.
-
-## Environment
-
-Create `.env` from `.env.example`:
-
-```bash
 cp .env.example .env
+pnpm dev
 ```
 
-Current documented variables:
+Default URL: `http://localhost:3000`.
+
+Required session value:
 
 ```env
+NUXT_SESSION_PASSWORD=a-random-value-at-least-32-characters-long
+```
+
+Optional for public preview mode:
+
+```env
+DATABASE_URL=
 NUXT_OAUTH_GOOGLE_CLIENT_ID=
 NUXT_OAUTH_GOOGLE_CLIENT_SECRET=
 NUXT_OAUTH_GITHUB_CLIENT_ID=
 NUXT_OAUTH_GITHUB_CLIENT_SECRET=
-NUXT_SESSION_PASSWORD=
 ```
 
-Rules:
+Without `DATABASE_URL`, `/jobs` and relocation preview work from labelled demo data. Database-backed auth/profile/application/admin routes do not.
 
-- Never commit `.env`.
-- Never send secrets in public chats.
-- Keep `.env.example` as names-only documentation.
-- Production/preview secrets should live in hosting provider environment variables.
+Never commit `.env` or send production credentials in chat.
 
-## Run
+## Database
+
+After provisioning PostgreSQL:
 
 ```bash
-pnpm dev
+pnpm db:migrate
 ```
 
-Default URL:
-
-```text
-http://localhost:3000
-```
-
-## Build
+Useful development commands:
 
 ```bash
+pnpm db:generate
+pnpm db:studio
+```
+
+`db:push` is for deliberate local prototyping only; shared environments should use migrations.
+
+## Quality Checks
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
 pnpm build
 ```
 
-## Preview
+ESLint currently reports non-blocking formatting/security warnings in redirected legacy presentation files. New and active MVP code has no lint errors.
 
-```bash
-pnpm preview
+## OAuth Callbacks
+
+Provider callback URLs must match the deployment origin:
+
+```text
+https://<origin>/api/v1/auth/google
+https://<origin>/api/v1/auth/github
 ```
 
-## Current Limitations
-
-- README and docs are being established now.
-- Database setup/migrations are not fully documented yet.
-- OAuth callback URLs must be configured in Google/GitHub provider settings.
-- SSR is currently disabled.
-- No tests or lint/typecheck scripts are configured in `package.json`.
-
-## Expected Next DX Improvements
-
-- Add `typecheck`, `lint`, and test scripts.
-- Add CI workflow.
-- Document database provisioning.
-- Document OAuth app setup.
-- Add seed/demo data workflow.
-
+Exact provider configuration must be checked again when preview and production domains are known.

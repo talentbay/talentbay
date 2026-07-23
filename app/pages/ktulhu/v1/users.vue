@@ -1,35 +1,18 @@
-<template>
-  <div class="users-page">
-    <div class="page-header">
-      <h1 class="page-title">Users</h1>
-      <button class="btn-teal" @click="showModal = true">+ Add User</button>
-    </div>
+<script setup lang="ts">
+type AdminUser = {
+  id: number
+  name: string
+  email: string
+  role: 'USER' | 'ADMIN'
+  avatarUrl: string | null
+  createdAt: string
+  lastLoginAt: string | null
+}
 
-    <div class="filters">
-      <input type="text" placeholder="Search users..." class="filter-input" v-model="search" />
-      <select class="filter-select" v-model="roleFilter">
-        <option value="">All Roles</option>
-        <option value="job_seeker">Job Seeker</option>
-        <option value="employer">Employer</option>
-        <option value="admin">Admin</option>
-      </select>
-    </div>
-
-    <div class="table-card">
-      <DataTable :columns="['Name', 'Email', 'Role', 'Status', 'Joined']" :rows="filteredUsers">
-        <template #actions="{ row, index }">
-          <button class="action-link" @click="editUser(index)">Edit</button>
-          <button class="action-link danger" @click="deleteUser(index)">Delete</button>
-        </template>
-      </DataTable>
-    </div>
-
-    <UserModal v-if="showModal" @close="showModal = false" @save="handleSave" :user="editingUser" />
-  </div>
-</template>
-
-<script setup>
-import { ref, computed } from 'vue'
+type AdminUsersResponse = {
+  items: AdminUser[]
+  total: number
+}
 
 definePageMeta({
   layout: 'admin',
@@ -38,118 +21,115 @@ definePageMeta({
 })
 
 const search = ref('')
-const roleFilter = ref('')
-const showModal = ref(false)
-const editingUser = ref(null)
+const role = ref<'all' | AdminUser['role']>('all')
 
-const users = ref([
-  ['John Doe', 'john@example.com', 'Job Seeker', 'Active', '2026-01-15'],
-  ['TechCorp Ltd', 'hr@techcorp.com', 'Employer', 'Active', '2025-11-20'],
-  ['Maria S.', 'maria@mail.com', 'Job Seeker', 'Pending', '2026-04-01'],
-  ['CryptoPay Inc', 'admin@cryptopay.io', 'Employer', 'Active', '2025-09-10'],
-])
+const roleItems = [
+  { label: 'All roles', value: 'all' },
+  { label: 'Users', value: 'USER' },
+  { label: 'Admins', value: 'ADMIN' },
+]
 
-const filteredUsers = computed(() => {
-  return users.value.filter(u => {
-    const matchSearch = u[0].toLowerCase().includes(search.value.toLowerCase()) ||
-        u[1].toLowerCase().includes(search.value.toLowerCase())
-    const matchRole = !roleFilter.value || u[2].toLowerCase().replace(' ', '_') === roleFilter.value
-    return matchSearch && matchRole
-  })
+const query = computed(() => ({
+  q: search.value || undefined,
+  role: role.value === 'all' ? undefined : role.value,
+}))
+
+const { data, status, error } = await useFetch<AdminUsersResponse>(
+  '/api/v1/admin/users',
+  { query },
+)
+
+const dateFormatter = new Intl.DateTimeFormat('en', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
 })
-
-const editUser = (idx) => {
-  editingUser.value = { index: idx, ...users.value[idx] }
-  showModal.value = true
-}
-
-const deleteUser = (idx) => {
-  users.value.splice(idx, 1)
-}
-
-const handleSave = (data) => {
-  if (data.index !== undefined) {
-    users.value[data.index] = [data.name, data.email, data.role, data.status, users.value[data.index][4]]
-  } else {
-    users.value.push([data.name, data.email, data.role, 'Active', new Date().toISOString().split('T')[0]])
-  }
-  showModal.value = false
-  editingUser.value = null
-}
 </script>
 
-<style lang="scss" scoped>
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
+<template>
+  <section aria-labelledby="admin-users-title">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 id="admin-users-title" class="text-3xl font-bold text-highlighted">Users</h1>
+        <p class="mt-2 text-sm text-muted">Read-only OAuth account registry for the MVP.</p>
+      </div>
+      <UBadge :label="`${data?.total ?? 0} records`" color="neutral" variant="soft" />
+    </div>
 
-.page-title {
-  font-family: 'Exo 2', sans-serif;
-  font-weight: 700;
-  font-size: 1.8rem;
-  color: var(--deep-navy);
-}
+    <div class="mt-6 flex flex-wrap gap-3">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+        placeholder="Search name or email"
+        aria-label="Search users"
+        class="w-full sm:w-80"
+      />
+      <USelect
+        v-model="role"
+        :items="roleItems"
+        value-key="value"
+        aria-label="Filter by role"
+        class="w-44"
+      />
+    </div>
 
-.filters {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
+    <div v-if="status === 'pending' && !data" class="mt-6 space-y-3">
+      <USkeleton v-for="index in 5" :key="index" class="h-20 rounded-lg" />
+    </div>
 
-.filter-input,
-.filter-select {
-  padding: 10px 16px;
-  border: 1px solid var(--light-gray);
-  border-radius: 10px;
-  font-size: 0.9rem;
-  background: white;
-  outline: none;
+    <UAlert
+      v-else-if="error"
+      class="mt-6"
+      color="error"
+      variant="soft"
+      icon="i-lucide-database-zap"
+      title="User data unavailable"
+      description="Connect the PostgreSQL database before using the user registry."
+    />
 
-  &:focus {
-    border-color: var(--electric-teal);
-  }
-}
+    <div v-else-if="data?.items.length" class="mt-6 overflow-x-auto rounded-lg border border-default bg-elevated">
+      <table class="w-full min-w-[720px] text-left text-sm">
+        <thead class="border-b border-default bg-muted text-xs font-semibold uppercase text-muted">
+          <tr>
+            <th class="px-4 py-3">User</th>
+            <th class="px-4 py-3">Role</th>
+            <th class="px-4 py-3">Created</th>
+            <th class="px-4 py-3">Last sign-in</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-default">
+          <tr v-for="account in data.items" :key="account.id">
+            <td class="px-4 py-4">
+              <div class="flex items-center gap-3">
+                <UAvatar
+                  :src="account.avatarUrl || undefined"
+                  :alt="account.name"
+                  :text="account.name.slice(0, 2).toUpperCase()"
+                  size="sm"
+                />
+                <div>
+                  <p class="font-semibold text-highlighted">{{ account.name }}</p>
+                  <p class="mt-0.5 text-xs text-muted">{{ account.email }}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-4">
+              <UBadge :label="account.role" color="neutral" variant="soft" />
+            </td>
+            <td class="px-4 py-4 text-default">{{ dateFormatter.format(new Date(account.createdAt)) }}</td>
+            <td class="px-4 py-4 text-default">
+              {{ account.lastLoginAt ? dateFormatter.format(new Date(account.lastLoginAt)) : 'Never' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-.table-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  border: 1px solid var(--light-gray);
-}
-
-.action-link {
-  background: none;
-  border: none;
-  color: var(--electric-teal);
-  cursor: pointer;
-  font-weight: 500;
-  padding: 4px 8px;
-
-  &.danger {
-    color: #ef4444;
-  }
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-.btn-teal {
-  background: var(--electric-teal);
-  border: none;
-  color: var(--deep-navy);
-  font-family: 'Exo 2', sans-serif;
-  font-weight: 700;
-  padding: 12px 24px;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &:hover {
-    box-shadow: 0 8px 25px rgba(0, 212, 170, 0.3);
-  }
-}
-</style>
+    <UEmpty
+      v-else
+      class="mt-6"
+      icon="i-lucide-users"
+      title="No users found"
+      description="OAuth accounts will appear here after first sign-in."
+    />
+  </section>
+</template>

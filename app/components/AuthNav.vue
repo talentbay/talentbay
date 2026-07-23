@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import Ship2 from '~/components/icons/ship2.vue'
 
-const props = defineProps({
+defineProps({
   title: String,
 })
 </script>

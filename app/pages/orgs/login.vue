@@ -1,11 +1,6 @@
-<template>
-
-</template>
-
 <script setup lang="ts">
-
+await navigateTo('/user/login?redirect=/jobs', {
+  redirectCode: 302,
+  replace: true,
+})
 </script>
-
-<style scoped lang="scss">
-
-</style>

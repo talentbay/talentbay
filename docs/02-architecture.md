@@ -1,141 +1,77 @@
 # Architecture
 
-Last updated: 2026-06-09
+Last updated: 2026-07-23
 
-## Current Architecture
+## System Shape
 
-TalentBay DMCC is currently a Nuxt fullstack application:
-
-- Frontend lives in `app/`.
-- Server API lives in `server/api/`.
-- Database schema lives in `server/db/schema/`.
-- Auth utility logic lives in `server/utils/`.
-- Public assets live in `public/`.
-
-Current rendering mode:
-
-- `ssr: false` in `nuxt.config.ts`.
-
-Current UI:
-
-- Bootstrap 5 and SCSS.
-
-Current API surface:
-
-- OAuth routes under `server/api/v1/auth/`.
-- No complete vacancy/company/application API yet.
-
-## Target MVP Architecture
-
-Keep a modular monolith until there is a real scaling or team reason to split services.
-
-Recommended boundaries:
+TalentBay is a Nuxt 4 modular monolith:
 
 ```text
-app/pages                Route-level screens
-app/components           Reusable and domain UI components
-app/composables          Client-side state/composition helpers
-server/api               Thin HTTP handlers
-server/services          Business logic
-server/repositories      Database access
-server/db/schema         Drizzle schema
-server/integrations      External APIs/providers
-shared/contracts         Shared types/contracts when needed
+app/pages                 route-level UI
+app/components            product and domain UI
+app/composables           browser/client state
+server/api/v1             thin HTTP handlers
+server/services           business rules
+server/repositories       persistence and preview-data selection
+server/db/schema           Drizzle PostgreSQL schema
+server/db/migrations       versioned SQL migrations
+shared/types              shared transport and session contracts
+tests                     unit tests for business rules
 ```
 
-Do not put database logic in Vue components.
+Splitting services or introducing a monorepo is not justified until a separate workload, ownership boundary or scaling requirement exists.
 
-Do not put business rules directly in API handlers when they are reused or non-trivial.
+## Rendering
 
-## Domain Modules
+- Nuxt SSR is enabled globally.
+- `/jobs/**`, legal status pages and public product surfaces are server-rendered.
+- `/user/**`, `/orgs/**` and `/ktulhu/**` remain client-rendered because they are authenticated application surfaces.
+- `/`, legacy landing, presentation and whitepaper routes redirect to `/jobs`.
 
-Expected first domains:
+Browser-only APIs must remain inside client lifecycle code.
+
+## UI
+
+- New product UI uses Nuxt UI 4, Tailwind CSS 4 and Manrope.
+- Bootstrap/SCSS remains globally loaded for redirected legacy pages and is a known bundle-size debt.
+- New UI is grouped by domain within Nuxt directories rather than strict FSD.
+- Figma is the review surface for foundations, components and page concepts.
+
+## Data
+
+- PostgreSQL is the production source of truth.
+- Drizzle schema and migrations are committed.
+- Public vacancy reads use PostgreSQL when `DATABASE_URL` exists and an explicitly labelled preview dataset otherwise.
+- Imported vacancies are idempotent by `(sourceName, sourceExternalID)`.
+- Imported records enter `DRAFT` and `UNREVIEWED`; only `VERIFIED` records can be published.
+- Relocation data has provenance, review status and effective-date fields, but verified city records are not yet loaded.
+
+## Auth and Authorization
+
+- OAuth-first through Google and GitHub.
+- OAuth identities map to permanent local users.
+- Server session shape is normalized and typed.
+- Candidate profile/application endpoints require a user session.
+- `/api/v1/admin/**` requires the `ADMIN` role in server middleware.
+- Admin pages also declare role metadata for client navigation.
+
+Client route guards are UX only; server authorization is the security boundary.
+
+## Current Domains
 
 - `auth`
-- `users`
 - `candidates`
-- `companies`
+- `organisations`
 - `vacancies`
 - `applications`
 - `relocation`
 - `admin`
 
-Nuxt already has opinionated directories, so the project should use Nuxt-way domain grouping instead of forcing strict Feature-Sliced Design.
+## Known Constraints
 
-Example:
-
-```text
-app/components/vacancies/
-app/components/relocation/
-app/composables/auth/
-server/api/v1/vacancies/
-server/services/vacancies/
-server/services/relocation/
-```
-
-## Rendering Strategy
-
-Current state:
-
-- SPA mode is enabled with `ssr: false`.
-
-Target direction:
-
-- Public marketing pages and public vacancy pages should be SSR-ready or prerenderable.
-- Private dashboards can stay client-heavy.
-- Browser-only APIs must be isolated to client-only code.
-
-Reason:
-
-- Job board content may need SEO later.
-- Delaying SSR readiness can create expensive hydration and browser-API bugs.
-
-## Data Strategy
-
-Current:
-
-- PostgreSQL with Drizzle ORM.
-- NuxtHub database integration.
-- Early schemas for users, organisations, vacancies.
-
-Target:
-
-- Explicit migrations.
-- Indexes for vacancy search and common filters.
-- Separate tables for candidate profiles, company profiles, applications, relocation city costs.
-- Avoid JSON blobs for core searchable/filterable data unless the shape is intentionally flexible.
-
-## Auth Strategy
-
-OAuth-first:
-
-- Google/GitHub for MVP.
-- Local password auth is not required for MVP.
-- TalentBay DMCC still owns local user records, roles, profiles, and permissions.
-
-See [04-auth-and-roles.md](04-auth-and-roles.md).
-
-## External Integrations
-
-Do not integrate external paid/regulated services until scope is explicit.
-
-Possible later integrations:
-
-- Flight pricing API.
-- Cost-of-living data providers.
-- Email provider.
-- Analytics.
-- OAuth providers beyond Google/GitHub.
-- KYC provider.
-- Payment provider.
-- Web3 wallet/token layer.
-
-## Known Architecture Issues
-
-- `ssr: false` blocks SSR/SEO until changed.
-- `server/api/v1/auth/test.post.ts` is unsafe for production unless intentionally protected/removed.
-- `server/utils/registered.ts` appears to return the pre-insert user value after insert, which can produce an empty session for new users.
-- `vacancies.orgID` currently references `users.id`; domain-wise it should likely reference `organisations.id`.
-- Old admin pages under `app/pages/ktulhu/old` reference missing or outdated modules/routes.
-- No test framework or CI checks are configured yet.
-
+- No real PostgreSQL environment has been connected or integration-tested.
+- OAuth cannot be verified end to end until database and provider callback URLs are configured.
+- The relocation calculator uses demo figures until approved sources are loaded and reviewed.
+- Company self-service is deferred; admin-managed vacancy ingestion is the first workflow.
+- Bootstrap legacy assets keep the main CSS entry near 425 kB before gzip.
+- Public legal documents are pending founder/legal approval and block production launch.

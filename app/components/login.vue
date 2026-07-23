@@ -14,13 +14,14 @@
 </template>
 
 <script setup lang="ts">
-const { fetch: refreshSession } = useUserSession()
 import GoogleIcon from '~/components/icons/google.vue'
 import GitIcon from '~/components/icons/github.vue'
 
-const props = defineProps(['color'])
+const { fetch: refreshSession } = useUserSession()
+const props = defineProps<{
+  color?: string
+}>()
 const btnStyle = props.color ? `border-color: ${props.color}; color: ${props.color}` : ''
-const imgStyle = props.color ? `fill: ${props.color}` : ''
 
 const loginWithPopup = (provider: string) => {
   const url = `/api/v1/auth/${provider}`

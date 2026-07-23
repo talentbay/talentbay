@@ -1,69 +1,61 @@
-# TalentBay DMCC
+# TalentBay
 
-TalentBay DMCC is an early-stage SaaS/job board product for international hiring and relocation planning.
+TalentBay is an English-first international job board MVP with relocation-cost previews.
 
-The current MVP direction is intentionally Web2-first: vacancies, candidate/company accounts, admin tools, and a relocation calculator that helps candidates understand approximate net income after taxes and living costs.
+The active product is Web2-only: vacancies, OAuth accounts, candidate profiles, applications, admin review and relocation estimates. Token, ICO, payment, custody and KYC flows are outside this application until separately specified and legally approved.
 
-Web3, token mechanics, KYC/AML, payments, custody, and pre-ICO investor flows are out of the first product MVP unless they are separately specified and legally approved.
+## Stack
 
-## Current Stack
+- Nuxt `4.5.0`, Vue `3.5.x`, Nitro.
+- Nuxt UI `4.10.x`, Tailwind CSS `4.3.x`, Manrope.
+- PostgreSQL, Drizzle ORM `0.45.x`.
+- `nuxt-auth-utils` with Google and GitHub OAuth.
+- pnpm `10.33.0`, Node.js `22`.
+- Vitest and official Nuxt ESLint flat config.
 
-- Nuxt `^4.4.2`
-- Vue `^3.5.32`
-- Nitro server routes inside Nuxt
-- PostgreSQL with Drizzle ORM
-- NuxtHub database integration
-- `nuxt-auth-utils` for OAuth/session utilities
-- Bootstrap/SCSS in the current UI
-- pnpm lockfile for dependency installation
-
-See [docs/02-architecture.md](docs/02-architecture.md) for the current and target architecture.
+The repository remains a Nuxt modular monolith. Public vacancy routes use SSR; authenticated/admin legacy-compatible routes are client-rendered where needed.
 
 ## Local Development
 
-Install dependencies:
-
 ```bash
 pnpm install
-```
-
-Create local environment file:
-
-```bash
 cp .env.example .env
-```
-
-Fill OAuth/session values in `.env`, then start the dev server:
-
-```bash
 pnpm dev
 ```
 
-By default Nuxt starts at `http://localhost:3000`.
+Nuxt starts at `http://localhost:3000`.
 
-Useful commands:
+Without `DATABASE_URL`, the public jobs and relocation routes use an explicitly labelled preview dataset. OAuth, profiles, applications and admin operations require a migrated PostgreSQL database and provider credentials.
+
+## Checks
 
 ```bash
+pnpm lint
+pnpm typecheck
+pnpm test
 pnpm build
-pnpm preview
-pnpm generate
 ```
 
-See [docs/03-local-development.md](docs/03-local-development.md) for environment variables and known setup notes.
+Database commands:
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+pnpm db:studio
+```
 
 ## Documentation
 
-- [docs/00-project-vision.md](docs/00-project-vision.md)
-- [docs/01-mvp-scope.md](docs/01-mvp-scope.md)
-- [docs/02-architecture.md](docs/02-architecture.md)
-- [docs/03-local-development.md](docs/03-local-development.md)
-- [docs/04-auth-and-roles.md](docs/04-auth-and-roles.md)
-- [docs/05-data-model.md](docs/05-data-model.md)
-- [docs/06-infrastructure-and-process.md](docs/06-infrastructure-and-process.md)
-- [docs/07-risk-register.md](docs/07-risk-register.md)
-- [docs/08-compliance-guardrails.md](docs/08-compliance-guardrails.md)
-- [docs/adr/README.md](docs/adr/README.md)
+- [Current state](docs/09-current-state.md)
+- [MVP scope](docs/01-mvp-scope.md)
+- [Architecture](docs/02-architecture.md)
+- [Local development](docs/03-local-development.md)
+- [Auth and roles](docs/04-auth-and-roles.md)
+- [Data model](docs/05-data-model.md)
+- [Infrastructure and process](docs/06-infrastructure-and-process.md)
+- [Risk register](docs/07-risk-register.md)
+- [Compliance guardrails](docs/08-compliance-guardrails.md)
+- [Design direction](docs/10-design-direction.md)
+- [Architecture decisions](docs/adr/README.md)
 
-## Project Status
-
-This repository is an alpha-stage codebase. Treat documentation as a living map of current reality and target direction, not as a guarantee that every described module already exists.
+This is an alpha/MVP codebase. The documentation distinguishes implemented behavior, preview data and decisions still blocked on external approval.

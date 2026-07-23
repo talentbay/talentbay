@@ -41,7 +41,6 @@
 import Ship2 from '~/components/icons/ship2.vue';
 
 const route = useRoute()
-const { clear, loggedIn } = useUserSession()
 </script>
 
 <style scoped lang="scss">

@@ -138,10 +138,11 @@ onBeforeUnmount(() => {
         />
 
         <p class="mt-5 text-center text-xs leading-5 text-muted">
-          By continuing, you agree to the
+          This is an MVP preview. Public
           <NuxtLink to="/terms" class="font-semibold text-primary">Terms</NuxtLink>
-          and acknowledge the
-          <NuxtLink to="/privacy" class="font-semibold text-primary">Privacy Policy</NuxtLink>.
+          and the
+          <NuxtLink to="/privacy" class="font-semibold text-primary">Privacy Notice</NuxtLink>
+          are pending legal review.
         </p>
       </div>
     </section>

@@ -10,19 +10,24 @@ export default defineNuxtConfig({
   ],
 
   modules: [
+    '@nuxt/eslint',
     '@nuxt/ui',
     'nuxt-auth-utils',
   ],
+
+  eslint: {
+    checker: false,
+  },
 
   ui: {
     fonts: false,
   },
 
   routeRules: {
-    '/': { ssr: false },
-    '/landing': { ssr: false },
-    '/presentation': { ssr: false },
-    '/whitepaper': { ssr: false },
+    '/': { redirect: { to: '/jobs', statusCode: 302 } },
+    '/landing': { redirect: { to: '/jobs', statusCode: 302 } },
+    '/presentation': { redirect: { to: '/jobs', statusCode: 302 } },
+    '/whitepaper': { redirect: { to: '/jobs', statusCode: 302 } },
     '/user/**': { ssr: false },
     '/orgs/**': { ssr: false },
     '/ktulhu/**': { ssr: false },

@@ -127,8 +127,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { ref, resolveComponent } from 'vue'
+import { computed, ref } from 'vue'
 import {getIcon} from '~/components/utils/global.ts'
 
 const slideRef = ref(null) // ссылка на DOM-элемент слайда
