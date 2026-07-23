@@ -2,6 +2,14 @@ export type VacancyWorkplace = 'ONSITE' | 'HYBRID' | 'REMOTE'
 export type VacancyEmployment = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP'
 export type VacancyDataStatus = 'DEMO' | 'VERIFIED'
 
+export type RelocationLocationOption = {
+  key: string
+  city: string
+  countryCode: string
+  currency: string
+  dataStatus: VacancyDataStatus
+}
+
 export type VacancySalary = {
   min: number
   max: number
@@ -63,4 +71,13 @@ export type RelocationPreviewResponse = {
   oneTimeMove: number
   dataStatus: VacancyDataStatus
   disclaimer: string
+  provenance: {
+    effectiveFrom: string | null
+    reviewedAt: string | null
+    sources: Array<{
+      label: string
+      url: string
+      accessedAt: string
+    }>
+  }
 }

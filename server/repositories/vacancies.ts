@@ -11,6 +11,8 @@ import type {
   VacancySearchResponse,
 } from '#shared/types/vacancies'
 
+const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
+
 export async function listVacancies(query: VacancySearch): Promise<VacancySearchResponse> {
   if (!isDatabaseConfigured()) {
     return searchDemoVacancies(query)
@@ -181,7 +183,7 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
     location: {
       city: row.city,
       countryCode: row.countryCode,
-      countryName: row.countryCode,
+      countryName: countryNames.of(row.countryCode) ?? row.countryCode,
     },
     workplaceType: row.workplaceType,
     employmentType: row.employmentType,

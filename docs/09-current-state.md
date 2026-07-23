@@ -11,6 +11,7 @@ Implemented:
 - SSR vacancy catalogue, search, filters, sorting and detail pages.
 - Clearly labelled demo vacancies when no database is configured.
 - Relocation preview for four demo cities.
+- Automatic use of reviewed PostgreSQL relocation records with source provenance when available.
 - Google/GitHub OAuth handlers backed by local user records.
 - Candidate profile form.
 - Apply flow and application list.
@@ -52,7 +53,7 @@ Passed on 2026-07-23:
 
 - `pnpm lint` with zero errors.
 - `pnpm typecheck`.
-- `pnpm test`: 13 tests.
+- `pnpm test`: 15 tests.
 - `pnpm build`.
 - Production-server HTTP smoke:
   - `/` -> `302 /jobs`

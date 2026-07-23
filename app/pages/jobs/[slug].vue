@@ -62,10 +62,14 @@ const location = computed(() => {
 })
 
 const relocationLocation = computed(() => {
-  const city = vacancy.value?.location.city?.toLowerCase()
-  return ['london', 'amsterdam', 'berlin', 'lisbon'].includes(city || '')
-    ? city
-    : 'london'
+  return vacancy.value?.location.city
+    ?.normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    || 'london'
 })
 
 const relocationSalary = computed(() => {

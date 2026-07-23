@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core'
-import type { RelocationPreviewResponse } from '#shared/types/vacancies'
+import type {
+  RelocationLocationOption,
+  RelocationPreviewResponse,
+} from '#shared/types/vacancies'
 
 const props = withDefaults(defineProps<{
   initialLocation?: string
@@ -14,12 +17,27 @@ const location = ref(props.initialLocation)
 const annualGross = ref(props.initialAnnualGross)
 const debouncedGross = refDebounced(annualGross, 300)
 
-const locationItems = [
+const fallbackLocationItems = [
   { label: 'London, UK', value: 'london' },
   { label: 'Amsterdam, NL', value: 'amsterdam' },
   { label: 'Berlin, DE', value: 'berlin' },
   { label: 'Lisbon, PT', value: 'lisbon' },
 ]
+
+const { data: locations } = await useFetch<{
+  items: RelocationLocationOption[]
+}>('/api/v1/relocation/locations')
+
+const locationItems = computed(() => {
+  if (!locations.value?.items.length) {
+    return fallbackLocationItems
+  }
+
+  return locations.value.items.map(item => ({
+    label: `${item.city}, ${item.countryCode}${item.dataStatus === 'DEMO' ? ' · Demo' : ''}`,
+    value: item.key,
+  }))
+})
 
 const query = computed(() => ({
   location: location.value,
@@ -59,7 +77,11 @@ const retainedPercent = computed(() => {
         </h2>
         <p class="mt-1 text-xs text-muted">One person · monthly estimate</p>
       </div>
-      <UBadge label="Demo data" color="warning" variant="soft" />
+      <UBadge
+        :label="data?.dataStatus === 'VERIFIED' ? 'Verified data' : 'Demo data'"
+        :color="data?.dataStatus === 'VERIFIED' ? 'success' : 'warning'"
+        variant="soft"
+      />
     </div>
 
     <div class="mt-5 grid gap-4">
@@ -130,6 +152,22 @@ const retainedPercent = computed(() => {
       </dl>
 
       <p class="mt-5 text-xs leading-5 text-muted">{{ data.disclaimer }}</p>
+
+      <div v-if="data.provenance.sources.length" class="mt-4 border-t border-default pt-4">
+        <p class="text-xs font-semibold text-default">Sources</p>
+        <ul class="mt-2 space-y-1 text-xs">
+          <li v-for="source in data.provenance.sources" :key="source.url">
+            <a
+              :href="source.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary hover:text-highlighted"
+            >
+              {{ source.label }}
+            </a>
+          </li>
+        </ul>
+      </div>
     </template>
   </aside>
 </template>

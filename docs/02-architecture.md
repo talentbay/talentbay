@@ -44,7 +44,7 @@ Browser-only APIs must remain inside client lifecycle code.
 - Public vacancy reads use PostgreSQL when `DATABASE_URL` exists and an explicitly labelled preview dataset otherwise.
 - Imported vacancies are idempotent by `(sourceName, sourceExternalID)`.
 - Imported records enter `DRAFT` and `UNREVIEWED`; only `VERIFIED` records can be published.
-- Relocation data has provenance, review status and effective-date fields, but verified city records are not yet loaded.
+- Relocation reads prefer `VERIFIED` PostgreSQL records and expose source provenance, review status and effective dates; demo cities remain labelled fallback data.
 
 ## Auth and Authorization
 
