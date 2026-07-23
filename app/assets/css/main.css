@@ -1,0 +1,48 @@
+@import "@fontsource-variable/manrope";
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-talent-navy-900: #0b1f33;
+  --color-talent-navy-700: #163a5f;
+  --color-talent-teal-700: #0f766e;
+  --color-talent-teal-600: #0d9488;
+  --color-talent-teal-100: #ccfbf1;
+}
+
+:root {
+  --ui-primary: var(--color-talent-teal-700);
+  --ui-text: var(--color-slate-700);
+  --ui-text-muted: var(--color-slate-500);
+  --ui-text-highlighted: var(--color-talent-navy-900);
+  --ui-bg: var(--color-slate-50);
+  --ui-bg-muted: var(--color-slate-100);
+  --ui-bg-elevated: var(--color-white);
+  --ui-border: var(--color-slate-200);
+  --ui-border-accented: var(--color-slate-300);
+  --ui-radius: 0.5rem;
+}
+
+html {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: var(--font-sans);
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background: var(--ui-bg);
+}
+
+a {
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

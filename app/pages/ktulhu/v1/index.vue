@@ -31,7 +31,11 @@
 import StatCard from '@/components/admin/StatCard.vue'
 import DataTable from '@/components/admin/DataTable.vue'
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({
+  layout: 'admin',
+  middleware: 'auth',
+  authRole: 'ADMIN',
+})
 
 const recentRows = [
   ['John Doe', 'Registered as Job Seeker', '2 min ago'],

@@ -31,7 +31,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({
+  layout: 'admin',
+  middleware: 'auth',
+  authRole: 'ADMIN',
+})
 
 const search = ref('')
 const roleFilter = ref('')

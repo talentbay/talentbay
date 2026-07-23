@@ -1,0 +1,95 @@
+import { eq } from 'drizzle-orm'
+import { z } from 'zod'
+import { schema, useDatabase } from '#server/db'
+import type { CandidateProfileResponse } from '#shared/types/candidates'
+
+const optionalText = (max: number) => z.string().trim().max(max).nullable().optional()
+const optionalUrl = z.union([z.url(), z.literal('')])
+  .transform(value => value || null)
+  .nullable()
+  .optional()
+
+export const candidateProfileInputSchema = z.object({
+  headline: optionalText(160),
+  about: optionalText(5_000),
+  countryCode: z.union([z.string().trim().length(2), z.literal('')])
+    .transform(value => value ? value.toUpperCase() : null)
+    .nullable()
+    .optional(),
+  city: optionalText(120),
+  phone: optionalText(40),
+  telegram: optionalText(80),
+  githubUrl: optionalUrl,
+  linkedinUrl: optionalUrl,
+})
+
+export type CandidateProfileInput = z.infer<typeof candidateProfileInputSchema>
+
+export async function getCandidateProfile(userID: number): Promise<CandidateProfileResponse> {
+  const db = useDatabase()
+  const [row] = await db
+    .select({
+      user: {
+        id: schema.users.id,
+        name: schema.users.name,
+        email: schema.users.email,
+        avatarUrl: schema.users.avatarUrl,
+      },
+      profile: {
+        headline: schema.candidateProfiles.headline,
+        about: schema.candidateProfiles.about,
+        countryCode: schema.candidateProfiles.countryCode,
+        city: schema.candidateProfiles.city,
+        phone: schema.candidateProfiles.phone,
+        telegram: schema.candidateProfiles.telegram,
+        githubUrl: schema.candidateProfiles.githubUrl,
+        linkedinUrl: schema.candidateProfiles.linkedinUrl,
+      },
+    })
+    .from(schema.users)
+    .leftJoin(
+      schema.candidateProfiles,
+      eq(schema.users.id, schema.candidateProfiles.userID),
+    )
+    .where(eq(schema.users.id, userID))
+    .limit(1)
+
+  if (!row) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'User not found',
+    })
+  }
+
+  return {
+    user: row.user,
+    profile: row.profile?.headline !== null
+      || row.profile?.about !== null
+      || row.profile?.countryCode !== null
+      || row.profile?.city !== null
+      ? row.profile
+      : null,
+  }
+}
+
+export async function saveCandidateProfile(
+  userID: number,
+  input: CandidateProfileInput,
+): Promise<CandidateProfileResponse> {
+  const db = useDatabase()
+  await db
+    .insert(schema.candidateProfiles)
+    .values({
+      userID,
+      ...input,
+    })
+    .onConflictDoUpdate({
+      target: schema.candidateProfiles.userID,
+      set: {
+        ...input,
+        updatedAt: new Date(),
+      },
+    })
+
+  return await getCandidateProfile(userID)
+}
