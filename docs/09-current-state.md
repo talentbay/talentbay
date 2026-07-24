@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 ## Product Status
 
@@ -20,6 +20,7 @@ Implemented:
 - PostgreSQL/Drizzle schema, indexes and migrations.
 - CI, typecheck, ESLint, Vitest and production build.
 - Responsive product UI and Figma concepts.
+- Bootstrap/SCSS and unused ICO presentation components removed from the active build.
 
 Not yet verified end to end:
 
@@ -49,17 +50,20 @@ Not yet verified end to end:
 
 ## Verification Snapshot
 
-Passed on 2026-07-23:
+Passed on 2026-07-24:
 
 - `pnpm lint` with zero errors.
 - `pnpm typecheck`.
 - `pnpm test`: 15 tests.
 - `pnpm build`.
+- `pnpm test:smoke`.
+- Main production CSS reduced from about 425 kB to about 197 kB before gzip.
 - Production-server HTTP smoke:
   - `/` -> `302 /jobs`
   - `/jobs` -> SSR `200`
   - `/api/v1/vacancies` -> demo response
   - `/terms` -> pending-review `200`
+  - `/api/_auth/session` -> `200` with a configured test session secret
 
 ## Next Release Path
 

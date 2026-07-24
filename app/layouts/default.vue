@@ -1,16 +1,9 @@
 <template>
-  <article class="container">
-    <nav-bar></nav-bar>
-    <slot></slot>
-  </article>
+  <div class="min-h-screen bg-default text-default">
+    <ProductAppHeader />
+    <main>
+      <slot />
+    </main>
+    <ProductAppFooter />
+  </div>
 </template>
-
-<script setup lang="ts">
-import NavBar from '~/components/navbar.vue'
-</script>
-
-<style scoped lang="scss">
-.container {
-  max-width: 100% !important;
-}
-</style>

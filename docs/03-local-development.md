@@ -1,6 +1,6 @@
 # Local Development
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 ## Requirements
 
@@ -41,6 +41,14 @@ Without `DATABASE_URL`, `/jobs` and relocation preview work from labelled demo d
 
 Never commit `.env` or send production credentials in chat.
 
+When running the compiled Nitro server directly, export the runtime variables first:
+
+```bash
+NUXT_SESSION_PASSWORD=... node .output/server/index.mjs
+```
+
+Unlike `pnpm dev`, the standalone server does not load the repository `.env` file automatically.
+
 ## Database
 
 After provisioning PostgreSQL:
@@ -67,7 +75,7 @@ pnpm test
 pnpm build
 ```
 
-ESLint currently reports non-blocking formatting/security warnings in redirected legacy presentation files. New and active MVP code has no lint errors.
+All four checks currently pass without ESLint warnings.
 
 ## OAuth Callbacks
 

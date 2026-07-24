@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 ## System Shape
 
@@ -33,7 +33,7 @@ Browser-only APIs must remain inside client lifecycle code.
 ## UI
 
 - New product UI uses Nuxt UI 4, Tailwind CSS 4 and Manrope.
-- Bootstrap/SCSS remains globally loaded for redirected legacy pages and is a known bundle-size debt.
+- Redirected legacy pages no longer compile their former Bootstrap/SCSS UI.
 - New UI is grouped by domain within Nuxt directories rather than strict FSD.
 - Figma is the review surface for foundations, components and page concepts.
 
@@ -73,5 +73,5 @@ Client route guards are UX only; server authorization is the security boundary.
 - OAuth cannot be verified end to end until database and provider callback URLs are configured.
 - The relocation calculator uses demo figures until approved sources are loaded and reviewed.
 - Company self-service is deferred; admin-managed vacancy ingestion is the first workflow.
-- Bootstrap legacy assets keep the main CSS entry near 425 kB before gzip.
+- The main CSS entry is about 197 kB before gzip (about 29.5 kB gzip), primarily Tailwind and Nuxt UI.
 - Public legal documents are pending founder/legal approval and block production launch.

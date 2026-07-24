@@ -5,7 +5,6 @@ export default defineNuxtConfig({
   ssr: true,
 
   css: [
-    '@/assets/scss/main.scss',
     '@/assets/css/main.css',
   ],
 
@@ -37,21 +36,6 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'light',
     fallback: 'light',
-  },
-
-  vite: {
-    optimizeDeps: {
-      include: [
-        'bootstrap',
-      ],
-    },
-    css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: '@use "@/assets/scss/variables.scss" as *;',
-        },
-      },
-    },
   },
 
   experimental: {

@@ -27,6 +27,8 @@ Nuxt starts at `http://localhost:3000`.
 
 Without `DATABASE_URL`, the public jobs and relocation routes use an explicitly labelled preview dataset. OAuth, profiles, applications and admin operations require a migrated PostgreSQL database and provider credentials.
 
+`NUXT_SESSION_PASSWORD` is required in every running environment, including public preview deployments. The standalone Nitro server does not load `.env` by itself; export the variables before running `node .output/server/index.mjs`, or use the hosting provider's environment-variable store.
+
 ## Checks
 
 ```bash

@@ -39,3 +39,8 @@ jobs:
           # Dummy value so nuxt build doesn't fail on missing env; real value is set in Vercel.
           DATABASE_URL: postgresql://user:pass@localhost:5432/db
           NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+
+      - name: Production smoke test
+        run: pnpm test:smoke
+        env:
+          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars

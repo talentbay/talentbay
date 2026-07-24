@@ -1,6 +1,6 @@
 # Infrastructure and Process
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 ## Current State
 
@@ -47,6 +47,8 @@ Use:
 - Vercel Environment Variables for deployed runtime.
 - GitHub Secrets only for CI tokens/secrets.
 
+`NUXT_SESSION_PASSWORD` is mandatory even when a deployment only exposes public preview data. Database and OAuth variables become mandatory before authenticated workflows are enabled.
+
 Do not use Telegram or committed files as a secrets store.
 
 ## Git Process
@@ -76,11 +78,11 @@ Implemented checks:
 - Install dependencies.
 - Typecheck.
 - Lint.
-- Build.
 - Unit tests.
 - Production build.
+- Production-server HTTP smoke.
 
-HTTP smoke verification is currently manual and should become an automated post-deploy check.
+The repository smoke script starts the compiled Nitro server and checks the root redirect, SSR jobs page, preview vacancy API, legal status page and session endpoint. A separate post-deploy check should be added after Vercel is connected.
 
 ## Release Policy
 
