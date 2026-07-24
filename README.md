@@ -46,6 +46,8 @@ pnpm db:migrate
 pnpm db:studio
 ```
 
+Use Neon's pooled URL as `DATABASE_URL` for the deployed application and its direct URL as `DATABASE_MIGRATION_URL` for Drizzle migrations.
+
 ## Documentation
 
 - [Current state](docs/09-current-state.md)
@@ -58,6 +60,7 @@ pnpm db:studio
 - [Risk register](docs/07-risk-register.md)
 - [Compliance guardrails](docs/08-compliance-guardrails.md)
 - [Design direction](docs/10-design-direction.md)
+- [Deployment runbook](docs/11-deployment-runbook.md)
 - [Architecture decisions](docs/adr/README.md)
 
 This is an alpha/MVP codebase. The documentation distinguishes implemented behavior, preview data and decisions still blocked on external approval.

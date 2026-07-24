@@ -31,6 +31,7 @@ Optional for public preview mode:
 
 ```env
 DATABASE_URL=
+DATABASE_MIGRATION_URL=
 NUXT_OAUTH_GOOGLE_CLIENT_ID=
 NUXT_OAUTH_GOOGLE_CLIENT_SECRET=
 NUXT_OAUTH_GITHUB_CLIENT_ID=
@@ -56,6 +57,8 @@ After provisioning PostgreSQL:
 ```bash
 pnpm db:migrate
 ```
+
+For Neon, set the pooled connection string as `DATABASE_URL` and the direct connection string as `DATABASE_MIGRATION_URL`. The application uses the pooler; Drizzle Kit prefers the direct URL for schema migrations.
 
 Useful development commands:
 
