@@ -1,19 +1,27 @@
 # Deployment Runbook
 
-Last updated: 2026-07-24
+Last updated: 2026-07-25
 
 ## Verified Access State
 
 - The repository branch `chore/sprint-1-cleanup` is published on GitHub.
 - Local Vercel CLI authentication belongs to the `lattelix` account.
-- The accessible Vercel team is Hobby and has no TalentBay project or domain.
+- A temporary Vercel project named `talentbay` exists in the personal
+  `alexs-projects-76662c2b` Hobby scope.
+- The current public demo is available at
+  `https://talentbay-seven.vercel.app`.
+- The demo is deployed directly with Vercel CLI and has no Git integration.
 - `talentbay.org` uses Vercel nameservers but is managed in another Vercel scope.
-- Local Google/GitHub OAuth credentials and `NUXT_SESSION_PASSWORD` are present.
+- A valid `NUXT_SESSION_PASSWORD` is configured for Preview and Production.
+- Local Google/GitHub OAuth credentials are present but are not deployed.
 - Both OAuth handlers generate redirects to the expected providers.
-- No `DATABASE_URL` is available.
-- No authenticated Neon session is available.
+- No database is connected to the Vercel project yet.
+- A Neon credential shared through chat must be rotated before use.
 
-The target deployment therefore needs access to the founder/company Vercel scope that currently owns `talentbay.org`. Do not create a second production project under the personal `lattelix` Hobby scope.
+The personal Hobby project is only a temporary internal demo. Vercel Hobby is
+restricted to personal, non-commercial use and cannot connect to a private
+GitHub Organization repository. The commercial release must move to an
+appropriate founder/company Vercel scope before `talentbay.org` is attached.
 
 ## Required Ownership
 
@@ -89,14 +97,27 @@ Use a stable branch Preview URL for OAuth testing, not a commit-specific URL.
 
 ## First Preview
 
-1. Create/import the Vercel project without attaching `talentbay.org`.
-2. Add Preview environment variables.
-3. Deploy `chore/sprint-1-cleanup`.
-4. Verify `/`, `/jobs`, vacancy detail, relocation preview and legal status pages.
-5. Connect PostgreSQL and run migrations.
-6. Verify Google and GitHub OAuth.
-7. Verify candidate profile, application and admin flows.
-8. Review logs and the automated CI/smoke result.
+The initial CLI demo is deployed. To publish the current local branch again:
+
+```bash
+pnpm dlx vercel@latest deploy --scope alexs-projects-76662c2b
+```
+
+The first deployment of a new project can become Production automatically.
+Later commands without `--prod` create Preview deployments. Use `--prod` only
+after the intended source state and environment variables have been verified.
+
+Remaining Preview work:
+
+1. Rotate the exposed Neon role password.
+2. Add the pooled URL as `DATABASE_URL`.
+3. Keep the direct URL local or in the migration environment as
+   `DATABASE_MIGRATION_URL`.
+4. Run and verify migrations once.
+5. Configure dedicated Preview OAuth callbacks and secrets.
+6. Verify vacancy detail, relocation, candidate profile, application and admin
+   flows against the connected database.
+7. Review runtime logs and the automated CI/smoke result.
 
 ## Production Gate
 
