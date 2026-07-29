@@ -1,4 +1,5 @@
 import { authenticateOAuthUser } from '#server/services/auth/oauth-user'
+import { logHandledRequestError } from '#server/utils/observability'
 
 export default defineOAuthGoogleEventHandler({
   async onSuccess(event, { user }) {
@@ -15,7 +16,7 @@ export default defineOAuthGoogleEventHandler({
     return send(event, '<html><script>window.close();</script></html>', 'text/html')
   },
   onError(event, error) {
-    console.error('Google OAuth error:', error)
+    logHandledRequestError(event, error, 'oauth.google')
     return send(event, '<!doctype html><html><body><script>window.close()</script></body></html>', 'text/html')
   },
 })

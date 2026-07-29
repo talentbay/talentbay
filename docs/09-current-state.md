@@ -33,6 +33,9 @@ Implemented:
 - Bootstrap/SCSS and unused ICO presentation components removed from the active build.
 - Public Vercel production deployment at
   `https://talentbay-seven.vercel.app`.
+- Vercel WAF rate limiting for `/api/` at 120 requests per 60 seconds per IP.
+- Correlated API request/error logs with `x-request-id` and no request bodies,
+  query strings, IP addresses, cookies or raw error messages.
 
 Not yet verified end to end:
 
@@ -65,7 +68,7 @@ Passed on 2026-07-29:
 
 - `pnpm lint` with zero errors.
 - `pnpm typecheck`.
-- `pnpm test`: 15 tests.
+- `pnpm test`: 25 tests.
 - `pnpm build`.
 - Neon connection as `neondb_owner` to PostgreSQL 18.4.
 - Neon Preview branch cloned with two migrations and five preview vacancies.
@@ -85,11 +88,13 @@ Passed on 2026-07-29:
 - Mobile navigation exposes Jobs, Relocation, For companies and Sign in.
 - Vercel runtime error scan after smoke requests returned no errors.
 - Protected Vercel Preview API smoke through authenticated `vercel curl`.
+- Latest Preview deployment reached `READY` and returned all five records from
+  the isolated Preview database.
 - GitHub OAuth authorization endpoint accepted the current Production callback.
 - Google OAuth returned `redirect_uri_mismatch`, isolating the remaining issue
   to provider-console configuration.
-- Admin promotion parser: 22 total tests pass, and a missing user fails without
-  changing data.
+- Admin promotion parser is covered, and a missing user fails without changing
+  data.
 - `pnpm audit`: zero critical/high findings; one moderate and one low
   `esbuild` finding remain in development/build tooling.
 - `pnpm db:generate`: schema is current with no migration changes.

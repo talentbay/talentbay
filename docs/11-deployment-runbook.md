@@ -137,6 +137,17 @@ GitHub accepts the callback. Google currently returns
 `redirect_uri_mismatch`, so its exact callback must be added in Google Cloud
 Console before the browser journey can pass.
 
+## Runtime Protection and Logs
+
+API requests are protected by the `TalentBay API rate limit` Vercel Firewall
+rule: 120 requests per 60 seconds per IP for paths starting with `/api/`.
+Changing or removing it is an operational change and must be recorded here.
+
+API responses include `x-request-id`. Runtime logs use one-line JSON records
+named `request.completed` and `request.error`. They intentionally exclude query
+strings, request/response bodies, IP addresses, cookies, authorization headers
+and raw error messages.
+
 ## Domain Handoff
 
 DNS inspection on 2026-07-29 confirmed:

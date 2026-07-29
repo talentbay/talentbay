@@ -31,8 +31,8 @@ publishing unapproved legal, vacancy, relocation, payment or token claims.
 
 ## P1 Work
 
-1. Add application-level request throttling for auth-adjacent and write routes.
-2. Add structured request/error logging without personal data or secrets.
+1. [x] Add shared request throttling for API routes.
+2. [x] Add structured request/error logging without personal data or secrets.
 3. Document admin operations and rollback steps.
 4. Prepare a founder demo checklist and acceptance record.
 

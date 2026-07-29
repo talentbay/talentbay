@@ -1,4 +1,5 @@
 import { authenticateOAuthUser } from '#server/services/auth/oauth-user'
+import { logHandledRequestError } from '#server/utils/observability'
 
 type GitHubEmail = {
   email: string
@@ -41,7 +42,7 @@ export default defineOAuthGitHubEventHandler({
     return send(event, '<html><script>window.close();</script></html>', 'text/html')
   },
   onError(event, error) {
-    console.error('GitHub OAuth error:', error)
+    logHandledRequestError(event, error, 'oauth.github')
     return send(event, '<!doctype html><html><body><script>window.close()</script></body></html>', 'text/html')
   },
 })
