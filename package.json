@@ -20,6 +20,7 @@
     "typecheck": "nuxt typecheck",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:promote-admin": "node --env-file=.env scripts/promote-admin.mjs",
     "db:push": "drizzle-kit push",
     "db:seed:preview": "node --env-file=.env scripts/seed-preview.mjs",
     "db:studio": "drizzle-kit studio"

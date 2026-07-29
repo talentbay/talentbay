@@ -19,9 +19,9 @@ publishing unapproved legal, vacancy, relocation, payment or token claims.
 
 ## P0 Work
 
-1. Create and configure a Neon Preview branch.
-2. Add a safe admin-promotion command that requires an explicit email.
-3. Verify exact Google and GitHub callback URLs.
+1. [x] Create and configure a Neon Preview branch.
+2. [x] Add a safe admin-promotion command that requires an explicit email.
+3. [x] Verify exact Google and GitHub callback URLs.
 4. Run the candidate journey:
    sign in -> edit profile -> open vacancy -> apply -> view application.
 5. Run the admin journey:

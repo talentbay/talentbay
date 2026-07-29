@@ -20,7 +20,10 @@ Implemented:
 - Read-only admin user registry and real operational counters.
 - PostgreSQL/Drizzle schema, indexes and migrations.
 - Neon PostgreSQL 18.4 runtime with both migrations applied.
+- Separate Neon `production` and `preview` branches; local development and
+  Vercel Preview use `preview`.
 - Idempotent `pnpm db:seed:preview` workflow with five preview vacancies.
+- Dry-run-first `pnpm db:promote-admin` operation for an existing OAuth user.
 - CI, typecheck, ESLint, Vitest and production build.
 - Responsive product UI and Figma concepts.
 - Bootstrap/SCSS and unused ICO presentation components removed from the active build.
@@ -45,7 +48,8 @@ Not yet verified end to end:
 ## External Blockers
 
 1. Transfer or shared access to the Vercel scope that owns `talentbay.org`.
-2. Google and GitHub OAuth callback configuration and a manual login account.
+2. Add the Production callback to Google OAuth; GitHub accepts its current
+   callback but still requires a manual login journey.
 3. Founder/legal-approved Terms and Privacy Notice.
 4. Approved vacancy sources and their usage/API terms.
 5. Verified relocation sources for the selected cities.
@@ -60,6 +64,7 @@ Passed on 2026-07-29:
 - `pnpm test`: 15 tests.
 - `pnpm build`.
 - Neon connection as `neondb_owner` to PostgreSQL 18.4.
+- Neon Preview branch cloned with two migrations and five preview vacancies.
 - `pnpm db:migrate`: both migrations applied successfully.
 - `pnpm db:seed:preview`: idempotency verified, leaving exactly five
   organisations and five published preview vacancies.
@@ -75,16 +80,21 @@ Passed on 2026-07-29:
   horizontal overflow.
 - Mobile navigation exposes Jobs, Relocation, For companies and Sign in.
 - Vercel runtime error scan after smoke requests returned no errors.
+- Protected Vercel Preview API smoke through authenticated `vercel curl`.
+- GitHub OAuth authorization endpoint accepted the current Production callback.
+- Google OAuth returned `redirect_uri_mismatch`, isolating the remaining issue
+  to provider-console configuration.
+- Admin promotion parser: 22 total tests pass, and a missing user fails without
+  changing data.
 
 ## Next Release Path
 
-1. Isolate Preview/local database access from the Production Neon branch.
-2. Configure provider callbacks and verify Google/GitHub OAuth.
-3. Promote an explicitly approved user to admin and verify candidate/admin
+1. Configure the Google callback and verify Google/GitHub OAuth.
+2. Promote an explicitly approved user to admin and verify candidate/admin
    flows end to end.
-4. Review the deployed product with the founder.
-5. Approve legal copy, data sources and the commercial launch checklist.
-6. Transfer/share `talentbay.org`, bind it to the Vercel project and repeat
+3. Review the deployed product with the founder.
+4. Approve legal copy, data sources and the commercial launch checklist.
+5. Transfer/share `talentbay.org`, bind it to the Vercel project and repeat
    public smoke checks.
 
 The current Vercel Production target is a technical MVP deployment, not approval

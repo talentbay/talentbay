@@ -19,6 +19,8 @@ Last updated: 2026-07-29
 - Neon PostgreSQL is connected to the Vercel runtime.
 - The exposed Neon role password was rotated on 2026-07-29.
 - Both Drizzle migrations are applied to the `production` Neon branch.
+- Local development and Vercel Preview use a separate Neon `preview` branch
+  cloned from Production on 2026-07-29.
 - Five explicitly labelled preview vacancies are stored in PostgreSQL.
 - Vercel CLI deployments require the Git commit author email to match a user
   with access to the target Vercel scope. Repository-local Git author email is
@@ -116,11 +118,21 @@ after the intended source state and environment variables have been verified.
 
 Remaining Preview work:
 
-1. Create a separate Neon branch for Preview/local development.
-2. Configure dedicated Preview OAuth callbacks.
-3. Verify vacancy detail, relocation, candidate profile, application and admin
+1. Configure OAuth callbacks for the selected stable origins.
+2. Verify vacancy detail, relocation, candidate profile, application and admin
    flows against the connected database.
-4. Review runtime logs and the automated CI/smoke result.
+3. Review runtime logs and the automated CI/smoke result.
+
+Current Production callback status:
+
+```text
+Google: https://talentbay-seven.vercel.app/api/v1/auth/google
+GitHub: https://talentbay-seven.vercel.app/api/v1/auth/github
+```
+
+GitHub accepts the callback. Google currently returns
+`redirect_uri_mismatch`, so its exact callback must be added in Google Cloud
+Console before the browser journey can pass.
 
 ## Domain Handoff
 
