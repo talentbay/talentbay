@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
+import postgres from 'postgres'
 
 const port = process.env.SMOKE_PORT || '3101'
 const baseUrl = `http://127.0.0.1:${port}`
@@ -58,6 +59,37 @@ async function assertResponse(path, expectedStatus, assertion) {
   await assertion?.(response)
 }
 
+async function assertDatabaseCatalog(body) {
+  if (!process.env.DATABASE_URL) {
+    return
+  }
+
+  const sql = postgres(process.env.DATABASE_URL, {
+    max: 1,
+    prepare: false,
+  })
+
+  try {
+    const [row] = await sql`
+      select count(*)::int as total
+      from vacancies
+      inner join organisations
+        on vacancies.organisation_id = organisations.id
+      where vacancies.status = 'PUBLISHED'
+        and organisations.status = 'ACTIVE'
+    `
+
+    if (!row || body.total !== row.total) {
+      throw new Error(
+        `/api/v1/vacancies total ${body.total} does not match PostgreSQL total ${row?.total}`,
+      )
+    }
+  }
+  finally {
+    await sql.end({ timeout: 5 })
+  }
+}
+
 try {
   await waitUntilReady()
 
@@ -79,6 +111,8 @@ try {
     if (!Array.isArray(body.items) || body.items.length === 0) {
       throw new Error('/api/v1/vacancies did not return preview vacancies')
     }
+
+    await assertDatabaseCatalog(body)
   })
 
   await assertResponse('/terms', 200)

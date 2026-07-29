@@ -1,6 +1,6 @@
 # Local Development
 
-Last updated: 2026-07-24
+Last updated: 2026-07-29
 
 ## Requirements
 
@@ -79,6 +79,26 @@ pnpm build
 ```
 
 All four checks currently pass without ESLint warnings.
+
+Database integration tests use the isolated Neon `integration` branch and a
+local, ignored `.env.integration`:
+
+```bash
+pnpm test:integration
+```
+
+The workflow creates unique user, organisation, vacancy, profile and application
+records, verifies the admin and candidate service paths, and removes all test
+records. Never point `.env.integration` at Preview or Production.
+
+To run the compiled-server smoke against a database:
+
+```bash
+node --env-file=.env.integration scripts/smoke-production.mjs
+```
+
+When `DATABASE_URL` is present, the smoke test compares the vacancy API total
+with PostgreSQL instead of only checking the fallback catalogue.
 
 ## OAuth Callbacks
 

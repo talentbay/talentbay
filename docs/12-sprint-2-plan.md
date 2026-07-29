@@ -26,8 +26,8 @@ publishing unapproved legal, vacancy, relocation, payment or token claims.
    sign in -> edit profile -> open vacancy -> apply -> view application.
 5. Run the admin journey:
    sign in -> import vacancy -> verify -> publish -> confirm public visibility.
-6. Add DB-backed integration coverage for the critical service paths.
-7. Extend production smoke checks to validate PostgreSQL-backed vacancy data.
+6. [x] Add DB-backed integration coverage for the critical service paths.
+7. [x] Extend production smoke checks to validate PostgreSQL-backed vacancy data.
 
 ## P1 Work
 

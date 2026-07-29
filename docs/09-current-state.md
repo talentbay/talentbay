@@ -22,6 +22,8 @@ Implemented:
 - Neon PostgreSQL 18.4 runtime with both migrations applied.
 - Separate Neon `production` and `preview` branches; local development and
   Vercel Preview use `preview`.
+- Separate Neon `integration` branch with self-cleaning service-level workflow
+  tests.
 - Idempotent `pnpm db:seed:preview` workflow with five preview vacancies.
 - Dry-run-first `pnpm db:promote-admin` operation for an existing OAuth user.
 - CI, typecheck, ESLint, Vitest and production build.
@@ -91,6 +93,9 @@ Passed on 2026-07-29:
 - `pnpm audit`: zero critical/high findings; one moderate and one low
   `esbuild` finding remain in development/build tooling.
 - `pnpm db:generate`: schema is current with no migration changes.
+- `pnpm test:integration`: admin import/review/publish and candidate
+  profile/apply/list pass against Neon; post-run cleanup leaves zero test
+  records.
 
 ## Next Release Path
 

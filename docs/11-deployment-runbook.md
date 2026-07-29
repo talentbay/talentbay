@@ -21,6 +21,8 @@ Last updated: 2026-07-29
 - Both Drizzle migrations are applied to the `production` Neon branch.
 - Local development and Vercel Preview use a separate Neon `preview` branch
   cloned from Production on 2026-07-29.
+- DB integration tests use a third Neon `integration` branch and an ignored
+  `.env.integration`.
 - Five explicitly labelled preview vacancies are stored in PostgreSQL.
 - Vercel CLI deployments require the Git commit author email to match a user
   with access to the target Vercel scope. Repository-local Git author email is
@@ -79,6 +81,7 @@ Do not commit or send `.env` through Git. Store deployed values in Vercel and ex
 For Neon:
 
 1. Keep Production, Preview and local development on separate Neon branches.
+   Keep automated integration tests on an additional isolated branch.
 2. Use the pooled connection URL as `DATABASE_URL`.
 3. Use the direct connection URL as `DATABASE_MIGRATION_URL` only where
    migrations are executed.
