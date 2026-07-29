@@ -167,6 +167,7 @@ type VacancyRow = Pick<
 
 function toVacancyListItem(row: VacancyRow): VacancyListItem {
   const sourceStatus: VacancyDataStatus = row.reviewStatus === 'VERIFIED'
+    && row.sourceName !== 'TalentBay preview dataset'
     ? 'VERIFIED'
     : 'DEMO'
 
