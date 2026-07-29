@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+.nuxt
+.output
+.data
+.nitro
+.cache
+.vercel
+dist
+node_modules
+logs
+*.log
+sonnet-*-context.md

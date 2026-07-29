@@ -4,6 +4,7 @@
 .nuxt
 .nitro
 .cache
+.vercel
 dist
 
 # Node dependencies
@@ -22,3 +23,6 @@ logs
 .env
 .env.*
 !.env.example
+
+# pnpm local store (created by in-place install)
+.pnpm-store/

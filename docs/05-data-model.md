@@ -132,9 +132,7 @@ Indexes must be implemented through Drizzle migrations, not only described here.
 
 ## Known Data Risks
 
-- Existing relations are too early-stage for production workflows.
+- Migrations have not yet been exercised against a managed PostgreSQL instance.
 - JSONB profile can hide data that later needs filtering/searching.
-- There are no migrations documented yet.
-- No seed/demo data workflow is documented yet.
-- No ownership model for companies/applications exists yet.
-
+- No production seed workflow is documented yet.
+- Company self-service and organization membership/ownership are intentionally deferred.

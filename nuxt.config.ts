@@ -2,34 +2,43 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  ssr: false,
+  ssr: true,
 
   css: [
-    '@/assets/scss/main.scss'
+    '@/assets/css/main.css',
   ],
 
   modules: [
-      'nuxt-auth-utils',
-      '@nuxthub/core',
+    '@nuxt/eslint',
+    '@nuxt/ui',
+    'nuxt-auth-utils',
   ],
-  vite: {
-    optimizeDeps: {
-      include: [
-          'bootstrap'
-      ]
-    },
-    css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: '@use "@/assets/scss/variables.scss" as *;'
-        }
-      }
-    }
+
+  eslint: {
+    checker: false,
   },
+
+  ui: {
+    fonts: false,
+  },
+
+  routeRules: {
+    '/': { redirect: { to: '/jobs', statusCode: 302 } },
+    '/landing': { redirect: { to: '/jobs', statusCode: 302 } },
+    '/presentation': { redirect: { to: '/jobs', statusCode: 302 } },
+    '/whitepaper': { redirect: { to: '/jobs', statusCode: 302 } },
+    '/user/**': { ssr: false },
+    '/orgs/**': { ssr: false },
+    '/ktulhu/**': { ssr: false },
+    '/jobs/**': { ssr: true },
+  },
+
+  colorMode: {
+    preference: 'light',
+    fallback: 'light',
+  },
+
   experimental: {
     serverAppConfig: false,
   },
-  hub: {
-    db: 'postgresql'
-  }
 })

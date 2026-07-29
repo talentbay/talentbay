@@ -1,86 +1,112 @@
 # Local Development
 
-Last updated: 2026-06-09
+Last updated: 2026-07-29
 
 ## Requirements
 
-- Node.js compatible with Nuxt 4.
-- pnpm.
-- OAuth credentials for enabled providers.
-- Local or remote PostgreSQL-compatible database depending on the selected setup.
+- Node.js 22.
+- pnpm 10.33.0.
+- PostgreSQL for authenticated and admin workflows.
+- Google/GitHub OAuth applications for real sign-in.
 
-The repo currently contains `pnpm-lock.yaml`, so pnpm is the expected package manager.
+The versions are recorded in `package.json` and `.mise.toml`.
 
-## Install
+## Setup
 
 ```bash
 pnpm install
-```
-
-Nuxt runs `nuxt prepare` during postinstall.
-
-## Environment
-
-Create `.env` from `.env.example`:
-
-```bash
 cp .env.example .env
+pnpm dev
 ```
 
-Current documented variables:
+Default URL: `http://localhost:3000`.
+
+Required session value:
 
 ```env
+NUXT_SESSION_PASSWORD=a-random-value-at-least-32-characters-long
+```
+
+Optional for public preview mode:
+
+```env
+DATABASE_URL=
+DATABASE_MIGRATION_URL=
 NUXT_OAUTH_GOOGLE_CLIENT_ID=
 NUXT_OAUTH_GOOGLE_CLIENT_SECRET=
 NUXT_OAUTH_GITHUB_CLIENT_ID=
 NUXT_OAUTH_GITHUB_CLIENT_SECRET=
-NUXT_SESSION_PASSWORD=
 ```
 
-Rules:
+Without `DATABASE_URL`, `/jobs` and relocation preview work from labelled demo data. Database-backed auth/profile/application/admin routes do not.
 
-- Never commit `.env`.
-- Never send secrets in public chats.
-- Keep `.env.example` as names-only documentation.
-- Production/preview secrets should live in hosting provider environment variables.
+Never commit `.env` or send production credentials in chat.
 
-## Run
+When running the compiled Nitro server directly, export the runtime variables first:
 
 ```bash
-pnpm dev
+NUXT_SESSION_PASSWORD=... node .output/server/index.mjs
 ```
 
-Default URL:
+Unlike `pnpm dev`, the standalone server does not load the repository `.env` file automatically.
 
-```text
-http://localhost:3000
-```
+## Database
 
-## Build
+After provisioning PostgreSQL:
 
 ```bash
+pnpm db:migrate
+```
+
+For Neon, set the pooled connection string as `DATABASE_URL` and the direct connection string as `DATABASE_MIGRATION_URL`. The application uses the pooler; Drizzle Kit prefers the direct URL for schema migrations.
+
+Useful development commands:
+
+```bash
+pnpm db:generate
+pnpm db:studio
+```
+
+`db:push` is for deliberate local prototyping only; shared environments should use migrations.
+
+## Quality Checks
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
 pnpm build
 ```
 
-## Preview
+All four checks currently pass without ESLint warnings.
+
+Database integration tests use the isolated Neon `integration` branch and a
+local, ignored `.env.integration`:
 
 ```bash
-pnpm preview
+pnpm test:integration
 ```
 
-## Current Limitations
+The workflow creates unique user, organisation, vacancy, profile and application
+records, verifies the admin and candidate service paths, and removes all test
+records. Never point `.env.integration` at Preview or Production.
 
-- README and docs are being established now.
-- Database setup/migrations are not fully documented yet.
-- OAuth callback URLs must be configured in Google/GitHub provider settings.
-- SSR is currently disabled.
-- No tests or lint/typecheck scripts are configured in `package.json`.
+To run the compiled-server smoke against a database:
 
-## Expected Next DX Improvements
+```bash
+node --env-file=.env.integration scripts/smoke-production.mjs
+```
 
-- Add `typecheck`, `lint`, and test scripts.
-- Add CI workflow.
-- Document database provisioning.
-- Document OAuth app setup.
-- Add seed/demo data workflow.
+When `DATABASE_URL` is present, the smoke test compares the vacancy API total
+with PostgreSQL instead of only checking the fallback catalogue.
 
+## OAuth Callbacks
+
+Provider callback URLs must match the deployment origin:
+
+```text
+https://<origin>/api/v1/auth/google
+https://<origin>/api/v1/auth/github
+```
+
+Exact provider configuration must be checked again when preview and production domains are known.

@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+        env:
+          # Dummy value so nuxt build doesn't fail on missing env; real value is set in Vercel.
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+
+      - name: Production smoke test
+        run: pnpm test:smoke
+        env:
+          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars

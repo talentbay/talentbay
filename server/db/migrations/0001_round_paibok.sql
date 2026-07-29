@@ -1,0 +1,1 @@
+ALTER TABLE "vacancies" ADD COLUMN "skills" text[] DEFAULT '{}'::text[] NOT NULL;
