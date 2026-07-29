@@ -25,6 +25,8 @@ Implemented:
 - Idempotent `pnpm db:seed:preview` workflow with five preview vacancies.
 - Dry-run-first `pnpm db:promote-admin` operation for an existing OAuth user.
 - CI, typecheck, ESLint, Vitest and production build.
+- Nuxt 4.5.1, Vue 3.5.40 and a refreshed lockfile without the removed
+  Bootstrap/Sass dependency tree.
 - Responsive product UI and Figma concepts.
 - Bootstrap/SCSS and unused ICO presentation components removed from the active build.
 - Public Vercel production deployment at
@@ -86,6 +88,9 @@ Passed on 2026-07-29:
   to provider-console configuration.
 - Admin promotion parser: 22 total tests pass, and a missing user fails without
   changing data.
+- `pnpm audit`: zero critical/high findings; one moderate and one low
+  `esbuild` finding remain in development/build tooling.
+- `pnpm db:generate`: schema is current with no migration changes.
 
 ## Next Release Path
 
