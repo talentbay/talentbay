@@ -1,6 +1,6 @@
 # Deployment Runbook
 
-Last updated: 2026-07-25
+Last updated: 2026-07-29
 
 ## Verified Access State
 
@@ -13,10 +13,16 @@ Last updated: 2026-07-25
 - The demo is deployed directly with Vercel CLI and has no Git integration.
 - `talentbay.org` uses Vercel nameservers but is managed in another Vercel scope.
 - A valid `NUXT_SESSION_PASSWORD` is configured for Preview and Production.
-- Local Google/GitHub OAuth credentials are present but are not deployed.
+- Google/GitHub OAuth credentials are configured for Preview and Production,
+  but callback/login flows are not yet verified.
 - Both OAuth handlers generate redirects to the expected providers.
-- No database is connected to the Vercel project yet.
-- A Neon credential shared through chat must be rotated before use.
+- Neon PostgreSQL is connected to the Vercel runtime.
+- The exposed Neon role password was rotated on 2026-07-29.
+- Both Drizzle migrations are applied to the `production` Neon branch.
+- Five explicitly labelled preview vacancies are stored in PostgreSQL.
+- Vercel CLI deployments require the Git commit author email to match a user
+  with access to the target Vercel scope. Repository-local Git author email is
+  configured accordingly.
 
 The personal Hobby project is only a temporary internal demo. Vercel Hobby is
 restricted to personal, non-commercial use and cannot connect to a private
@@ -70,13 +76,14 @@ Do not commit or send `.env` through Git. Store deployed values in Vercel and ex
 
 For Neon:
 
-1. Create the TalentBay project in the intended company/founder account.
-2. Use a region close to the selected Vercel function region.
-3. Copy the pooled connection URL to `DATABASE_URL`.
-4. Copy the direct connection URL to `DATABASE_MIGRATION_URL`.
-5. Test a read-only connection.
-6. Run `pnpm db:migrate` once against the intended database.
-7. Verify tables and indexes before seeding an admin or vacancy data.
+1. Keep Production, Preview and local development on separate Neon branches.
+2. Use the pooled connection URL as `DATABASE_URL`.
+3. Use the direct connection URL as `DATABASE_MIGRATION_URL` only where
+   migrations are executed.
+4. Test a read-only connection before applying a migration.
+5. Run `pnpm db:migrate` against the intended branch.
+6. Verify tables and indexes.
+7. Run `pnpm db:seed:preview` only for an explicitly approved preview dataset.
 
 Do not run `db:push` against shared Preview or Production databases.
 
@@ -100,7 +107,7 @@ Use a stable branch Preview URL for OAuth testing, not a commit-specific URL.
 The initial CLI demo is deployed. To publish the current local branch again:
 
 ```bash
-pnpm dlx vercel@latest deploy --scope alexs-projects-76662c2b
+npx --yes vercel@58.0.0 deploy --scope alexs-projects-76662c2b
 ```
 
 The first deployment of a new project can become Production automatically.
@@ -109,15 +116,28 @@ after the intended source state and environment variables have been verified.
 
 Remaining Preview work:
 
-1. Rotate the exposed Neon role password.
-2. Add the pooled URL as `DATABASE_URL`.
-3. Keep the direct URL local or in the migration environment as
-   `DATABASE_MIGRATION_URL`.
-4. Run and verify migrations once.
-5. Configure dedicated Preview OAuth callbacks and secrets.
-6. Verify vacancy detail, relocation, candidate profile, application and admin
+1. Create a separate Neon branch for Preview/local development.
+2. Configure dedicated Preview OAuth callbacks.
+3. Verify vacancy detail, relocation, candidate profile, application and admin
    flows against the connected database.
-7. Review runtime logs and the automated CI/smoke result.
+4. Review runtime logs and the automated CI/smoke result.
+
+## Domain Handoff
+
+DNS inspection on 2026-07-29 confirmed:
+
+```text
+ns1.vercel-dns.com
+ns2.vercel-dns.com
+```
+
+The `lattelix` Vercel account cannot add `talentbay.org` because the domain is
+owned by another Vercel scope. The existing owner must either:
+
+1. Grant the deploying account access to that scope and project; or
+2. Move the domain to `alexs-projects-76662c2b`.
+
+Do not use `--force` without confirming the current owner and target project.
 
 ## Production Gate
 
@@ -130,7 +150,7 @@ Do not bind `talentbay.org` or merge for release until:
 - Vacancy and relocation sources are approved.
 - A rollback owner is identified.
 
-After approval:
+After approval and domain access:
 
 1. Merge the reviewed PR into `main`.
 2. Confirm the Production deployment passes.
