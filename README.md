@@ -6,7 +6,7 @@ The active product is Web2-only: vacancies, OAuth accounts, candidate profiles, 
 
 ## Stack
 
-- Nuxt `4.5.0`, Vue `3.5.x`, Nitro.
+- Nuxt `4.5.1`, Vue `3.5.x`, Nitro.
 - Nuxt UI `4.10.x`, Tailwind CSS `4.3.x`, Manrope.
 - PostgreSQL, Drizzle ORM `0.45.x`.
 - `nuxt-auth-utils` with Google and GitHub OAuth.
@@ -61,6 +61,10 @@ Use Neon's pooled URL as `DATABASE_URL` for the deployed application and its dir
 - [Compliance guardrails](docs/08-compliance-guardrails.md)
 - [Design direction](docs/10-design-direction.md)
 - [Deployment runbook](docs/11-deployment-runbook.md)
+- [Sprint 2 plan](docs/12-sprint-2-plan.md)
+- [Admin operations](docs/13-admin-operations.md)
+- [Founder demo checklist](docs/14-founder-demo-checklist.md)
+- [MVP acceptance record](docs/15-mvp-acceptance-record.md)
 - [Architecture decisions](docs/adr/README.md)
 
 This is an alpha/MVP codebase. The documentation distinguishes implemented behavior, preview data and decisions still blocked on external approval.

@@ -45,3 +45,28 @@ After promotion:
 5. Review and publish it.
 6. Confirm it appears in `/jobs`.
 7. Archive or delete test data according to the approved cleanup record.
+
+## Rollback
+
+For an incorrectly published vacancy:
+
+1. Record its ID, source URL and current status.
+2. Change it to `ARCHIVED` through the admin workflow.
+3. Confirm it no longer appears in `/jobs` or `/api/v1/vacancies`.
+4. Retain the record for audit unless deletion is explicitly approved.
+
+For an incorrect admin assignment:
+
+1. Treat it as a security incident and record the user ID, email, branch and
+   promotion output.
+2. Revoke the role in a reviewed database transaction; do not improvise a
+   public API or create another account.
+3. Ask the user to sign out. Existing session invalidation is not yet
+   centralized, so rotate `NUXT_SESSION_PASSWORD` if immediate global session
+   invalidation is required.
+4. Confirm `/ktulhu` and `/api/v1/admin/**` reject the account after a new
+   session is created.
+
+For a bad deployment, use Vercel rollback as described in
+`docs/11-deployment-runbook.md`. Database migrations require a separate reviewed
+forward-fix or restore plan; a Vercel rollback does not roll back PostgreSQL.

@@ -33,8 +33,8 @@ publishing unapproved legal, vacancy, relocation, payment or token claims.
 
 1. [x] Add shared request throttling for API routes.
 2. [x] Add structured request/error logging without personal data or secrets.
-3. Document admin operations and rollback steps.
-4. Prepare a founder demo checklist and acceptance record.
+3. [x] Document admin operations and rollback steps.
+4. [x] Prepare a founder demo checklist and acceptance record.
 
 ## External Inputs
 
