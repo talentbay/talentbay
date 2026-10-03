@@ -1,22 +1,28 @@
 # TalentBay Roadmap
 
-Last updated: 2026-10-02
+Last updated: 2026-10-03
 
 This roadmap orders work by dependency. It is not a promise of calendar dates.
 
-## Phase 0 — Align Product Design
+## Phase 0 — Align Candidate Product Design
 
-Goal: one responsive product specification for desktop web, mobile web and Telegram.
+Goal: one implementation-ready candidate product specification for desktop web, mobile web
+and Telegram.
 
 - audit current website screens against Telegram Mini App flows;
 - define responsive behavior for Jobs, Vacancy Detail, Saved, Relocation, Applications,
   Profile and Settings;
 - preserve Telegram-only host behavior behind a platform adapter;
-- design the missing admin/content-management surface;
-- define bulk import UX: file upload, mapping, validation, preview, dedupe, review/publish;
-- consolidate shared Figma components and remove duplicate web/mobile component concepts.
+- consolidate shared Figma components and remove duplicate web/mobile component concepts;
+- document responsive breakpoints, interaction states, state ownership and implementation
+  gaps in the active candidate specification and handoff.
 
-Exit condition: candidate and admin journeys have implementation-ready responsive designs.
+Admin/content-management design is deliberately deferred until Phase 6. Archived
+employer/admin concepts are reference only and must not be extended during the current
+candidate implementation phase.
+
+Exit condition: Candidate Design v1.0 is frozen and implementation-ready, with one responsive
+specification for desktop, mobile web and Telegram WebView.
 
 ## Phase 1 — Architecture & Cloudflare Foundation
 
@@ -61,7 +67,7 @@ Exit condition: one user can enter through Telegram or web OAuth and reach the s
 
 ## Phase 4 — Responsive Candidate Product
 
-Implement from the unified Figma specification:
+Implement from Candidate Design v1.0 and the active Figma handoff:
 
 - responsive application shell/platform adapter;
 - Jobs search/filter/sort;
@@ -92,6 +98,19 @@ Mini App.
 Exit condition: Saved syncs between devices and notification opt-in delivers real events.
 
 ## Phase 6 — Admin & Content Operations
+
+### Design gate before implementation
+
+Before Phase 6 application code begins:
+
+- design the responsive admin shell in Figma;
+- define dashboard, vacancies, imports, relocation data, users/roles and operational/audit
+  states;
+- define bulk import UX for file upload, field mapping, validation, preview, dedupe and
+  review/publish;
+- reuse the active TalentBay design system rather than reviving archived employer/admin
+  concepts;
+- review admin flows against current backend contracts before implementation.
 
 ### Admin shell
 
@@ -171,4 +190,5 @@ default.
 - forcing profile completion on onboarding;
 - requesting Telegram write access on first launch;
 - inventing unsupported relocation inputs;
+- designing or implementing admin before its Phase 6 design gate;
 - building employer self-service before admin ingestion works.
