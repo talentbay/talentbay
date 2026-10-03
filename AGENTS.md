@@ -39,10 +39,16 @@ Implement the next roadmap step or explicitly document the gap.
 - Figma is the product-design review surface.
 - Desktop and Mini App are variants of one responsive product, not two independent visual
   systems.
+- Candidate Design v1.0 is frozen for implementation; use `30 Product · Candidate · Responsive`
+  and `99 Utilities → TalentBay · Candidate Handoff · v1.0` as the active candidate references.
 - Reuse existing TalentBay variables, text styles and components before adding new ones.
 - Keep Telegram-specific chrome/behavior out of reusable domain components.
 - Do not design functionality the backend does not support without clearly marking it as
   planned/future scope.
+- Archived Figma pages are history/reference only and must not be used as competing product
+  specifications.
+- Admin design is deferred until Phase 6; do not extend archived employer/admin concepts in
+  the current candidate implementation phase.
 
 ## Admin/content rules
 
@@ -85,10 +91,10 @@ Run integration/smoke tests when the required environment is available.
 
 ## Current high-priority sequence
 
-1. reconcile website and Telegram designs into one responsive system;
-2. design admin/content bulk-import workflows;
-3. Cloudflare/Hyperdrive foundation;
-4. CI/CD previews and production pipeline;
-5. unified Telegram + Google/GitHub identities;
-6. implement responsive candidate product;
+1. keep Candidate Design v1.0 frozen and use it as the implementation contract;
+2. Cloudflare/Hyperdrive foundation;
+3. CI/CD previews and production pipeline;
+4. unified Telegram + Google/GitHub identities;
+5. implement responsive candidate product;
+6. design admin/content bulk-import workflows before Phase 6 implementation;
 7. implement scalable admin/content ingestion.
