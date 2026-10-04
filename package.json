@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "nuxt build",
-    "build:cloudflare": "nuxt build --preset=cloudflare",
+    "build:cloudflare": "nuxt build --preset=cloudflare_module",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

@@ -42,11 +42,12 @@ pooled Neon connection until the adapter is changed.
 ## Consequences
 
 - `pnpm build` continues to produce the current default deployment output.
-- `pnpm build:cloudflare` builds the Cloudflare preset.
+- `pnpm build:cloudflare` builds Nitro's current Workers Modules preset (`cloudflare_module`).
 - `pnpm preview:cloudflare` runs the built Worker through Wrangler locally.
 - `pnpm deploy:cloudflare` is available for manual/CI deployment once the
   Cloudflare account and secrets are configured.
 - `.dev.vars` is the local Wrangler secret file and is never committed.
 - Cloudflare observability is enabled in Wrangler configuration.
+- With compatibility dates on or after 2026-08-04, Node.js compatibility is enabled by Cloudflare by default; new Wrangler config does not add a redundant `nodejs_compat` flag.
 - The migration is incremental; this ADR does not claim Hyperdrive or
   production Cloudflare deployment is complete.
