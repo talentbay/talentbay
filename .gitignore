@@ -23,6 +23,9 @@ logs
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 
 # pnpm local store (created by in-place install)
 .pnpm-store/

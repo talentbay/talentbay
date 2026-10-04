@@ -8,9 +8,13 @@
   },
   "scripts": {
     "build": "nuxt build",
+    "build:cloudflare": "nuxt build --preset=cloudflare",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "preview:cloudflare": "pnpm run build:cloudflare && pnpm dlx wrangler@4.68.0 dev",
+    "deploy:cloudflare": "pnpm run build:cloudflare && pnpm dlx wrangler@4.68.0 deploy",
+    "cf:types": "pnpm dlx wrangler@4.68.0 types",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
