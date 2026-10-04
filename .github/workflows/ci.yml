@@ -36,7 +36,13 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          # Dummy value so nuxt build doesn't fail on missing env; real value is set in Vercel.
+          # Dummy value so nuxt build doesn't fail on missing env; real value is set in deployment runtime.
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+
+      - name: Cloudflare build
+        run: pnpm build:cloudflare
+        env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/db
           NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
 
