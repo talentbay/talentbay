@@ -32,7 +32,9 @@ async function waitUntilReady() {
     }
 
     try {
-      const response = await fetch(`${baseUrl}/jobs`)
+      const response = await fetch(`${baseUrl}/jobs`, {
+        signal: AbortSignal.timeout(5_000),
+      })
       if (response.ok) {
         return
       }
@@ -50,6 +52,7 @@ async function waitUntilReady() {
 async function assertResponse(path, expectedStatus, assertion) {
   const response = await fetch(`${baseUrl}${path}`, {
     redirect: 'manual',
+    signal: AbortSignal.timeout(5_000),
   })
 
   if (response.status !== expectedStatus) {
@@ -93,6 +96,16 @@ async function assertDatabaseCatalog(body) {
 try {
   await waitUntilReady()
 
+  await assertResponse('/api/health', 200, async (response) => {
+    const body = await response.json()
+    if (body.status !== 'ok' || body.service !== 'talentbay') {
+      throw new Error('/api/health did not return the liveness contract')
+    }
+    if (response.headers.get('cache-control') !== 'no-store') {
+      throw new Error('/api/health must not be cached')
+    }
+  })
+
   await assertResponse('/', 302, (response) => {
     if (response.headers.get('location') !== '/jobs') {
       throw new Error('/ did not redirect to /jobs')
@@ -118,7 +131,12 @@ try {
   await assertResponse('/terms', 200)
   await assertResponse('/api/_auth/session', 200)
 
-  console.log('Production smoke test passed.')
+  // Exercise the real compiled HTTP guards, not mocked session functions.
+  await assertResponse('/api/v1/profile', 401)
+  await assertResponse('/api/v1/applications', 401)
+  await assertResponse('/api/v1/admin/dashboard', 403)
+
+  console.log('Production smoke test passed (liveness, public routes and anonymous access guards).')
 }
 finally {
   server.kill('SIGTERM')
