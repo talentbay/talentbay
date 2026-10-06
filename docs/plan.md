@@ -49,8 +49,9 @@ prerequisite. PostgreSQL remains the source of truth; D1 migration is out of sco
 Share routes, domain logic and components across hosts:
 
 - `/jobs` and `/jobs/:slug` remain separate routes;
-- `/saved`, `/applications`, `/profile`, `/settings` and the Relocation route follow the
-  canonical route mapping in the active handoff;
+- `/saved`, `/applications`, `/profile` and `/settings` follow the canonical route mapping;
+- Relocation is vacancy-context state with preserved context/back state. Handoff node
+  `2078:35` does not mandate a new top-level route;
 - wide composition starts at `lg` / 1024px; narrower layouts use the same domain model;
 - the Telegram adapter provides optional host capabilities rather than a second page tree.
 
@@ -63,6 +64,10 @@ Telegram identity.
 
 Implement one local TalentBay account with multiple provider identities. Google and
 GitHub web handlers already exist; Telegram identity/session support is still work to do.
+
+Existing code automatically links Google/GitHub identities using verified provider email,
+not an arbitrary client-supplied email. The new identity model and explicit linking are
+planned, not implemented. M2.1 preserves that existing behavior while patching state validation.
 
 - Validate Telegram `initData` on the server, including signature and bounded age.
 - Treat usernames, display names and client-supplied emails as untrusted identifiers.
@@ -112,6 +117,10 @@ skipping data. Design the small file-import UI delta before implementing new con
 keep Candidate v1 frozen. A larger admin redesign and XLSX arbitrary-column mapping are
 post-MVP work.
 
+The current re-import path can retain `PUBLISHED` while setting `UNREVIEWED`; the invariant
+above is not yet fully enforced. Schedule M4.1 immediately after M2.1 in a separate PR,
+before identity expansion. Acceptance criteria are in `docs/14-mvp-execution.md`.
+
 ## Delivery and test strategy
 
 Keep GitHub Actions typecheck, lint, unit tests, Node production build and HTTP smoke.
@@ -134,7 +143,8 @@ private user data from demo fixtures, preview pages and test artifacts.
 
 - Vercel project ownership/settings access and a plan permitting the intended commercial
   use and private GitHub organisation repository.
-- Neon project/branch identifiers and authorized access, verified before migrations.
+- Neon runtime/schema/data readiness and authorized operations, verified before migrations.
+  Identifiers were discovered; dated metadata and archived status are in the execution log.
 - Google/GitHub callback configuration and Telegram bot credentials/menu URL.
 - Final domain ownership and routing approval.
 - Approved privacy/terms text and vacancy sources; reviewed relocation data or a clearly
@@ -156,7 +166,7 @@ not requirements for serving the same product in Telegram.
 
 ## Execution discipline
 
-Use focused branches/PRs. Report four states separately: implemented, tested, merged,
-deployed. Update the execution log after each verified milestone. A planned feature or
+Use focused branches/PRs. Report five states separately: code ready, tests passed, merged,
+deployed, live verified. Update the execution log after each verified milestone. A planned feature or
 passing build is never described as deployed or fully working. Keep the design unchanged
 unless implementation exposes a material contract conflict requiring review.

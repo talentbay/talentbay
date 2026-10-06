@@ -23,6 +23,8 @@ Do not treat the deferred Cloudflare PR/ADR as the current launch decision.
 
 - Keep one frontend and one repository. No separate Telegram routes/component tree.
 - Share domain logic/components; responsive wide composition starts at lg / 1024px.
+- Relocation preserves vacancy context and back state; the handoff does not mandate
+  a new top-level route.
 - Put Telegram APIs in a feature-detected host adapter with browser fallbacks.
 - Prefer a modular monolith. Do not add microservices, monorepo moves, D1 or ClickHouse
   without a demonstrated requirement and an explicit decision.
@@ -75,7 +77,7 @@ Use disposable PostgreSQL in GitHub Actions for integration tests and migrations
 manual Neon integration runs, resolve and verify the isolated branch before writing.
 Never point automated tests at production or use production credentials in PR workflows.
 
-Report implemented, tested, merged and deployed separately. Update the execution log with
+Report code ready, tests passed, merged, deployed and live verified separately. Update the execution log with
 actual commands/results, commit/PR and remaining blockers; do not record planned checks as
 passed. Cloudflare build success does not prove a running deployment or DB connection.
 
@@ -88,11 +90,13 @@ passed. Cloudflare build success does not prove a running deployment or DB conne
 - Keep existing deployment protection and API security controls intact.
 - A provider-access blocker is not a reason to stop independent code/test work.
 
-## Immediate sequence
+## Delivery sequence
 
 1. Reconcile the MVP plan and isolate baseline database tests.
-2. Implement unified auth on the current Node runtime.
-3. Build frozen responsive Candidate v1 and its host adapter.
-4. Add minimal validated file import and approved real content.
-5. Verify and release after provider, data and user-approval gates.
-6. Expand admin/services only after the MVP.
+2. Patch OAuth security before expanding authentication.
+3. Protect re-import publication invariants in a separate focused change, not an admin redesign.
+4. Implement backward-compatible identities, Telegram auth and explicit linking.
+5. Build frozen responsive Candidate v1 and its host adapter.
+6. Add minimal validated file import and approved real content.
+7. Verify and release after provider, data and user-approval gates.
+8. Expand admin/services only after the MVP.

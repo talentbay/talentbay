@@ -21,7 +21,8 @@ release commercial software on a restricted plan.
 3. Remove Cloudflare/Hyperdrive and microservice extraction from MVP prerequisites.
 4. Preserve PR #24 as a draft experiment. Do not delete it or merge it into the launch path.
 5. Retain CI checks and add disposable PostgreSQL integration CI before auth/data changes.
-6. Implement shared auth, Candidate v1, a minimal reviewed file-import path and beta checks.
+6. Patch OAuth security, then protect re-import publication safety in its own small PR;
+   implement shared auth, Candidate v1, a minimal reviewed file-import path and beta checks.
 7. Separate independent code work from external billing/access/provider configuration.
 
 This supersedes the Cloudflare-first ordering in the 2026-10-02 plan and 2026-10-03
@@ -44,6 +45,8 @@ We can build and test the product without a hosting migration. Existing Cloudfla
 is reusable later but has no effect on MVP delivery. Strong module boundaries, normal HTTP
 contracts and committed migrations preserve migration options without pre-building services.
 The plan does not waive security, source permissions, privacy or data-integrity gates.
+The early re-import fix is not the expanded admin redesign. Task IDs and acceptance
+criteria remain in `docs/roadmap.md` and `docs/14-mvp-execution.md`.
 
 ## Reference checks
 

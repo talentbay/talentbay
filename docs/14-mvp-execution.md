@@ -14,13 +14,29 @@ Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talent
 - Vercel deployment metadata for `talentbay-seven.vercel.app` reports READY, source CLI,
   commit `c8a21522266a39e32cc5a20374470641d116ee98`. This is an old technical demo, not current
   main or implemented Candidate v1.
-- The connected Vercel team context reports Hobby and no linked TalentBay Git project.
-  A direct settings read of the historical TalentBay project ID in that team returned
-  404; project ownership/settings access is not yet verified. Deployment visibility is
-  not equivalent to permission to configure the project.
-- Historical runbooks describe Neon production/preview/integration branches. Their current
-  IDs, access and state have not been independently reverified in this pass. No Neon data
-  was read, seeded or migrated.
+- July backend/partial UI is on main (PR #22); Candidate v1 is frozen design, not fully
+  implemented. Telegram-only auth, new identities and explicit linking are absent.
+- Current OAuth auto-links by verified provider email, not arbitrary client email.
+  Admin authorization uses the session role; immediate DB-role revocation is not implemented.
+
+### Provider metadata — 2026-10-06
+
+Read-only audit at 15:11-15:20 MSK (12:11-12:20 UTC), not SQL/live verification:
+
+| Resource | Observed metadata | Still unverified |
+| --- | --- | --- |
+| Neon project | `royal-field-51154253`; PostgreSQL major 18; project metadata readable | Runtime/schema/data readiness |
+| Neon production | `br-proud-poetry-as21qww0`; archived on 2026-10-02 | No restoration, SQL or writes performed |
+| Neon preview | `br-jolly-glade-ash2y5iy`; archived on 2026-10-02 | No restoration, SQL or writes performed |
+| Neon integration | `br-restless-rice-asthw10g`; archived on 2026-08-12 | No restoration, SQL or writes performed |
+| Vercel project | `prj_lHZmzknETqd40Hag5xPRACGgynU9`; get_project without teamId succeeded; accountId `team_cjyqd17DfaDhcsylDIgQmBTl`; Node 24.x | Explicit-team get_project returned 404; settings/write scope unresolved |
+| Vercel deployment | Production source CLI, READY at `c8a21522266a39e32cc5a20374470641d116ee98`; Preview at `dd1c98e8acc72a8f207af25e1b114ee73844b17a` | Neither SHA is current main/PR; no new deployment or live journey |
+
+Independent `get_git_deployment_context(teamId)` read during this pass, before 17:28 MSK
+(14:28 UTC), returned `plan=hobby`, no linked TalentBay Git project and no origin
+connection. This confirms the plan separately from get_project; partial reads do not mean
+all access is unavailable. Node 24.x metadata disagrees with Node 22 engines/CI.
+No tariff, project settings, domain, archived branch, secrets or shared DB was changed.
 
 ## M1.1 / M1.2 verification — 2026-10-06
 
@@ -76,6 +92,15 @@ claim a new run passed.
 | M3 Candidate UI | Not started | Frozen design is the implementation contract |
 | M4 fixed-template content import | Planned | Focused flow review, validation/dry-run and publication safety |
 
+### Executor coordination
+
+| Task | Executor | Branch / PR | Base SHA | Affected areas | Checks result | Next step |
+| --- | --- | --- | --- | --- | --- | --- |
+| Context reconciliation | Codex (sole editor; other chat reviews) | `feat/mvp-vercel-baseline` / #25 | main `2aca646f2c1ad0b5e59c375a30598a0f47da060a`; starting head `fea34354ccfe51358dedb277e32d86ba7dd3defe` | Existing docs/AGENTS only | Source/code/metadata reads; no new code checks claimed here | Separate M2.1 PR; stop for review |
+
+Old `chore/sprint-1-cleanup` worktree and untracked Sonnet context remain untouched.
+Cloudflare PR #24 remains draft at `4ab26daa2957a5eef2e023afc23b5e0f9b442a5f`.
+
 Merge status: PR #25 is unmerged at the time of this entry. Deployment status: unchanged.
 No new Vercel deployment, billing change, shared DB migration or production promotion.
 
@@ -91,16 +116,38 @@ review callback/state behavior and add regression coverage before enabling Teleg
 account linking. The current Google handler delegates OAuth handling to that dependency.
 No auth patch or complete dependency audit is claimed in this baseline PR.
 
+Next is early M4.1 re-import safety in a separate PR, not a full admin redesign.
 Then implement a backward-compatible local identity model, server-side Telegram initData
 validation and explicit linking. Use disposable database tests for schema/identity work.
 Do not wait for hosting billing to implement/test independent code, and do not report auth
 complete until the real provider/browser/WebView journeys pass on a stable preview origin.
 
+## Next safety change — early M4.1 (not implemented by M2.1)
+
+The current upsert resets review to `UNREVIEWED` without clearing an existing `PUBLISHED`
+status. Public list/detail reads filter published status, whereas apply also requires
+verified review. This is a confirmed code-path risk, not a completed safety fix.
+
+Acceptance criteria for the separate change:
+
+- First reproduce import -> verify/publish -> changed-content re-import in a regression.
+- Unreviewed changes are no longer public; list, detail and total share visibility rules.
+- Preserve vacancy ID, applications and source dedupe; do not delete/recreate records.
+- Archived vacancies cannot reappear publicly without an administrator decision.
+- Review and publish restore an eligible vacancy to the catalogue.
+- Define and test unchanged re-import behavior separately from changed content.
+- Keep explicitly labelled demo fixtures distinct from verified real content; do not
+  mislabel fixtures merely to pass tests.
+
+Implementation details require their own proposal/review; no universal content versioning
+system or new admin design is implied.
+
 ## External launch gates
 
 1. Confirm the intended Vercel team/project access and an eligible plan. Current connected
    scope is Hobby; no billing/trial changes are authorized by this work.
-2. Resolve Neon project and branch IDs using authorized project access before migrations.
+2. Neon IDs are discovered. Verify authorized runtime/schema/data readiness separately;
+   archived branch restoration and shared migrations/seed need explicit approval.
 3. Configure real OAuth callbacks and Telegram bot credentials/menu in provider secret
    stores; do not paste credentials in issues, PRs, logs or chat.
 4. Confirm final domain ownership, approved terms/privacy and permitted vacancy data.
@@ -112,3 +159,4 @@ For every milestone record: task ID; changed files/PR; checks actually run and o
 merge status; deployment status; next runnable task; exact external blocker if present.
 A failed check is fixed or documented, not removed. Do not label a phase complete while
 its release criteria remain unverified.
+Keep five states distinct: code ready / tests passed / merged / deployed / live verified.

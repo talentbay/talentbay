@@ -7,6 +7,10 @@ This replaces the Cloudflare-first ordering dated 2026-10-03. Phase numbers belo
 to this revision. Code progress and external environment readiness are tracked separately
 in `docs/14-mvp-execution.md`. No calendar dates are promised.
 
+Execution order: baseline/CI -> M2.1 OAuth security -> early M4.1 re-import safety ->
+M2.2-M2.5 identities/Telegram/linking -> Candidate -> minimal CSV/content -> beta.
+Stable task IDs remain below; phase grouping does not postpone the early M4.1 safety PR.
+
 ## Phase 0 — Candidate design (frozen)
 
 Status: DONE as a design handoff, not implemented product UI.
@@ -37,7 +41,8 @@ or silently switching hosts. External release gates stay open.
 
 Status: NEXT after baseline tests.
 
-M2.1 — Review dependencies/advisories and current OAuth callbacks/state handling.
+M2.1 — Patch the confirmed OAuth advisory with a bounded dependency update and real
+library/route state-validation regressions. Preserve existing verified-email linking.
 M2.2 — Add a backward-compatible identity model and migrations for Telegram + existing
 Google/GitHub users; preserve existing user IDs and application/profile relations.
 M2.3 — Server-validate Telegram initData, resolve the local account and issue normal
@@ -68,7 +73,9 @@ Telegram page tree, invented server capabilities or fake permission/settings con
 
 Status: PLANNED; required before useful public beta.
 
-M4.1 — Audit and protect existing import/review/publish invariants, especially re-imports.
+M4.1 — Protect existing import/review/publish invariants immediately after M2.1, in a
+separate small PR. Reproduce changed re-import exposure; preserve IDs/applications/dedupe,
+align list/detail/total visibility and test unchanged/archived cases. See execution log.
 M4.2 — Agree a fixed CSV template and design/review the minimal file-import UI delta.
 M4.3 — Parse bounded files, validate all rows, report errors and provide a dry run.
 M4.4 — Import through server-authorized existing operations into controlled draft/review

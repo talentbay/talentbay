@@ -1,8 +1,20 @@
 # Deployment Runbook
 
-Last updated: 2026-07-29
+Last updated: 2026-10-06
 
-## Verified Access State
+## Current operating boundary
+
+The access/runtime results below are historical July observations unless dated otherwise.
+October metadata, project/branch IDs and SHA are centralized in `docs/14-mvp-execution.md`.
+Neon branches are archived; no SQL readiness was checked. Project reads without teamId
+succeed, while explicit-team reads returned 404; this is partial access, not no access.
+Hobby was independently reverified via team context. Node 24.x metadata differs from the
+Node 22 code/CI baseline and needs an approved resolution before deployment.
+
+This pass authorizes no deployment, domain/billing/settings changes, branch restoration,
+shared migrations or seed. Commands here are runbook examples, not permission to execute.
+
+## Historical Access State (2026-07-29)
 
 - The repository branch `chore/sprint-1-cleanup` is published on GitHub.
 - Local Vercel CLI authentication belongs to the `lattelix` account.
@@ -85,8 +97,9 @@ For Neon:
 2. Use the pooled connection URL as `DATABASE_URL`.
 3. Use the direct connection URL as `DATABASE_MIGRATION_URL` only where
    migrations are executed.
-4. Test a read-only connection before applying a migration.
-5. Run `pnpm db:migrate` against the intended branch.
+4. Obtain explicit approval before restoring an archived branch or any shared DB write;
+   first verify the intended branch and read-only runtime/schema/data readiness.
+5. After migration approval and rollback preparation, run `pnpm db:migrate` against that branch.
 6. Verify tables and indexes.
 7. Run `pnpm db:seed:preview` only for an explicitly approved preview dataset.
 
@@ -109,7 +122,7 @@ Use a stable branch Preview URL for OAuth testing, not a commit-specific URL.
 
 ## First Preview
 
-The initial CLI demo is deployed. To publish the current local branch again:
+The initial CLI demo was deployed in July. Historical CLI example (not authorization):
 
 ```bash
 npx --yes vercel@58.0.0 deploy --scope alexs-projects-76662c2b
@@ -126,7 +139,7 @@ Remaining Preview work:
    flows against the connected database.
 3. Review runtime logs and the automated CI/smoke result.
 
-Current Production callback status:
+Historical Production callback status (2026-07-29; not reverified):
 
 ```text
 Google: https://talentbay-seven.vercel.app/api/v1/auth/google
@@ -139,7 +152,7 @@ Console before the browser journey can pass.
 
 ## Runtime Protection and Logs
 
-API requests are protected by the `TalentBay API rate limit` Vercel Firewall
+July verification found the `TalentBay API rate limit` Vercel Firewall
 rule: 120 requests per 60 seconds per IP for paths starting with `/api/`.
 Changing or removing it is an operational change and must be recorded here.
 
@@ -158,10 +171,12 @@ ns2.vercel-dns.com
 ```
 
 The `lattelix` Vercel account cannot add `talentbay.org` because the domain is
-owned by another Vercel scope. The existing owner must either:
+owned by another Vercel scope in the July check. After current ownership verification,
+the existing owner must either:
 
 1. Grant the deploying account access to that scope and project; or
-2. Move the domain to `alexs-projects-76662c2b`.
+2. Approve transfer to the intended company scope with a plan permitting commercial use.
+   Do not move it to the temporary personal Hobby demo as a launch workaround.
 
 Do not use `--force` without confirming the current owner and target project.
 

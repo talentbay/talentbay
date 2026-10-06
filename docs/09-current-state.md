@@ -1,6 +1,20 @@
 # Current State
 
-Last updated: 2026-07-29
+Last updated: 2026-10-06
+
+## October reconciliation
+
+July backend and partial UI exist in current main. Candidate v1.0 is frozen design, not a
+complete implementation. Telegram-only auth/new identities/explicit linking are absent;
+current OAuth auto-links verified provider email. No new auth capability is claimed.
+
+PR #25 remains unmerged; deployed commits are older than main and PR #25. Neon branch IDs
+have been discovered, but archived metadata is not SQL/runtime/schema/data readiness.
+Vercel metadata access is partial, not wholly absent; Node 24.x differs from Node 22 CI.
+OAuth 0.5.29, changed re-import exposure and delayed admin revocation remain recorded risks.
+See `docs/14-mvp-execution.md` for dated sources/SHA and `docs/roadmap.md` for delivery order.
+
+The sections below preserve the **2026-07-29 snapshot**, not fresh October verification.
 
 ## Product Status
 
@@ -40,7 +54,8 @@ Implemented:
 Not yet verified end to end:
 
 - OAuth callbacks on a deployed origin.
-- Profile/application/admin workflows against the real database.
+- Authenticated browser profile/application/admin workflows against the real database
+  (July service-level integration passed; that is not a browser journey).
 - Real vacancy ingestion from approved providers.
 - Verified relocation data and tax models.
 - `talentbay.org` domain binding.
@@ -102,7 +117,7 @@ Passed on 2026-07-29:
   profile/apply/list pass against Neon; post-run cleanup leaves zero test
   records.
 
-## Next Release Path
+## Historical July Release Path
 
 1. Configure the Google callback and verify Google/GitHub OAuth.
 2. Promote an explicitly approved user to admin and verify candidate/admin
@@ -114,3 +129,6 @@ Passed on 2026-07-29:
 
 The current Vercel Production target is a technical MVP deployment, not approval
 for a commercial launch.
+
+The active path is now baseline/CI -> M2.1 -> early M4.1 -> unified auth -> Candidate ->
+minimal content workflow -> verified beta; see `docs/roadmap.md`.
