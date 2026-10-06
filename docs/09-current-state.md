@@ -11,7 +11,8 @@ current OAuth auto-links verified provider email. No new auth capability is clai
 PR #25 remains unmerged; deployed commits are older than main and PR #25. Neon branch IDs
 have been discovered, but archived metadata is not SQL/runtime/schema/data readiness.
 Vercel metadata access is partial, not wholly absent; Node 24.x differs from Node 22 CI.
-OAuth 0.5.29, changed re-import exposure and delayed admin revocation remain recorded risks.
+Baseline OAuth 0.5.29, changed re-import exposure and delayed admin revocation were recorded
+risks. Separate M2.1 patch status/evidence is in the execution log, not a deployed fix.
 See `docs/14-mvp-execution.md` for dated sources/SHA and `docs/roadmap.md` for delivery order.
 
 The sections below preserve the **2026-07-29 snapshot**, not fresh October verification.

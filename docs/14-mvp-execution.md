@@ -88,7 +88,7 @@ claim a new run passed.
 | M1.2 isolated PostgreSQL CI | Implemented and tested in PR #25 | Both CI jobs successful; not merged yet |
 | M1.3 access/security audit | Partial, findings here | Resolve provider access and finish dependency/auth review |
 | M1.4 preview/release automation | Blocked externally | Correct team/project access and eligible plan approval |
-| M2.1 OAuth security | Implemented in separate PR #26 | Local checks passed; own PR CI must be verified before merge |
+| M2.1 OAuth security | Implemented in separate PR #26 | Local + own CI passed; review/merge pending, not deployed |
 | M2.2–M2.5 unified auth | Not implemented | Schema/identities, Telegram validation, linking and provider verification |
 | M3 Candidate UI | Not started | Frozen design is the implementation contract |
 | M4 fixed-template content import | Planned | Focused flow review, validation/dry-run and publication safety |
@@ -97,8 +97,8 @@ claim a new run passed.
 
 | Task | Executor | Branch / PR | Base SHA | Affected areas | Checks result | Next step |
 | --- | --- | --- | --- | --- | --- | --- |
-| Context reconciliation | Codex (sole editor; other chat reviews) | `feat/mvp-vercel-baseline` / #25 | main `2aca646f2c1ad0b5e59c375a30598a0f47da060a`; starting head `fea34354ccfe51358dedb277e32d86ba7dd3defe` | Existing docs/AGENTS only | Source/code/metadata reads; no new code checks claimed here | Separate M2.1 PR; stop for review |
-| M2.1 OAuth state | Codex | `codex/oauth-state-security` / #26 (Depends on #25) | baseline `ffbefd85889f4aee88214ccb08ceb95f0374f8cd` | Dependency, two auth routes, presence guard, regression/smoke tests | Local checks below; own CI pending | Review, then early M4.1 separately |
+| Context reconciliation | Codex (sole editor; other chat reviews) | `feat/mvp-vercel-baseline` / #25 | main `2aca646f2c1ad0b5e59c375a30598a0f47da060a`; starting head `fea34354ccfe51358dedb277e32d86ba7dd3defe` | Existing docs/AGENTS only | Published docs ffbefd8; CI 37479681093 passed | Review #25; no merge performed |
+| M2.1 OAuth state | Codex | `codex/oauth-state-security` / #26 (Depends on #25) | baseline `ffbefd85889f4aee88214ccb08ceb95f0374f8cd` | Dependency, two auth routes, presence guard, regression/smoke tests | Local passed; head 0542eff / CI 37482005196 passed | Stop for review, then early M4.1 separately |
 
 Old `chore/sprint-1-cleanup` worktree and untracked Sonnet context remain untouched.
 Cloudflare PR #24 remains draft at `4ab26daa2957a5eef2e023afc23b5e0f9b442a5f`.
@@ -108,7 +108,7 @@ No new Vercel deployment, billing change, shared DB migration or production prom
 
 ## M2.1 implementation and local verification — 2026-10-06
 
-The frozen install log confirms `nuxt-auth-utils` 0.5.29. Maintainer release v0.5.30 states
+The baseline frozen install used `nuxt-auth-utils` 0.5.29. Maintainer release v0.5.30 states
 that it fixes OAuth callback state validation / login CSRF:
 https://github.com/atinux/nuxt-auth-utils/releases/tag/v0.5.30
 https://github.com/atinux/nuxt-auth-utils/security/advisories/GHSA-xc49-mgwh-9pjv
@@ -127,7 +127,7 @@ Existing WASM peer, deprecated tooling and ignored-build-script warnings remain.
 
 The installed 0.5.30 handlers compare query state to cookie state. With **both absent**,
 undefined equals undefined: an initial real-route regression produced 16 passes / 2
-failures (Google and GitHub reached persistence). A 21-line shared presence guard now
+failures (Google and GitHub reached the mocked persistence entrypoint). A small shared presence guard now
 rejects missing/empty/non-scalar state or missing/empty cookie before token exchange.
 The actual library still generates, compares and consumes state; verified-provider-email
 account linking and schema are unchanged. Other invalid-state callbacks retain the
@@ -156,7 +156,22 @@ actual user creation/linking against Neon, or stolen-cookie replay prevention.
 Baseline docs at ffbefd8 have their own successful CI:
 https://github.com/talentbay/talentbay/actions/runs/37479681093
 This is **not** a security PR run. PR #26's creation initially had no checks; verify its
-own synchronize run before claiming CI passed. No merge, deployment or shared DB write.
+own synchronize run instead: head `0542efff877d2c5b259474aa309ba2e86bdb12a5`, base main
+`2aca646f2c1ad0b5e59c375a30598a0f47da060a`, pull_request run
+https://github.com/talentbay/talentbay/actions/runs/37482005196
+Both build and PostgreSQL integration jobs succeeded. Logs confirm frozen install,
+typecheck/lint, 13 tooling tests, 43 unit/OAuth tests, Node build and compiled HTTP smoke;
+database guard, migrations and 2 existing integration tests passed on runner-only PG 18.
+GitHub tests the PR merge ref, not a merge into main. No deployment or shared DB write.
+
+CI annotations warn about older action runtimes and the upcoming ubuntu-latest image
+change; action upgrades are separate maintenance, not silently added to M2.1. Application
+checks still explicitly select Node 22, independently of the GitHub Actions runtime.
+
+For M2.1: **code ready / tests passed / not merged / not deployed / not live verified**.
+Real Google/GitHub login, Telegram, current Neon SQL readiness and deployed journeys remain
+unverified. This evidence is pinned to the tested head/run; later log-only commits need
+their own run and do not retrospectively change this SHA.
 
 GitHub push reported 31 main-branch dependency alerts (13 high / 13 moderate / 5 low),
 not individually triaged here. M2.1 is not a complete dependency/security audit.

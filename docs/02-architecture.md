@@ -81,7 +81,8 @@ Client route guards are UX only; server authorization is the security boundary.
 - Neon service-level integration passed in July; that does not prove present readiness.
   October metadata shows archived branches; SQL/schema/data have not been reverified.
 - Disposable PostgreSQL CI exists in unmerged PR #25; real browser auth journeys remain unproven.
-- OAuth dependency 0.5.29 needs the bounded M2.1 security patch before auth expansion.
+- The reconciled baseline used OAuth dependency 0.5.29; the bounded M2.1 patch is tracked
+  separately in `docs/14-mvp-execution.md`. Do not equate PR implementation with deployment.
 - Vercel metadata Node 24.x differs from Node 22 engines/CI; do not change cloud settings implicitly.
 - The relocation calculator uses demo figures until approved sources are loaded and reviewed.
 - Company self-service is deferred; admin-managed vacancy ingestion is the first workflow.
