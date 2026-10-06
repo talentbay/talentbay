@@ -2,99 +2,97 @@
 
 ## Repository purpose
 
-TalentBay is one product that should run as a responsive website and as a Telegram Mini
-App from the same Nuxt codebase.
+TalentBay is one responsive Nuxt product for desktop web, mobile web and Telegram Mini App.
+The active MVP runtime is Node on Vercel with PostgreSQL in Neon. Cloudflare/Hyperdrive is
+optional post-MVP work, not the next implementation phase.
 
-## Sources of truth
+## Read before changing code
 
-Read these before substantial changes:
+1. `docs/14-mvp-execution.md` — verified progress, blockers and next runnable task.
+2. `docs/plan.md` — current product/architecture decision.
+3. `docs/roadmap.md` — dependency order and exit criteria.
+4. `docs/09-current-state.md`, `docs/02-architecture.md` and the deployment runbook —
+   existing implementation and historical environment evidence (respect their dates).
+5. `docs/10-design-direction.md` and the active Figma handoff.
+6. Relevant ADRs, especially `0006-mvp-first-vercel-neon.md`.
 
-1. `docs/09-current-state.md` — what exists now.
-2. `docs/plan.md` — target product/architecture direction.
-3. `docs/roadmap.md` — dependency order for upcoming work.
-4. `docs/02-architecture.md` — current architecture until migrations in the plan land.
-5. `docs/10-design-direction.md` and the TalentBay Figma file — design system/product UI.
-6. relevant ADRs under `docs/adr/`.
+When docs disagree, distinguish planned from implemented and verify live code/environment.
+Do not treat the deferred Cloudflare PR/ADR as the current launch decision.
 
-When current-state docs and the plan differ, do not pretend the migration is already done.
-Implement the next roadmap step or explicitly document the gap.
+## Product architecture
 
-## Product architecture rules
+- Keep one frontend and one repository. No separate Telegram routes/component tree.
+- Share domain logic/components; responsive wide composition starts at lg / 1024px.
+- Put Telegram APIs in a feature-detected host adapter with browser fallbacks.
+- Prefer a modular monolith. Do not add microservices, monorepo moves, D1 or ClickHouse
+  without a demonstrated requirement and an explicit decision.
+- Keep PostgreSQL/Drizzle migrations; never migrate shared databases from a build hook.
+- Validate Telegram initData on the server; never authenticate using initDataUnsafe.
+- Provider identities resolve to permanent local users. Explicit account linking requires
+  proof of both accounts/identities, not a supplied matching email or username.
 
-- Do not create a separate Telegram frontend unless a later ADR explicitly reverses the
-  current decision.
-- Build shared responsive domain components for desktop, mobile web and Telegram.
-- Keep Telegram APIs behind a platform/host adapter.
-- Prefer a modular monolith for transactional product domains.
-- Extract a Worker/service only for a real lifecycle, scaling, isolation or security reason.
-- PostgreSQL remains the source of truth; do not move core relational data to D1 without
-  an approved ADR.
-- Preserve Drizzle migrations and explicit database migration procedures.
-- Never trust Telegram `initDataUnsafe` for authentication; validate `initData` on server.
-- Web OAuth identities and Telegram identity must resolve to local TalentBay users rather
-  than creating incompatible account systems.
+## Design contract
 
-## Design rules
+Candidate Design v1.0 is frozen. Active references:
 
-- Figma is the product-design review surface.
-- Desktop and Mini App are variants of one responsive product, not two independent visual
-  systems.
-- Candidate Design v1.0 is frozen for implementation; use `30 Product · Candidate · Responsive`
-  and `99 Utilities → TalentBay · Candidate Handoff · v1.0` as the active candidate references.
-- Reuse existing TalentBay variables, text styles and components before adding new ones.
-- Keep Telegram-specific chrome/behavior out of reusable domain components.
-- Do not design functionality the backend does not support without clearly marking it as
-  planned/future scope.
-- Archived Figma pages are history/reference only and must not be used as competing product
-  specifications.
-- Admin design is deferred until Phase 6; do not extend archived employer/admin concepts in
-  the current candidate implementation phase.
+- `30 Product · Candidate · Responsive`;
+- `99 Utilities → TalentBay · Candidate Handoff · v1.0`;
+- Core and Candidate shared component libraries.
 
-## Admin/content rules
+Do not use archived pages as competing product specs. Preserve state ownership and
+backend gaps: local Saved is not account sync; notification opt-in is not delivery;
+current application status is not a timestamped timeline. Use Nuxt UI/Lucide and existing
+tokens before introducing new primitives.
 
-- Bulk ingestion is the primary content-entry path; manual create/edit is an exception.
-- Imports must be previewed and validated before commit.
-- Imported vacancies enter controlled draft/review states and must not silently publish.
-- Preserve idempotency/deduplication by source identifiers.
-- Destructive/admin actions require server authorization; client guards are UX only.
+Full admin redesign remains behind its Phase 6 design gate. Phase 4 may implement the
+small fixed-template file-import workflow after its focused design review; do not revive
+archived admin screens or expand it into a new content platform.
 
-## Git and change discipline
+## Content and authorization
 
-- Prefer small, coherent changes.
-- Do not perform broad mechanical repository moves together with functional changes.
-- Keep schema changes and migrations in the same reviewed change.
-- Do not remove existing tests to make a change pass.
-- Update relevant docs when architecture, auth, deployment, data contracts or workflows
-  materially change.
+- Bulk ingestion is the primary operator workflow; manual editing is for corrections.
+- Validate and dry-run imports; keep bounded batches and source-based idempotency.
+- New/changed imported content must not become public without review and publishing.
+- Do not delete application-linked records merely to simplify imports.
+- Server authorization is the security boundary; client guards are UX only.
 
-## Required checks
+## Change and test discipline
 
-For application-code changes run, as applicable:
+Use small, coherent branches/PRs. Do not mix a mechanical repository move with product
+changes. Keep schema changes, migrations and tests together. Do not remove tests to pass CI.
+
+Run the applicable checks:
 
 ```bash
 pnpm typecheck
 pnpm lint
 pnpm test
 pnpm build
+pnpm test:smoke
 ```
 
-Run integration/smoke tests when the required environment is available.
+Use disposable PostgreSQL in GitHub Actions for integration tests and migrations. For
+manual Neon integration runs, resolve and verify the isolated branch before writing.
+Never point automated tests at production or use production credentials in PR workflows.
 
-## Security
+Report implemented, tested, merged and deployed separately. Update the execution log with
+actual commands/results, commit/PR and remaining blockers; do not record planned checks as
+passed. Cloudflare build success does not prove a running deployment or DB connection.
 
-- Never commit secrets, connection strings, bot tokens or session passwords.
-- Server authorization is the security boundary.
-- Validate external/webhook inputs.
-- Treat authentication/account-linking changes as security-sensitive.
-- Keep production migrations, admin promotion and destructive operations explicit and
-  reviewable.
+## External operations and secrets
 
-## Current high-priority sequence
+- No secrets, bot tokens, session passwords or connection strings in Git, chat or artifacts.
+- Do not start paid plans/trials or change billing without explicit approval.
+- Do not switch production, transfer projects, move domains, rotate secrets or migrate
+  shared databases without explicit approval and a rollback plan.
+- Keep existing deployment protection and API security controls intact.
+- A provider-access blocker is not a reason to stop independent code/test work.
 
-1. keep Candidate Design v1.0 frozen and use it as the implementation contract;
-2. Cloudflare/Hyperdrive foundation;
-3. CI/CD previews and production pipeline;
-4. unified Telegram + Google/GitHub identities;
-5. implement responsive candidate product;
-6. design admin/content bulk-import workflows before Phase 6 implementation;
-7. implement scalable admin/content ingestion.
+## Immediate sequence
+
+1. Reconcile the MVP plan and isolate baseline database tests.
+2. Implement unified auth on the current Node runtime.
+3. Build frozen responsive Candidate v1 and its host adapter.
+4. Add minimal validated file import and approved real content.
+5. Verify and release after provider, data and user-approval gates.
+6. Expand admin/services only after the MVP.
