@@ -1,5 +1,6 @@
 import { createApp, createError, send, toWebHandler } from 'h3'
 import type { EventHandler } from 'h3'
+import type { SessionUser } from '../../shared/types/auth'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineOAuthGoogleEventHandler } from '../../node_modules/nuxt-auth-utils/dist/runtime/server/lib/oauth/google.js'
 import { defineOAuthGitHubEventHandler } from '../../node_modules/nuxt-auth-utils/dist/runtime/server/lib/oauth/github.js'
@@ -14,8 +15,8 @@ vi.mock('#server/services/auth/oauth-user', () => ({ authenticateOAuthUser: auth
 vi.mock('#server/utils/observability', () => ({ logHandledRequestError: logError }))
 
 const sessionWriter = vi.fn(setUserSession)
-const sessionUser = {
-  id: 'test-user', role: 'CANDIDATE', name: 'Test Candidate',
+const sessionUser: SessionUser = {
+  id: 123, role: 'USER', name: 'Test Candidate',
   email: 'candidate@example.test', avatarUrl: null,
 }
 

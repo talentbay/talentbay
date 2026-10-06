@@ -3,6 +3,7 @@
 Updated: 2026-10-06
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
+Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
 ## Evidence baseline
 
@@ -87,7 +88,7 @@ claim a new run passed.
 | M1.2 isolated PostgreSQL CI | Implemented and tested in PR #25 | Both CI jobs successful; not merged yet |
 | M1.3 access/security audit | Partial, findings here | Resolve provider access and finish dependency/auth review |
 | M1.4 preview/release automation | Blocked externally | Correct team/project access and eligible plan approval |
-| M2.1 OAuth security | Confirmed dependency gap | Patch and regression tests next, before new auth capabilities |
+| M2.1 OAuth security | Implemented in separate PR #26 | Local checks passed; own PR CI must be verified before merge |
 | M2.2–M2.5 unified auth | Not implemented | Schema/identities, Telegram validation, linking and provider verification |
 | M3 Candidate UI | Not started | Frozen design is the implementation contract |
 | M4 fixed-template content import | Planned | Focused flow review, validation/dry-run and publication safety |
@@ -97,6 +98,7 @@ claim a new run passed.
 | Task | Executor | Branch / PR | Base SHA | Affected areas | Checks result | Next step |
 | --- | --- | --- | --- | --- | --- | --- |
 | Context reconciliation | Codex (sole editor; other chat reviews) | `feat/mvp-vercel-baseline` / #25 | main `2aca646f2c1ad0b5e59c375a30598a0f47da060a`; starting head `fea34354ccfe51358dedb277e32d86ba7dd3defe` | Existing docs/AGENTS only | Source/code/metadata reads; no new code checks claimed here | Separate M2.1 PR; stop for review |
+| M2.1 OAuth state | Codex | `codex/oauth-state-security` / #26 (Depends on #25) | baseline `ffbefd85889f4aee88214ccb08ceb95f0374f8cd` | Dependency, two auth routes, presence guard, regression/smoke tests | Local checks below; own CI pending | Review, then early M4.1 separately |
 
 Old `chore/sprint-1-cleanup` worktree and untracked Sonnet context remain untouched.
 Cloudflare PR #24 remains draft at `4ab26daa2957a5eef2e023afc23b5e0f9b442a5f`.
@@ -104,17 +106,62 @@ Cloudflare PR #24 remains draft at `4ab26daa2957a5eef2e023afc23b5e0f9b442a5f`.
 Merge status: PR #25 is unmerged at the time of this entry. Deployment status: unchanged.
 No new Vercel deployment, billing change, shared DB migration or production promotion.
 
-## Next runnable task — M2.1
+## M2.1 implementation and local verification — 2026-10-06
 
 The frozen install log confirms `nuxt-auth-utils` 0.5.29. Maintainer release v0.5.30 states
 that it fixes OAuth callback state validation / login CSRF:
 https://github.com/atinux/nuxt-auth-utils/releases/tag/v0.5.30
 https://github.com/atinux/nuxt-auth-utils/security/advisories/GHSA-xc49-mgwh-9pjv
 
-Update to a confirmed patched release with a regenerated lockfile in a focused change;
-review callback/state behavior and add regression coverage before enabling Telegram or
-account linking. The current Google handler delegates OAuth handling to that dependency.
-No auth patch or complete dependency audit is claimed in this baseline PR.
+Implementation: `011bc78d69365282965dbee964a573463f393a6e` in PR #26, based on
+`ffbefd85889f4aee88214ccb08ceb95f0374f8cd` from unmerged #25. Target main to match the CI
+branch filter; security-only comparison excludes inherited baseline:
+https://github.com/talentbay/talentbay/compare/ffbefd85889f4aee88214ccb08ceb95f0374f8cd...codex/oauth-state-security
+
+Exact dependency 0.5.29 -> **0.5.30**; not a general upgrade or latest-version claim.
+pnpm regenerated the lockfile. It reused already-present @nuxt/kit 4.5.1 for auth (was
+4.4.7) and fonts/icon/color-mode peer snapshots (were 4.5.0); h3 deduplicated node-mock-http
+1.0.4 to already-present 1.0.5. Package-key comparison found only auth 0.5.30 added,
+auth 0.5.29 and unused node-mock-http 1.0.4 removed. All other direct versions are unchanged.
+Existing WASM peer, deprecated tooling and ignored-build-script warnings remain.
+
+The installed 0.5.30 handlers compare query state to cookie state. With **both absent**,
+undefined equals undefined: an initial real-route regression produced 16 passes / 2
+failures (Google and GitHub reached persistence). A 21-line shared presence guard now
+rejects missing/empty/non-scalar state or missing/empty cookie before token exchange.
+The actual library still generates, compares and consumes state; verified-provider-email
+account linking and schema are unchanged. Other invalid-state callbacks retain the
+existing onError popup-close HTTP 200 response, which does not mean authentication success.
+
+Verified locally in the isolated worktree with Node 22.23.1 / pnpm 10.33.0:
+
+| Command | Actual result |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | Passed; no developer secrets copied |
+| `pnpm typecheck` / `pnpm lint` | Passed |
+| `pnpm test` | 43 passed, including 18 new OAuth regressions |
+| `node --test tests/tooling/*.test.mjs` | 13 passed |
+| `pnpm build` | Node-server production build passed |
+| `pnpm test:smoke` | Passed; baseline checks retained plus unbound Google/GitHub callbacks return 400 without a session |
+| `node scripts/assert-ci-database.mjs` | Explicit disposable marker and loopback-only target accepted |
+| `pnpm db:migrate` | Existing migrations applied to disposable local PostgreSQL 18.6 only |
+| `pnpm exec vitest run --config vitest.integration.config.ts` | 2 existing workflow tests passed; temporary local PG stopped |
+
+OAuth tests import installed runtime + real TalentBay routes + the real sealed-session
+writer. Only provider transport and the persistence entrypoint are mocked. Correct state
+succeeds; incorrect/missing/empty/array state, missing/empty cookie and completed-browser
+replay have no new persistence/session effects. This does not prove real Google login,
+actual user creation/linking against Neon, or stolen-cookie replay prevention.
+
+Baseline docs at ffbefd8 have their own successful CI:
+https://github.com/talentbay/talentbay/actions/runs/37479681093
+This is **not** a security PR run. PR #26's creation initially had no checks; verify its
+own synchronize run before claiming CI passed. No merge, deployment or shared DB write.
+
+GitHub push reported 31 main-branch dependency alerts (13 high / 13 moderate / 5 low),
+not individually triaged here. M2.1 is not a complete dependency/security audit.
+
+## Next runnable task (after review) — early M4.1
 
 Next is early M4.1 re-import safety in a separate PR, not a full admin redesign.
 Then implement a backward-compatible local identity model, server-side Telegram initData
