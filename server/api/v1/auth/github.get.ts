@@ -1,5 +1,6 @@
 import { authenticateOAuthUser } from '#server/services/auth/oauth-user'
 import { logHandledRequestError } from '#server/utils/observability'
+import { withOAuthCallbackState } from '#server/utils/oauth-callback-state'
 
 type GitHubEmail = {
   email: string
@@ -7,7 +8,7 @@ type GitHubEmail = {
   verified: boolean
 }
 
-export default defineOAuthGitHubEventHandler({
+export default withOAuthCallbackState(defineOAuthGitHubEventHandler({
   config: {
     emailRequired: true,
   },
@@ -45,4 +46,4 @@ export default defineOAuthGitHubEventHandler({
     logHandledRequestError(event, error, 'oauth.github')
     return send(event, '<!doctype html><html><body><script>window.close()</script></body></html>', 'text/html')
   },
-})
+}))

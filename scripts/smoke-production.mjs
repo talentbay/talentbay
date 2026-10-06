@@ -136,7 +136,17 @@ try {
   await assertResponse('/api/v1/applications', 401)
   await assertResponse('/api/v1/admin/dashboard', 403)
 
-  console.log('Production smoke test passed (liveness, public routes and anonymous access guards).')
+  for (const provider of ['google', 'github']) {
+    for (const query of ['?code=smoke-code', '?code=smoke-code&state=unbound-state']) {
+      await assertResponse(`/api/v1/auth/${provider}${query}`, 400, (response) => {
+        if (response.headers.getSetCookie().some(cookie => cookie.startsWith('nuxt-session='))) {
+          throw new Error('Rejected OAuth callback must not issue a session')
+        }
+      })
+    }
+  }
+
+  console.log('Production smoke test passed (liveness, public routes, anonymous guards and unbound OAuth callbacks).')
 }
 finally {
   server.kill('SIGTERM')

@@ -1,7 +1,8 @@
 import { authenticateOAuthUser } from '#server/services/auth/oauth-user'
 import { logHandledRequestError } from '#server/utils/observability'
+import { withOAuthCallbackState } from '#server/utils/oauth-callback-state'
 
-export default defineOAuthGoogleEventHandler({
+export default withOAuthCallbackState(defineOAuthGoogleEventHandler({
   async onSuccess(event, { user }) {
     const sessionUser = await authenticateOAuthUser({
       provider: 'GOOGLE',
@@ -19,4 +20,4 @@ export default defineOAuthGoogleEventHandler({
     logHandledRequestError(event, error, 'oauth.google')
     return send(event, '<!doctype html><html><body><script>window.close()</script></body></html>', 'text/html')
   },
-})
+}))

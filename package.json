@@ -33,7 +33,7 @@
     "@vueuse/core": "^14.4.0",
     "drizzle-orm": "^0.45.2",
     "nuxt": "^4.5.1",
-    "nuxt-auth-utils": "^0.5.29",
+    "nuxt-auth-utils": "0.5.30",
     "pinia": "^3.0.4",
     "postgres": "^3.4.9",
     "tailwindcss": "^4.3.3",
