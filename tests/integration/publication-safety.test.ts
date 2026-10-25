@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { closeDatabase } from '#server/db'
-import { getVacancyBySlug, listVacancies } from '#server/repositories/vacancies'
+import { getVacancyBySlug, listVacancies, resolveVacancies } from '#server/repositories/vacancies'
 import { createApplication } from '#server/services/candidates/applications'
 import { importVacancies, type VacancyImportItem } from '#server/services/vacancies/import-vacancies'
 import { reviewVacancy } from '#server/services/vacancies/review-vacancy'
@@ -47,6 +47,27 @@ afterAll(async () => {
 })
 
 describe('import publication invariants', () => {
+  it('searches company and skills as well as the role description', async () => {
+    const input = item('search-fields')
+    const token = suffix.replaceAll('-', '')
+    input.company.name = `Orbital${token}`
+    input.vacancy.skills = [`Elixir${token}`]
+    const first = await published(input)
+    expect((await listVacancies({ ...query, q: input.company.name })).items.map(value => value.id)).toContain(first.id)
+    expect((await listVacancies({ ...query, q: input.vacancy.skills[0]! })).items.map(value => value.id)).toContain(first.id)
+  })
+  it('resolves a local shortlist in request order without leaking withdrawn records', async () => {
+    const first = item('resolve-first')
+    const second = item('resolve-second')
+    const hidden = item('resolve-hidden')
+    await published(first)
+    await published(second)
+    const concealed = await published(hidden)
+    await sql`update vacancies set review_status = 'UNREVIEWED' where id = ${concealed.id}`
+    const result = await resolveVacancies([second.vacancy.slug, hidden.vacancy.slug, first.vacancy.slug, second.vacancy.slug, 'missing-shortlist-role'])
+    expect(result.items.map(value => value.slug)).toEqual([second.vacancy.slug, first.vacancy.slug])
+    expect(result.unavailableSlugs).toEqual([hidden.vacancy.slug, 'missing-shortlist-role'])
+  })
   it('withdraws changed content from list, detail and total, retaining IDs and applications', async () => {
     const input = item('changed')
     const first = await published(input)

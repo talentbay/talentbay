@@ -1,6 +1,6 @@
 # TalentBay Product & Architecture Plan
 
-Last updated: 2026-10-06
+Last updated: 2026-10-26
 Decision: ship the MVP on Nuxt/Node + Vercel + Neon.
 
 ## Active decision
@@ -62,8 +62,9 @@ Telegram identity.
 
 ## Authentication and identity
 
-Implement one local TalentBay account with multiple provider identities. Google and
-GitHub web handlers already exist; Telegram identity/session support is still work to do.
+One local TalentBay account supports multiple provider identities. Google/GitHub handlers,
+validated Telegram sessions and explicit linking are implemented in the current unmerged
+MVP line; real-provider acceptance and deployment remain separate release gates.
 
 The unified identity branch implements stable provider subjects, Telegram-only users,
 explicit linking and conflicts; see ADR 0007 and the execution log for its checks and
@@ -118,9 +119,9 @@ skipping data. Design the small file-import UI delta before implementing new con
 keep Candidate v1 frozen. A larger admin redesign and XLSX arbitrary-column mapping are
 post-MVP work.
 
-The current re-import path can retain `PUBLISHED` while setting `UNREVIEWED`; the invariant
-above is not yet fully enforced. Schedule M4.1 immediately after M2.1 in a separate PR,
-before identity expansion. Acceptance criteria are in `docs/14-mvp-execution.md`.
+PR #27 implements the publication invariant with PostgreSQL regressions, retaining IDs and
+applications. Its checks and unmerged delivery status are in `docs/14-mvp-execution.md`.
+Do not infer the fix is deployed merely because it exists in this branch.
 
 ## Delivery and test strategy
 

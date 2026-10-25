@@ -1,6 +1,6 @@
 # TalentBay Roadmap
 
-Last updated: 2026-10-06
+Last updated: 2026-10-26
 Active path: MVP first on Nuxt/Node + Vercel + Neon.
 
 This replaces the Cloudflare-first ordering dated 2026-10-03. Phase numbers below refer
@@ -39,7 +39,7 @@ or silently switching hosts. External release gates stay open.
 
 ## Phase 2 — Unified auth on the existing runtime
 
-Status: NEXT after baseline tests.
+Status: CODE IMPLEMENTED in the unmerged MVP line; live-provider acceptance pending.
 
 M2.1 — Patch the confirmed OAuth advisory with a bounded dependency update and real
 library/route state-validation regressions. Preserve existing verified-email linking.
@@ -56,7 +56,8 @@ browser/WebView verification is required before declaring auth complete.
 
 ## Phase 3 — Responsive Candidate v1.0
 
-Status: PLANNED; public UI work may proceed alongside provider setup.
+Status: CODE IMPLEMENTED in the current Candidate branch; local Chromium/API/Postgres checks
+passed. Native host/live-provider acceptance is still pending; see the execution log.
 
 M3.1 — Shared shell/navigation, tokens and host adapter with ordinary web fallbacks.
 M3.2 — Jobs + Vacancy Detail, search/filter/sort, local Saved and restoration of list state.

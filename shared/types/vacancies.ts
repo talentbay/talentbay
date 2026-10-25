@@ -53,6 +53,11 @@ export type VacancySearchResponse = {
   dataStatus: VacancyDataStatus
 }
 
+export type VacancyResolveResponse = {
+  items: VacancyListItem[]
+  unavailableSlugs: string[]
+}
+
 export type RelocationPreviewResponse = {
   location: {
     key: string

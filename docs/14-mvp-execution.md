@@ -1,9 +1,66 @@
 # MVP Execution Log
 
-Updated: 2026-10-06
+Updated: 2026-10-26
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
+
+## Responsive Candidate local verification — 2026-10-26
+
+Current branch `codex/candidate-responsive-shell` is based on security head `b4a49a5` /
+[draft #29](https://github.com/talentbay/talentbay/pull/29), whose own
+[CI 40237496254](https://github.com/talentbay/talentbay/actions/runs/40237496254) passed.
+
+Implemented the shared Candidate shell, canonical routes, local Saved + Undo/resolution,
+URL search/staged filters, profile editor, application preflight/submit/current statuses,
+working local Settings and explicit provider-connection UI. Telegram remains a host adapter,
+not another frontend. Optional native methods, theme, safe areas and signed job deep links
+are covered by Chromium host simulation against the real HTTP/session/database boundary.
+
+Browser verification exposed and fixed pre-hydration lost interactions, early storage
+initialization, native-versus-router Back history and the old disabled server app config
+breaking server icon resolution. A failed profile save preserves its draft. Contact-only
+profiles now survive Drizzle's nullable join mapping. Private responses are no-store;
+profile/application writes require same-origin after authentication. Legacy unsafe profile
+links are not rendered, and incoming profile links only accept HTTP(S).
+
+Relocation uses stable destination keys, preserves vacancy inputs, annualizes monthly
+salary and does not invent hourly workload or FX conversion. Invalid inputs return 400
+rather than default figures. Same-named/diacritic destinations have database regressions.
+Postgres search now includes company and skills, not just the role text. Public result
+visibility remains aligned with the earlier publication-safety fix.
+
+Actually passed locally, Node 22.23.1 / pnpm 10.33.0, using an explicit empty dotenv for
+prepare/typecheck/build and the isolated loopback PostgreSQL 18.6 fixture only:
+
+| Check | Result |
+| --- | --- |
+| Nuxt typecheck / full ESLint / Node production build | PASS |
+| `pnpm test` | 89 unit/HTTP/OAuth tests PASS |
+| `node --test tests/tooling/*.test.mjs` | 13 target-safety tests PASS |
+| Vitest integration config | 23 PostgreSQL tests PASS |
+| `pnpm test:smoke` | Compiled HTTP smoke PASS |
+| `pnpm test:e2e` | 16 public Chromium tests PASS |
+| Playwright database config | 6 real API/session/Postgres browser tests PASS |
+| `git diff --check` | PASS |
+
+Screenshots and overflow checks cover guest routes and authenticated Profile, Applications
+and Detail at 320/390/768/900/1024/1440px. Visual inspection included narrow detail, wide
+profile and Jobs. Tests include network retry, quota fallback, cross-tab Saved, staged
+filters, keyboard search, 404 recovery, duplicate apply, account isolation, CSRF rejection,
+native Back/theme/deep links and retained relocation inputs. Both browser suites are in CI.
+An initial concurrent-run artifact collision was a test-harness issue; separate output
+directories were added and both complete suites subsequently passed. No tests were removed.
+
+The owner explicitly authorized design iteration: mobile Figma contexts/screenshots were
+used with existing Nuxt UI/Lucide/tokens; desktop/mobile primary colors were unified and
+profile/settings use unframed sections. This is not a new approved Figma freeze. See
+`docs/17-candidate-verification.md` for the implemented contract and reproducible commands.
+
+Code ready / local tests passed / not merged / not deployed / no real-provider acceptance.
+Next: focused fixed-template CSV/dry-run/import review, operator metrics and real-content
+readiness. Native Telegram/mobile Safari, provider callbacks, cloud DB/domain/plan and
+content/legal release gates remain open. No shared database or production settings changed.
 
 ## Security maintenance before Candidate — 2026-10-26
 
@@ -181,8 +238,8 @@ claim a new run passed.
 | M1.3 access/security audit | Partial, findings here | Resolve provider access and finish dependency/auth review |
 | M1.4 preview/release automation | Blocked externally | Correct team/project access and eligible plan approval |
 | M2.1 OAuth security | Implemented in separate PR #26 | Local + own CI passed; review/merge pending, not deployed |
-| M2.2–M2.5 unified auth | Not implemented | Schema/identities, Telegram validation, linking and provider verification |
-| M3 Candidate UI | Not started | Frozen design is the implementation contract |
+| M2.2–M2.5 unified auth | Code implemented in #28 | Local + own CI passed; live providers/merge/deploy pending |
+| M3 Candidate UI | Implemented in current Candidate branch | Local browser/API/PG checks above; native host/provider acceptance pending |
 | M4 fixed-template content import | Planned | Focused flow review, validation/dry-run and publication safety |
 
 ### Executor coordination

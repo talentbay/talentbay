@@ -5,6 +5,8 @@ export default withNuxt({
     '.nuxt/**',
     '.output/**',
     'coverage/**',
+    'test-results/**',
+    'playwright-report/**',
     'node_modules/**',
   ],
 }, {

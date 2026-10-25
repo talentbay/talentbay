@@ -35,7 +35,10 @@ Do not treat the deferred Cloudflare PR/ADR as the current launch decision.
 
 ## Design contract
 
-Candidate Design v1.0 is frozen. Active references:
+Candidate Design v1.0 is the reference baseline. The owner explicitly authorized project
+design iteration on 2026-10-26. Record implementation deviations in
+`docs/17-candidate-verification.md`; do not call them a new approved Figma freeze.
+Active references:
 
 - `30 Product · Candidate · Responsive`;
 - `99 Utilities → TalentBay · Candidate Handoff · v1.0`;

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, or, sql } from 'drizzle-orm'
 import { isDatabaseConfigured, schema, useDatabase } from '#server/db'
 import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
 import {
@@ -9,10 +9,26 @@ import type { VacancySearch } from '#server/services/vacancies/search-vacancies'
 import type {
   VacancyDataStatus,
   VacancyListItem,
+  VacancyResolveResponse,
   VacancySearchResponse,
 } from '#shared/types/vacancies'
 
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
+
+export async function resolveVacancies(slugs: string[]): Promise<VacancyResolveResponse> {
+  const unique = [...new Set(slugs)]
+  const items = !isDatabaseConfigured()
+    ? unique.flatMap(slug => findDemoVacancyBySlug(slug) ?? [])
+    : (await useDatabase().select(vacancySelection).from(schema.vacancies)
+        .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
+        .where(and(publicVacancyConditions(), inArray(schema.vacancies.slug, unique))))
+        .map(toVacancyListItem)
+  const bySlug = new Map(items.map(item => [item.slug, item]))
+  return {
+    items: unique.flatMap(slug => bySlug.get(slug) ?? []),
+    unavailableSlugs: unique.filter(slug => !bySlug.has(slug)),
+  }
+}
 
 export async function listVacancies(query: VacancySearch): Promise<VacancySearchResponse> {
   if (!isDatabaseConfigured()) {
@@ -25,7 +41,7 @@ export async function listVacancies(query: VacancySearch): Promise<VacancySearch
   ]
 
   if (query.q) {
-    conditions.push(sql<boolean>`
+    conditions.push(or(sql<boolean>`
       to_tsvector(
         'english',
         ${schema.vacancies.title}
@@ -34,7 +50,8 @@ export async function listVacancies(query: VacancySearch): Promise<VacancySearch
         || ' '
         || ${schema.vacancies.description}
       ) @@ websearch_to_tsquery('english', ${query.q})
-    `)
+    `, sql<boolean>`to_tsvector('simple', ${schema.organisations.name}) @@ websearch_to_tsquery('simple', ${query.q})`,
+    sql<boolean>`to_tsvector('simple', array_to_string(${schema.vacancies.skills}, ' ')) @@ websearch_to_tsquery('simple', ${query.q})`)!)
   }
 
   if (query.countryCode) {

@@ -26,3 +26,6 @@ logs
 
 # pnpm local store (created by in-place install)
 .pnpm-store/
+# Browser test outputs may contain session state; never commit them.
+/test-results/
+/playwright-report/

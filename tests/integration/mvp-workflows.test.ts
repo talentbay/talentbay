@@ -164,4 +164,10 @@ describe('database-backed MVP workflows', () => {
       },
     })
   })
+
+  it('retains a contact-only profile and clears optional fields explicitly', async () => {
+    const result = await saveCandidateProfile(userID, { headline: null, about: null, city: null, countryCode: null, githubUrl: null, phone: '+49 1234' })
+    expect(result.profile).toMatchObject({ headline: null, phone: '+49 1234' })
+    expect((await getCandidateProfile(userID)).profile?.phone).toBe('+49 1234')
+  })
 })

@@ -1,27 +1,28 @@
 <script setup lang="ts">
 import type { VacancyListItem } from '#shared/types/vacancies'
+import { formatVacancySalary } from '~/utils/vacancy-salary'
 
 const props = defineProps<{
   vacancy: VacancyListItem
 }>()
+const emit = defineEmits<{ removed: [slug: string, position: number] }>()
 
-const { isSaved, toggleSaved } = useSavedVacancies()
+const { isSaved, toggleSaved, savedSlugs, initialized } = useSavedVacancies()
 const saved = computed(() => isSaved(props.vacancy.slug))
+const { haptic } = useProductHost()
+const toast = useToast()
 
-const salary = computed(() => {
-  if (!props.vacancy.salary) {
-    return 'Salary not disclosed'
+function save() {
+  const position = savedSlugs.value.indexOf(props.vacancy.slug)
+  if (!toggleSaved(props.vacancy.slug)) {
+    toast.add({ title: 'Your shortlist is full', description: 'Remove a saved role before adding another.', color: 'warning' })
+    return
   }
+  haptic()
+  if (position >= 0) emit('removed', props.vacancy.slug, position)
+}
 
-  const formatter = new Intl.NumberFormat('en', {
-    style: 'currency',
-    currency: props.vacancy.salary.currency,
-    notation: 'compact',
-    maximumFractionDigits: 0,
-  })
-
-  return `${formatter.format(props.vacancy.salary.min)}–${formatter.format(props.vacancy.salary.max)}`
-})
+const salary = computed(() => formatVacancySalary(props.vacancy.salary))
 
 const location = computed(() => {
   const parts = [
@@ -62,7 +63,7 @@ const published = computed(() => {
           <div class="min-w-0">
             <NuxtLink
               :to="`/jobs/${vacancy.slug}`"
-              class="text-base font-semibold text-highlighted hover:text-primary sm:text-lg"
+              class="break-words text-base font-semibold text-highlighted hover:text-primary focus-visible:outline-2 focus-visible:outline-primary sm:text-lg"
             >
               {{ vacancy.title }}
             </NuxtLink>
@@ -76,7 +77,10 @@ const published = computed(() => {
             square
             size="sm"
             :aria-label="saved ? 'Remove saved vacancy' : 'Save vacancy'"
-            @click="toggleSaved(vacancy.slug)"
+            :aria-pressed="saved"
+            :disabled="!initialized"
+            class="min-h-11 min-w-11 shrink-0"
+            @click="save"
           />
         </div>
 
@@ -84,8 +88,8 @@ const published = computed(() => {
       </div>
     </div>
 
-    <div class="mt-3 flex items-center justify-between gap-4">
-      <p class="font-semibold text-highlighted">{{ salary }}</p>
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+      <p class="text-sm font-semibold text-highlighted lg:text-base">{{ salary }}</p>
       <p class="shrink-0 text-xs text-muted">Posted {{ published }}</p>
     </div>
 

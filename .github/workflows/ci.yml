@@ -58,6 +58,12 @@ jobs:
         env:
           NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
 
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Candidate public browser tests
+        run: pnpm test:e2e
+
   integration:
     name: PostgreSQL integration
     runs-on: ubuntu-latest
@@ -109,3 +115,12 @@ jobs:
       - name: Database-backed workflow tests
         # Use injected runner env, not the developer's ignored .env.integration.
         run: pnpm exec vitest run --config vitest.integration.config.ts
+
+      - name: Build browser-test runtime
+        run: pnpm build
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser to API to PostgreSQL tests
+        run: pnpm exec playwright test --config playwright.database.config.ts

@@ -25,4 +25,13 @@ describe('candidateProfileInputSchema', () => {
 
     expect(result.success).toBe(false)
   })
+
+  it.each(['javascript:alert(1)', 'data:text/html,hello', 'ftp://example.com/file'])('rejects unsafe URL %s', (url) => {
+    expect(candidateProfileInputSchema.safeParse({ githubUrl: url }).success).toBe(false)
+    expect(candidateProfileInputSchema.safeParse({ linkedinUrl: url }).success).toBe(false)
+  })
+
+  it('rejects invalid country codes', () => {
+    expect(candidateProfileInputSchema.safeParse({ countryCode: '12' }).success).toBe(false)
+  })
 })

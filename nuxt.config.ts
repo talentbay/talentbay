@@ -31,17 +31,17 @@ export default defineNuxtConfig({
     '/presentation': { redirect: { to: '/jobs', statusCode: 302 } },
     '/whitepaper': { redirect: { to: '/jobs', statusCode: 302 } },
     '/user/**': { ssr: false },
+    '/profile': { ssr: false },
+    '/applications': { ssr: false },
+    '/settings': { ssr: false },
     '/orgs/**': { ssr: false },
     '/ktulhu/**': { ssr: false },
     '/jobs/**': { ssr: true },
   },
 
   colorMode: {
-    preference: 'light',
+    preference: 'system',
     fallback: 'light',
   },
 
-  experimental: {
-    serverAppConfig: false,
-  },
 })
