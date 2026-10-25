@@ -4,6 +4,9 @@ for (const width of [320, 390, 768, 900, 1024, 1440]) {
   test(`candidate navigation and cards fit ${width}px`, async ({ page }, testInfo) => {
     const errors: string[] = []
     page.on('pageerror', error => errors.push(error.message))
+    page.on('console', (message) => {
+      if (/hydration.*mismatch|mismatch.*hydration/i.test(message.text())) errors.push(message.text())
+    })
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/jobs')
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()

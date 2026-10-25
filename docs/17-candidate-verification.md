@@ -1,5 +1,13 @@
 # Candidate Browser Verification
 
+## Hydration follow-up — 2026-10-26
+
+A real dev-server check caught Node/Chromium ICU compact-currency default differences
+(`£95.0K` versus `£95K`). The formatter now explicitly sets minimum 0 / maximum 1 fraction
+digits. Exact-format unit coverage and console hydration-warning capture complement the
+earlier pageerror-only browser checks. Dev 390/1440 and compiled public viewport journeys
+passed after repair. No SSR disablement, blanket suppression or custom money parser.
+
 The shared Candidate shell serves the same `/jobs`, `/jobs/:slug`, `/saved`, `/profile`,
 `/applications` and `/settings` routes in browsers and Telegram. Wide composition begins
 at 1024px. Private Candidate routes are client-rendered; public vacancies remain SSR.

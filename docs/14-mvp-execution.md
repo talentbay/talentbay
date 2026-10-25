@@ -5,6 +5,27 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Candidate hydration follow-up — 2026-10-26
+
+Branch `codex/candidate-hydration`, base release-preparation `b5f1aea91b7b0c6bb6a3b7c624a6468ceda12d3c`
+/ [draft #32](https://github.com/talentbay/talentbay/pull/32).
+Starting a real dev preview exposed compact-currency SSR mismatches: Node rendered
+`£95.0K–£125.0K`, while Chromium hydrated `£95K–£125K`. Explicit minimum/maximum fraction
+digits fix the differing ICU defaults without removing SSR or hiding the warning.
+
+Added an exact salary-format regression and hydration-console capture to every public
+viewport journey. Prior pageerror-only tests did not cover console hydration warnings.
+Actually passed on this change: **112 unit/HTTP/OAuth**, full lint, explicit Nuxt build-mode
+typecheck, Node production build/compiled HTTP smoke, **16 public browser tests** with
+hydration warning detection. Dev preview at loopback 3130 also returned 200, no overflow,
+no hydration warnings/page exceptions at 390/1440px after the fix. A standalone diagnostic
+initially used a nonexistent link label; it timed out/closed, then was rerun with actual
+visible card/button selectors and an explicit bounded timeout.
+
+No DB/API/schema changes. Database tests were not rerun locally for this formatting-only
+patch; the preceding release branch's 32 SQL/8 browser tests are dated evidence, and this
+PR's own CI will independently rerun them. Nothing merged/deployed/live-provider verified.
+
 ## Release preparation — 2026-10-26
 
 Base operator head `b99776f57ca838ffed828cfc37a46dbff92aeecc` / [draft #31](https://github.com/talentbay/talentbay/pull/31)

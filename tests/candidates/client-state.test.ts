@@ -34,6 +34,10 @@ describe('candidate presentation contracts', () => {
     expect(formatVacancySalary(salary)).toContain('/ month')
     expect(formatVacancySalary(null)).toBe('Salary not disclosed')
   })
+  it('formats compact currency consistently for server and browser hydration', () => {
+    expect(formatVacancySalary({ min: 95000, max: 125000, currency: 'GBP', period: 'YEAR' })).toBe('£95K–£125K / year')
+    expect(formatVacancySalary({ min: 95500, max: 125500, currency: 'GBP', period: 'YEAR' })).toBe('£95.5K–£125.5K / year')
+  })
   it('does not turn invalid calculation inputs into a successful default estimate', () => {
     expect(relocationPreviewQuery.safeParse({ annualGross: -1 }).success).toBe(false)
     expect(relocationPreviewQuery.safeParse({ annualGross: 'not-a-number' }).success).toBe(false)
