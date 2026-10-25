@@ -55,8 +55,9 @@ async function assertResponse(path, expectedStatus, assertion) {
     signal: AbortSignal.timeout(5_000),
   })
 
-  if (response.status !== expectedStatus) {
-    throw new Error(`${path} returned ${response.status}; expected ${expectedStatus}`)
+  const allowedStatuses = Array.isArray(expectedStatus) ? expectedStatus : [expectedStatus]
+  if (!allowedStatuses.includes(response.status)) {
+    throw new Error(`${path} returned ${response.status}; expected ${allowedStatuses.join(' or ')}`)
   }
 
   await assertion?.(response)
@@ -143,6 +144,9 @@ try {
     }
   })
   await assertResponse('/api/v1/admin/dashboard', 403)
+  for (const path of ['/API/v1/admin/dashboard', '/api/v1/ADMIN/dashboard', '/api/v1/admin/USERS', '/api/v1/admin/VACANCIES']) {
+    await assertResponse(path, [403, 404])
+  }
 
   for (const path of ['/api/v1/auth/telegram', '/api/v1/auth/link']) {
     const response = await fetch(`${baseUrl}${path}`, {

@@ -67,8 +67,8 @@ Browser-only APIs must remain inside client lifecycle code.
 - Candidate profile/application endpoints require a user session.
 - `/api/v1/admin/**` requires the `ADMIN` role in server middleware.
 - Admin pages also declare role metadata for client navigation.
-- Admin middleware trusts the session role; immediate revocation based on the current
-  database role is not separately implemented.
+- Admin handlers and middleware share a request-scoped guard which verifies the current
+  database role/account, including immediate revocation of old ADMIN sessions.
 
 Client route guards are UX only; server authorization is the security boundary.
 

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { listAdminVacancies } from '#server/services/vacancies/list-admin-vacancies'
+import { requireAdminSession } from '#server/utils/admin-session'
 
 const querySchema = z.object({
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
@@ -7,6 +8,7 @@ const querySchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
+  await requireAdminSession(event)
   const query = await getValidatedQuery(event, value => querySchema.parse(value))
   const items = await listAdminVacancies(query)
 

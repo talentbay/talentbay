@@ -5,6 +5,27 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Security maintenance before Candidate — 2026-10-26
+
+Branch `codex/mvp-security-hardening` from identities `36f93b2a5815dfed5388d577076db32ca63bdfad`.
+Identity PR #28 has its own successful CI:
+https://github.com/talentbay/talentbay/actions/runs/40236627784
+
+Updated Nuxt 4.6.2, Vue 3.5.44, router 5.4.0, Zod 4.6.7, the old Tiptap/brace overrides
+and compatible vulnerable transitive packages. Node minimum now matches Nuxt (22.22.3).
+Production dependency advisory entries fell from 57 to 2, with no critical entries;
+remaining node-forge/esbuild tooling exposure and output-trace checks are documented in
+`docs/16-security-review.md`. Alerts were not suppressed; no claim of a clean full audit.
+
+Admin authorization now exists in each handler as well as middleware, checks the current
+database role/account and caches only within a request. Case-variant bypass was not
+reproduced (old runtime returned 404); compiled smoke accepts 403/404 and rejects exposure.
+
+Passed locally: 78 unit/HTTP/OAuth tests, 19 disposable PostgreSQL integration tests,
+lint/typecheck, Node build and compiled HTTP smoke. No shared migrations/deployments.
+Next: shared Candidate shell/navigation, local Saved and Telegram host adapter, then the
+remaining responsive Candidate flows and minimal reviewed content/admin operations.
+
 ## M2.2-M2.4 local implementation — 2026-10-26
 
 Branch `codex/telegram-identities`, based on content safety `cb462cc` / PR #27. The user

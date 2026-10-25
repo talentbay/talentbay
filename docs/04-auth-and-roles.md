@@ -56,9 +56,10 @@ has not been shipped. Public browsing is anonymous; profile/application endpoint
 current session user ID, never a client-supplied owner ID. Admin endpoints are protected by
 server middleware; client route guards only improve navigation.
 
-The current admin guard still reads role from the sealed session. Immediate DB-role
-revocation remains an operational hardening task; do not confuse a hidden button with
-server authorization. New login reads the current database role; new accounts default USER.
+Each admin handler checks the server guard; middleware also protects the namespace.
+The guard verifies the current database role/account on every request and caches only
+within that request. Revocation/deletion takes effect despite an old ADMIN session.
+New accounts default USER. A newly granted administrator refreshes their login/session.
 
 ## Verification and Release
 

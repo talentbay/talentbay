@@ -1,15 +1,12 @@
+import { requireAdminSession } from '#server/utils/admin-session'
+
 export default defineEventHandler(async (event) => {
-  const isProtectedRoute = event.path.startsWith('/api/v1/admin')
+  const path = event.path.toLowerCase()
+  const isProtectedRoute = path === '/api/v1/admin' || path.startsWith('/api/v1/admin/')
 
   if (!isProtectedRoute) {
     return
   }
 
-  const session = await getUserSession(event)
-  if (!session.user || session.user.role !== 'ADMIN') {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'Forbidden',
-    })
-  }
+  await requireAdminSession(event)
 })

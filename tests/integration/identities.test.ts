@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { closeDatabase } from '#server/db'
 import { authenticateOAuthUser, authenticateProviderUser, listConnectedIdentities } from '#server/services/auth/oauth-user'
 import type { OAuthIdentity, ProviderIdentity } from '#server/services/auth/oauth-user'
+import { requireCurrentAdmin } from '#server/services/auth/authorization'
 
 const suffix = randomUUID()
 const name = `Identity test ${suffix}`
@@ -35,6 +36,14 @@ afterAll(async () => {
 })
 
 describe('permanent local accounts and provider identities', () => {
+  it('revokes administrator access immediately after a DB role change or account removal', async () => {
+    await expect(requireCurrentAdmin(legacyID)).rejects.toMatchObject({ statusCode: 403 })
+    await sql`update users set role = 'ADMIN' where id = ${legacyID}`
+    expect((await requireCurrentAdmin(legacyID)).role).toBe('ADMIN')
+    await sql`update users set role = 'USER' where id = ${legacyID}`
+    await expect(requireCurrentAdmin(legacyID)).rejects.toMatchObject({ statusCode: 403 })
+    await expect(requireCurrentAdmin(2147483647)).rejects.toMatchObject({ statusCode: 403 })
+  })
   it('preserves a legacy provider subject, user ID and profile even if the provider email changes', async () => {
     const user = await authenticateOAuthUser(google('legacy', `changed-${suffix}@talentbay.invalid`))
     expect(user).toMatchObject({ id: legacyID, email, role: 'USER' })
