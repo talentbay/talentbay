@@ -47,8 +47,13 @@ Browser-only APIs must remain inside client lifecycle code.
 - Public vacancy reads use PostgreSQL when `DATABASE_URL` exists and an explicitly labelled preview dataset otherwise.
 - Imported vacancies are idempotent by `(sourceName, sourceExternalID)`.
 - New imports enter `DRAFT` and `UNREVIEWED`; the publish action requires `VERIFIED`.
-  Existing re-imports can retain `PUBLISHED` while resetting review to `UNREVIEWED`;
-  public reads do not yet enforce the full review invariant. Early M4.1 fixes this separately.
+  Changed re-imports return to draft/unreviewed (archives stay archived); unchanged
+  content returns `UNCHANGED` and preserves review, publication and timestamps.
+  Changes to shared company details invalidate all of its vacancy reviews atomically.
+  Public list/detail/count require published, verified content and an active company.
+  Applications use the same visibility conditions, reject labelled demo content and lock
+  the vacancy/company during submission so an import cannot invalidate the eligibility
+  check before the application is inserted. IDs and existing applications are retained.
 - Relocation reads prefer `VERIFIED` PostgreSQL records and expose source provenance, review status and effective dates; demo cities remain labelled fallback data.
 
 ## Auth and Authorization

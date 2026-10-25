@@ -79,6 +79,7 @@ async function assertDatabaseCatalog(body) {
       inner join organisations
         on vacancies.organisation_id = organisations.id
       where vacancies.status = 'PUBLISHED'
+        and vacancies.review_status = 'VERIFIED'
         and organisations.status = 'ACTIVE'
     `
 

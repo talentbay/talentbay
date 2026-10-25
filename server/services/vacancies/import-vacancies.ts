@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, getTableColumns, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 
@@ -56,7 +56,7 @@ export type VacancyImportItem = z.infer<typeof vacancyImportItemSchema>
 export type VacancyImportResult = {
   id: number
   slug: string
-  operation: 'CREATED' | 'UPDATED'
+  operation: 'CREATED' | 'UPDATED' | 'UNCHANGED'
 }
 
 export async function importVacancies(
@@ -68,22 +68,19 @@ export async function importVacancies(
     const results: VacancyImportResult[] = []
 
     for (const item of items) {
-      const [organisation] = await tx
+      await tx
         .insert(schema.organisations)
         .values({
           name: item.company.name,
           slug: item.company.slug,
-          websiteUrl: item.company.websiteUrl,
+          websiteUrl: item.company.websiteUrl ?? null,
         })
-        .onConflictDoUpdate({
-          target: schema.organisations.slug,
-          set: {
-            name: item.company.name,
-            websiteUrl: item.company.websiteUrl,
-            updatedAt: new Date(),
-          },
-        })
-        .returning({ id: schema.organisations.id })
+        .onConflictDoNothing({ target: schema.organisations.slug })
+
+      // Serialize changes to shared company metadata before touching its vacancies.
+      const [organisation] = await tx.select().from(schema.organisations)
+        .where(eq(schema.organisations.slug, item.company.slug))
+        .for('update')
 
       if (!organisation) {
         throw createError({
@@ -92,8 +89,23 @@ export async function importVacancies(
         })
       }
 
+      const organisationChanged = organisation.name !== item.company.name
+        || organisation.websiteUrl !== (item.company.websiteUrl ?? null)
+      if (organisationChanged) {
+        await tx.update(schema.organisations).set({
+          name: item.company.name,
+          websiteUrl: item.company.websiteUrl ?? null,
+          updatedAt: new Date(),
+        }).where(eq(schema.organisations.id, organisation.id))
+        await tx.update(schema.vacancies).set({
+          status: sql`case when ${schema.vacancies.status} = 'ARCHIVED' then 'ARCHIVED'::vacancy_status else 'DRAFT'::vacancy_status end`,
+          reviewStatus: 'UNREVIEWED',
+          updatedAt: new Date(),
+        }).where(eq(schema.vacancies.organisationID, organisation.id))
+      }
+
       const [existing] = await tx
-        .select({ id: schema.vacancies.id })
+        .select({ id: schema.vacancies.id, slug: schema.vacancies.slug })
         .from(schema.vacancies)
         .where(and(
           eq(schema.vacancies.sourceName, item.source.name),
@@ -105,32 +117,38 @@ export async function importVacancies(
         organisationID: organisation.id,
         slug: item.vacancy.slug,
         title: item.vacancy.title,
-        summary: item.vacancy.summary,
+        summary: item.vacancy.summary ?? null,
         description: item.vacancy.description,
         employmentType: item.vacancy.employmentType,
         workplaceType: item.vacancy.workplaceType,
-        seniority: item.vacancy.seniority,
+        seniority: item.vacancy.seniority ?? null,
         countryCode: item.vacancy.countryCode,
-        city: item.vacancy.city,
-        salaryMin: item.vacancy.salary?.min,
-        salaryMax: item.vacancy.salary?.max,
-        salaryCurrency: item.vacancy.salary?.currency,
-        salaryPeriod: item.vacancy.salary?.period,
+        city: item.vacancy.city ?? null,
+        salaryMin: item.vacancy.salary?.min ?? null,
+        salaryMax: item.vacancy.salary?.max ?? null,
+        salaryCurrency: item.vacancy.salary?.currency ?? null,
+        salaryPeriod: item.vacancy.salary?.period ?? null,
         skills: [...new Set(item.vacancy.skills)],
         relocationOffered: item.vacancy.relocationOffered,
         visaSponsorship: item.vacancy.visaSponsorship,
         sourceName: item.source.name,
         sourceUrl: item.source.url,
         sourceExternalID: item.source.externalId,
-        publishedAt: item.vacancy.sourcePublishedAt
-          ? new Date(item.vacancy.sourcePublishedAt)
-          : null,
-        reviewStatus: 'UNREVIEWED' as const,
       }
+
+      const columns = getTableColumns(schema.vacancies)
+      const contentKeys = Object.keys(vacancyValues) as Array<keyof typeof vacancyValues>
+      const contentChanged = sql.join(contentKeys.map(key =>
+        sql`${columns[key]} is distinct from excluded.${sql.identifier(columns[key].name)}`,
+      ), sql` or `)
 
       const [vacancy] = await tx
         .insert(schema.vacancies)
-        .values(vacancyValues)
+        .values({
+          ...vacancyValues,
+          reviewStatus: 'UNREVIEWED',
+          publishedAt: item.vacancy.sourcePublishedAt ? new Date(item.vacancy.sourcePublishedAt) : null,
+        })
         .onConflictDoUpdate({
           target: [
             schema.vacancies.sourceName,
@@ -138,15 +156,19 @@ export async function importVacancies(
           ],
           set: {
             ...vacancyValues,
+            status: sql`case when ${schema.vacancies.status} = 'ARCHIVED' then 'ARCHIVED'::vacancy_status else 'DRAFT'::vacancy_status end`,
+            reviewStatus: 'UNREVIEWED',
+            publishedAt: null,
             updatedAt: new Date(),
           },
+          setWhere: contentChanged,
         })
         .returning({
           id: schema.vacancies.id,
           slug: schema.vacancies.slug,
         })
 
-      if (!vacancy) {
+      if (!vacancy && !existing) {
         throw createError({
           statusCode: 500,
           statusMessage: 'Failed to import vacancy',
@@ -154,8 +176,8 @@ export async function importVacancies(
       }
 
       results.push({
-        ...vacancy,
-        operation: existing ? 'UPDATED' : 'CREATED',
+        ...(vacancy ?? existing!),
+        operation: !vacancy && !organisationChanged ? 'UNCHANGED' : existing ? 'UPDATED' : 'CREATED',
       })
     }
 

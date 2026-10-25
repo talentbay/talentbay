@@ -1,5 +1,6 @@
 import { and, count, desc, eq, sql } from 'drizzle-orm'
 import { isDatabaseConfigured, schema, useDatabase } from '#server/db'
+import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
 import {
   findVacancyBySlug as findDemoVacancyBySlug,
   searchVacancies as searchDemoVacancies,
@@ -20,8 +21,7 @@ export async function listVacancies(query: VacancySearch): Promise<VacancySearch
 
   const db = useDatabase()
   const conditions = [
-    eq(schema.vacancies.status, 'PUBLISHED'),
-    eq(schema.organisations.status, 'ACTIVE'),
+    publicVacancyConditions(),
   ]
 
   if (query.q) {
@@ -104,8 +104,7 @@ export async function getVacancyBySlug(slug: string): Promise<VacancyListItem | 
     )
     .where(and(
       eq(schema.vacancies.slug, slug),
-      eq(schema.vacancies.status, 'PUBLISHED'),
-      eq(schema.organisations.status, 'ACTIVE'),
+      publicVacancyConditions(),
     ))
     .limit(1)
 

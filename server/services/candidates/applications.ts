@@ -1,6 +1,7 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
+import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
 import type {
   CandidateApplicationItem,
   CandidateApplicationsResponse,
@@ -16,48 +17,52 @@ export async function createApplication(
   coverLetter?: string | null,
 ) {
   const db = useDatabase()
-  const [vacancy] = await db
-    .select({ id: schema.vacancies.id })
-    .from(schema.vacancies)
-    .where(and(
-      eq(schema.vacancies.id, vacancyID),
-      eq(schema.vacancies.status, 'PUBLISHED'),
-      eq(schema.vacancies.reviewStatus, 'VERIFIED'),
-    ))
-    .limit(1)
+  return await db.transaction(async (tx) => {
+    const [vacancy] = await tx
+      .select({ id: schema.vacancies.id })
+      .from(schema.vacancies)
+      .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
+      .where(and(
+        eq(schema.vacancies.id, vacancyID),
+        publicVacancyConditions(),
+        sql`${schema.vacancies.sourceName} is distinct from 'TalentBay preview dataset'`,
+      ))
+      .limit(1)
+      .for('share')
 
-  if (!vacancy) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Published vacancy not found',
-    })
-  }
+    if (!vacancy) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Published vacancy not found',
+      })
+    }
 
-  const [application] = await db
-    .insert(schema.applications)
-    .values({
-      userID,
-      vacancyID,
-      coverLetter: coverLetter || null,
-    })
-    .onConflictDoNothing()
-    .returning({
-      id: schema.applications.id,
-      status: schema.applications.status,
-      createdAt: schema.applications.createdAt,
-    })
+    const [application] = await tx
+      .insert(schema.applications)
+      .values({
+        userID,
+        vacancyID,
+        coverLetter: coverLetter || null,
+      })
+      .onConflictDoNothing()
+      .returning({
+        id: schema.applications.id,
+        status: schema.applications.status,
+        createdAt: schema.applications.createdAt,
+      })
 
-  if (!application) {
-    throw createError({
-      statusCode: 409,
-      statusMessage: 'You have already applied to this vacancy',
-    })
-  }
+    if (!application) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'You have already applied to this vacancy',
+      })
+    }
 
-  return {
-    ...application,
-    createdAt: application.createdAt.toISOString(),
-  }
+    return {
+      ...application,
+      createdAt: application.createdAt.toISOString(),
+    }
+  })
 }
 
 export async function listCandidateApplications(

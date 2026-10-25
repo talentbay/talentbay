@@ -5,6 +5,42 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Autonomous continuation / early M4.1 — 2026-10-26
+
+The user authorized continued implementation of the shared web/Telegram product,
+candidate flows, content operations and admin metrics. No new calendar deadline was set.
+Fresh GitHub reads found #24 draft and #25/#26 open at the heads recorded above. Work
+continues from OAuth head `9e6dbcd1d90effb6e0b829febaa06dd449afb5c4` in the existing managed
+worktree, branch `codex/content-publication-safety`. The original checkout and its private
+env/data/untracked Sonnet note were preserved. No main merge or cloud mutation occurred.
+
+Early M4.1 is now implemented in this branch (supersedes the older "not implemented"
+entries below):
+
+- Changed imported content becomes DRAFT/UNREVIEWED; ARCHIVED stays ARCHIVED.
+- Unchanged content reports UNCHANGED and preserves publication/review/timestamps.
+  Source publication date alone is not treated as a reviewed content edit; publication
+  on TalentBay remains the explicit review/publish action.
+- Removed optional values become NULL, rather than silently retaining an old salary.
+- Shared company metadata changes invalidate sibling vacancy reviews in the same transaction.
+- List, detail and total require PUBLISHED + VERIFIED + ACTIVE organisation, including
+  legacy inconsistent rows. Apply shares the visibility rule and rejects demo fixtures.
+- Apply locks the vacancy/company until insertion, retaining IDs, applications and dedupe.
+
+Regression evidence: the initial run on the unmodified services had 4 failures out of 5
+tests (published/unreviewed, unchanged import, legacy visibility and inactive-company apply).
+After the fix, 8 focused regressions plus the 2 prior workflow tests passed on disposable
+local PostgreSQL 18.6, created under `/private/tmp`; no Neon/env/data were used.
+
+Checks actually passed with Node 22.23.1 / pnpm 10.33.0: Nuxt prepare and typecheck using
+an empty explicit dotenv file, lint, 43 unit/OAuth tests, 13 tooling safety tests,
+Node production build, compiled HTTP smoke and 10 database integration tests. The smoke
+SQL expectation now includes review status. No dependency/schema migration was needed.
+
+Status: code ready / local tests passed / not merged / not deployed / no new live-provider
+verification. Next independent slice: backward-compatible provider identities, validated
+Telegram login and explicit account linking, then frozen Candidate v1 and content operations.
+
 ## Evidence baseline
 
 - GitHub main inspected at `2aca646f2c1ad0b5e59c375a30598a0f47da060a`.
