@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'product' })
 useSeoMeta({ title: 'Settings · TalentBay', robots: 'noindex' })
-const colorMode = useColorMode()
+const theme = useProductTheme()
 const { state: host } = useProductHost()
 const preferences = useJobPreferences()
 const haptics = useState('haptics-enabled', () => true)
@@ -36,7 +36,7 @@ const themes = [
           <ClientOnly>
             <USelect
               id="theme"
-              v-model="colorMode.preference"
+              v-model="theme"
               :items="themes"
               class="w-44"
             />

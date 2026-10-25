@@ -13,8 +13,8 @@ const saving = ref(false)
 const error = ref('')
 const dirty = ref(false)
 watch(open, (value) => {
-  if (value && !dirty.value)
-    Object.assign(form, emptyCandidateProfile(), props.profile || {})
+  if (!value || dirty.value) return
+  for (const key of Object.keys(form) as Array<keyof typeof form>) form[key] = props.profile?.[key] ?? ''
 })
 async function save() {
   if (saving.value) return

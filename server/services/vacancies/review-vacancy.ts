@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
+import { vacancyRevision } from './admin-vacancy'
 
 export const vacancyReviewSchema = z.object({
   reviewStatus: z.enum(['UNREVIEWED', 'VERIFIED', 'FLAGGED']),
@@ -9,7 +10,7 @@ export const vacancyReviewSchema = z.object({
 
 export type VacancyReview = z.infer<typeof vacancyReviewSchema>
 
-export async function reviewVacancy(id: number, review: VacancyReview) {
+export async function reviewVacancy(id: number, review: VacancyReview, expectedRevision?: string) {
   if (review.status === 'PUBLISHED' && review.reviewStatus !== 'VERIFIED') {
     throw createError({
       statusCode: 422,
@@ -35,7 +36,19 @@ export async function reviewVacancy(id: number, review: VacancyReview) {
       })
     }
 
-    if (review.status === 'PUBLISHED') {
+    const [company] = await tx.select().from(schema.organisations)
+      .where(eq(schema.organisations.id, existing.organisationID)).for('update')
+    const [current] = await tx.select().from(schema.vacancies)
+      .where(eq(schema.vacancies.id, id)).for('update')
+    if (!current || !company || current.organisationID !== company.id
+      || (expectedRevision && vacancyRevision(current, company) !== expectedRevision)) {
+      throw createError({ statusCode: 409, statusMessage: 'Content changed. Reload the vacancy before reviewing it.' })
+    }
+    if (review.status === 'PUBLISHED' && company.status === 'ARCHIVED') {
+      throw createError({ statusCode: 422, statusMessage: 'An archived company cannot publish vacancies' })
+    }
+
+    if (review.status === 'PUBLISHED' && company.status !== 'ACTIVE') {
       await tx
         .update(schema.organisations)
         .set({ status: 'ACTIVE', updatedAt: new Date() })
@@ -46,7 +59,7 @@ export async function reviewVacancy(id: number, review: VacancyReview) {
       .update(schema.vacancies)
       .set({
         ...review,
-        publishedAt: review.status === 'PUBLISHED' ? new Date() : undefined,
+        publishedAt: review.status === 'PUBLISHED' ? current.publishedAt ?? new Date() : null,
         updatedAt: new Date(),
       })
       .where(eq(schema.vacancies.id, id))

@@ -10,8 +10,10 @@ Mini App WebViews. Keep the existing repository, PostgreSQL/Drizzle data model a
 server runtime. Cloudflare Workers/Hyperdrive is an optional post-MVP experiment, not a
 release dependency. See `docs/adr/0006-mvp-first-vercel-neon.md`.
 
-Candidate Design v1.0 remains frozen. Use `docs/10-design-direction.md` and the active
-Figma handoff; do not use archived web or Telegram screens as competing specifications.
+Candidate Design v1.0 is the reference baseline. The owner authorized design iteration on
+2026-10-26; record deviations, not an invented new approval/freeze. Use
+`docs/10-design-direction.md` and the active Figma handoff; archived web/Telegram screens
+are not competing specifications.
 
 `docs/roadmap.md` defines dependency order. `docs/14-mvp-execution.md` records evidence,
 current blockers and the next runnable task. Older verification dates in
@@ -116,7 +118,7 @@ No source scraping or publication without source permission. Re-imported content
 remain publicly published while its review is invalidated. Preserve idempotency and user
 applications when updating a vacancy. Return row-level errors rather than silently
 skipping data. Design the small file-import UI delta before implementing new controls;
-keep Candidate v1 frozen. A larger admin redesign and XLSX arbitrary-column mapping are
+preserve the Candidate reference contract. A larger admin redesign and XLSX arbitrary-column mapping are
 post-MVP work.
 
 PR #27 implements the publication invariant with PostgreSQL regressions, retaining IDs and

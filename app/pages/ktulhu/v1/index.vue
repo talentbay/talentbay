@@ -1,6 +1,7 @@
 <script setup lang="ts">
 type AdminDashboard = {
   users: number
+  profiles: number
   organisations: number
   vacancies: {
     total: number
@@ -8,6 +9,7 @@ type AdminDashboard = {
     published: number
   }
   applications: number
+  applicationStatuses: { status: string, count: number }[]
 }
 
 definePageMeta({
@@ -26,13 +28,13 @@ const metrics = computed(() => [
     to: '/ktulhu/v1/vacancies?reviewStatus=UNREVIEWED',
   },
   {
-    label: 'Published vacancies',
+    label: 'Public vacancies',
     value: data.value?.vacancies.published ?? 0,
     icon: 'i-lucide-circle-check',
-    to: '/ktulhu/v1/vacancies?status=PUBLISHED',
+    to: '/ktulhu/v1/vacancies?status=PUBLISHED&reviewStatus=VERIFIED',
   },
   {
-    label: 'OAuth users',
+    label: 'Accounts',
     value: data.value?.users ?? 0,
     icon: 'i-lucide-users',
     to: '/ktulhu/v1/users',
@@ -52,9 +54,6 @@ const metrics = computed(() => [
       <h1 id="admin-overview-title" class="mt-1 text-3xl font-bold text-highlighted">
         MVP overview
       </h1>
-      <p class="mt-2 max-w-2xl text-sm leading-6 text-muted">
-        Live platform records only. Vacancy imports remain private until they are reviewed and published.
-      </p>
     </div>
 
     <div v-if="status === 'pending'" class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -72,7 +71,8 @@ const metrics = computed(() => [
     />
 
     <div v-else class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <NuxtLink
+      <component
+        :is="metric.to ? resolveComponent('NuxtLink') : 'div'"
         v-for="metric in metrics"
         :key="metric.label"
         :to="metric.to"
@@ -85,15 +85,12 @@ const metrics = computed(() => [
           </div>
           <UIcon :name="metric.icon" class="size-5 text-primary" />
         </div>
-      </NuxtLink>
+      </component>
     </div>
 
     <div class="mt-8 grid gap-5 lg:grid-cols-2">
-      <section class="rounded-lg border border-default bg-elevated p-5" aria-labelledby="vacancy-operations-title">
+      <section class="border-t border-default pt-5" aria-labelledby="vacancy-operations-title">
         <h2 id="vacancy-operations-title" class="text-lg font-bold text-highlighted">Vacancy operations</h2>
-        <p class="mt-2 text-sm leading-6 text-muted">
-          Review the source, verify the record and publish only vacancies suitable for the public catalogue.
-        </p>
         <UButton
           class="mt-5"
           to="/ktulhu/v1/vacancies"
@@ -103,7 +100,7 @@ const metrics = computed(() => [
         />
       </section>
 
-      <section class="rounded-lg border border-default bg-elevated p-5" aria-labelledby="data-status-title">
+      <section class="border-t border-default pt-5" aria-labelledby="data-status-title">
         <h2 id="data-status-title" class="text-lg font-bold text-highlighted">Data status</h2>
         <dl class="mt-4 grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -114,8 +111,14 @@ const metrics = computed(() => [
             <dt class="text-muted">Organisations</dt>
             <dd class="mt-1 font-semibold text-highlighted">{{ data?.organisations ?? 0 }}</dd>
           </div>
+          <div><dt class="text-muted">Profiles</dt><dd class="mt-1 font-semibold">{{ data?.profiles ?? 0 }}</dd></div>
         </dl>
       </section>
     </div>
+    <section class="mt-8 border-t border-default pt-5" aria-labelledby="application-statuses-title">
+      <h2 id="application-statuses-title" class="text-lg font-bold">Application status</h2>
+      <dl v-if="data?.applicationStatuses.length" class="mt-4 flex flex-wrap gap-8"><div v-for="row in data.applicationStatuses" :key="row.status"><dt class="text-sm text-muted">{{ row.status }}</dt><dd class="mt-1 font-semibold tabular-nums">{{ row.count }}</dd></div></dl>
+      <p v-else class="mt-3 text-sm text-muted">No applications yet</p>
+    </section>
   </section>
 </template>

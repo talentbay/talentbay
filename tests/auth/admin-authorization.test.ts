@@ -10,6 +10,7 @@ vi.mock('#server/services/admin/users', () => ({ listAdminUsers: domainOperation
 vi.mock('#server/services/vacancies/list-admin-vacancies', () => ({ listAdminVacancies: domainOperation }))
 vi.mock('#server/services/vacancies/import-vacancies', () => ({ importVacancies: domainOperation, vacancyImportRequestSchema: {} }))
 vi.mock('#server/services/vacancies/review-vacancy', () => ({ reviewVacancy: domainOperation, vacancyReviewSchema: {} }))
+vi.mock('#server/services/vacancies/admin-vacancy', () => ({ getAdminVacancy: domainOperation }))
 
 const sessionReader = vi.fn()
 const admin = { id: 42, role: 'ADMIN', name: 'Admin', email: null, avatarUrl: null }
@@ -25,6 +26,8 @@ beforeAll(async () => {
     (await import('../../server/api/v1/admin/vacancies/index.get')).default,
     (await import('../../server/api/v1/admin/vacancies/import.post')).default,
     (await import('../../server/api/v1/admin/vacancies/[id].patch')).default,
+    (await import('../../server/api/v1/admin/vacancies/[id].get')).default,
+    (await import('../../server/api/v1/admin/vacancies/file.post')).default,
   )
 })
 beforeEach(() => vi.clearAllMocks())
@@ -37,12 +40,12 @@ function request(handler: EventHandler) {
 }
 
 describe('admin authorization independent of middleware/path matching', () => {
-  it.each(['anonymous', 'user', 'revoked'])('all five handlers reject %s before domain operations', async (scenario) => {
+  it.each(['anonymous', 'user', 'revoked'])('all seven handlers reject %s before domain operations', async (scenario) => {
     sessionReader.mockResolvedValue(scenario === 'anonymous' ? {} : { user: { ...admin, role: scenario === 'user' ? 'USER' : 'ADMIN' } })
     currentAdmin.mockRejectedValue(createError({ statusCode: 403 }))
     for (const handler of handlers) expect((await request(handler)).status).toBe(403)
     expect(domainOperation).not.toHaveBeenCalled()
-    expect(currentAdmin).toHaveBeenCalledTimes(scenario === 'revoked' ? 5 : 0)
+    expect(currentAdmin).toHaveBeenCalledTimes(scenario === 'revoked' ? handlers.length : 0)
   })
 
   it('caches DB authorization only within a request, never across requests', async () => {

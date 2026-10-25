@@ -9,10 +9,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   let backAction: (() => void) | null = null
   const router = useRouter()
   const session = useUserSession()
-  const colorMode = useColorMode()
-  watch(() => [state.value.kind, state.value.theme, colorMode.preference, colorMode.value], () => {
-    if (state.value.kind === 'telegram' && colorMode.preference === 'system') colorMode.value = state.value.theme
-  })
   const back = () => backAction?.()
   const settings = () => { void router.push('/settings') }
 

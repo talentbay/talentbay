@@ -5,6 +5,85 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Minimal operator workflow — 2026-10-26
+
+Branch `codex/admin-file-import`, base Candidate `5ab31646e15a7a3b0a4e4ea8c79723b178f2318e`.
+Candidate is published as [draft #30](https://github.com/talentbay/talentbay/pull/30), whose
+own [CI 40242019559](https://github.com/talentbay/talentbay/actions/runs/40242019559) passed.
+These are unmerged stacked changes, not a production release.
+
+M4.2-M4.4 code: fixed-template UTF-8 CSV, 50 records/512 KiB; maintained `csv-parse` parser
+and `raw-body` request limits; all-record validation, duplicate/conflict errors, no-write
+preview and SHA-256 revision confirmation in the same transaction as the bounded import.
+Existing JSON imports remain supported. Company-wide withdrawal impact is shown; imported
+records retain source-based IDs and applications. No arbitrary XLSX mapping/source fetch.
+
+Review now reads complete content/company/source data and requires its revision before
+mutation. Company then vacancy locks reject stale review, including same-timestamp content
+changes. Publishing cannot reactivate an archived company. Operator UI has file/errors/
+preview/confirmation/retry states and complete-record review. The dashboard measures a
+consistent DB snapshot; public count shares the public visibility predicate. No fake
+visits/conversion/import-history graphs. See [operator guide](19-content-operations.md).
+
+Focused design contract: [18-admin-import-contract.md](18-admin-import-contract.md).
+Figma local Core primitives/variables/fonts were inspected; the connector rejected
+`createPage` with `Can't call createPage in read-only mode`. No Figma writes succeeded.
+Implementation uses existing Nuxt UI controls and is browser/screenshot reviewed; this is
+not a new founder-approved Figma freeze or the deferred full admin redesign.
+
+### Type gate correction
+
+The installed Nuxt CLI exited 0 for `nuxt typecheck`, but explicit
+`vue-tsc --build --noEmit` exposed nullable profile input types and an unsupported write to
+Color Mode's readonly `value`. Earlier log entries accurately record the command's result,
+**not proof that all referenced projects were checked**. The package script now explicitly
+passes `--build`; both Nuxt build-mode checking and direct Vue/TS project checking passed
+after repair. Profile drafts normalize null to empty input strings. Host appearance now
+uses the supported `preference` API and independently persists the user's Host/system
+choice instead of storing Telegram's transient resolved theme as their preference.
+Sources: [TypeScript project references](https://www.typescriptlang.org/docs/handbook/project-references),
+[Color Mode migration](https://color-mode.nuxtjs.org/advanced/migration).
+
+Latest completed local checks: Node 22.23.1 / pnpm 10.33.0, empty explicit build dotenv,
+disposable loopback PostgreSQL 18.6 only. 101 unit/HTTP/OAuth, 13 tooling and 30 PostgreSQL
+tests passed; full lint, explicit build-mode typecheck/direct Vue checker, Node build and
+diff whitespace check passed. Final compiled HTTP smoke, **16 public Chromium tests** and
+**8 real HTTP/session/PostgreSQL browser tests** passed on the final production build.
+Operator views passed overflow checks at 320/390/768/1024/1440px; Candidate matrices also
+include 900px. Screenshots of import, complete review modal and overview were inspected.
+Browser tests cover no-write preview, source identity, creator attribution, stale publish,
+changed re-import withdrawal, truthful aggregate counts, CSRF/types/size rejection and
+host theme changes/manual override/return to Host-system without persisting a false choice.
+
+Initial browser failures were fixed, not removed: expected 404 heading differed from the
+actual recovery UI; invalid request shape now returns 400 rather than an unhandled Zod
+500; screenshot capture waits for modal opacity before visual review. A malformed source
+URL now produces row errors rather than throwing from the credential check.
+
+M4.5 remains pending: no approved real vacancy set imported into a shared environment.
+No schema change/migration is introduced by this operator slice. No merge/deploy/shared
+database writes, billing or domain changes performed.
+
+### Provider refresh — 2026-10-26 (read only)
+
+- Vercel project ID remains `prj_lHZmzknETqd40Hag5xPRACGgynU9`, owning scope
+  `team_cjyqd17DfaDhcsylDIgQmBTl`; Nuxt / Node **24.x** metadata still differs from tested
+  Node 22. Latest returned deployment `dpl_DvU86EvSJFgns2nsjxP8Kd8vwQnf` is old, not this code.
+- `get_git_deployment_context` independently confirms **Hobby**, no linked TalentBay Git
+  project and no origin connection. Project/team reads alone omit billing information;
+  they were not treated as evidence of Pro entitlement. No unrelated projects changed.
+- Neon `list_branches` still returns production `br-proud-poetry-as21qww0`, preview
+  `br-jolly-glade-ash2y5iy` and integration `br-restless-rice-asthw10g` as **archived**.
+  No restoration, SQL readiness check or shared data mutation performed.
+- Hobby is non-commercial and cannot connect this private organisation repository:
+  [Hobby](https://vercel.com/docs/plans/hobby), [Git](https://vercel.com/docs/git).
+  CLI deployment does not waive plan terms. A budget decision was requested separately;
+  no paid plan/trial started. Pro public pricing starts at $20/month, before possible
+  usage/taxes: [pricing](https://vercel.com/pricing).
+
+Next: finish/review the operator PR and release-readiness checks; cloud preview, real
+providers/native Telegram, permitted content and approved public release remain gates.
+
 ## Responsive Candidate local verification — 2026-10-26
 
 Current branch `codex/candidate-responsive-shell` is based on security head `b4a49a5` /
@@ -239,8 +318,8 @@ claim a new run passed.
 | M1.4 preview/release automation | Blocked externally | Correct team/project access and eligible plan approval |
 | M2.1 OAuth security | Implemented in separate PR #26 | Local + own CI passed; review/merge pending, not deployed |
 | M2.2–M2.5 unified auth | Code implemented in #28 | Local + own CI passed; live providers/merge/deploy pending |
-| M3 Candidate UI | Implemented in current Candidate branch | Local browser/API/PG checks above; native host/provider acceptance pending |
-| M4 fixed-template content import | Planned | Focused flow review, validation/dry-run and publication safety |
+| M3 Candidate UI | Implemented in #30 | Own CI passed; native host/provider acceptance pending |
+| M4 fixed-template content import | Code implemented in operator branch | Local checks above; final PR evidence and approved real content pending |
 
 ### Executor coordination
 

@@ -9,6 +9,7 @@ const querySchema = z.object({
 
 export default defineEventHandler(async (event) => {
   await requireAdminSession(event)
+  setHeader(event, 'cache-control', 'no-store')
   const query = await getValidatedQuery(event, value => querySchema.parse(value))
   const items = await listAdminVacancies(query)
 

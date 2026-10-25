@@ -1,57 +1,12 @@
 import { and, eq, getTableColumns, sql } from 'drizzle-orm'
-import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 
-const slugSchema = z.string()
-  .trim()
-  .min(2)
-  .max(120)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
-
-const salarySchema = z.object({
-  min: z.number().int().nonnegative(),
-  max: z.number().int().positive(),
-  currency: z.string().trim().length(3).transform(value => value.toUpperCase()),
-  period: z.enum(['YEAR', 'MONTH', 'HOUR']),
-}).refine(value => value.max >= value.min, {
-  message: 'Salary maximum must be greater than or equal to minimum',
-  path: ['max'],
-})
-
-export const vacancyImportItemSchema = z.object({
-  source: z.object({
-    name: z.string().trim().min(2).max(120),
-    url: z.url(),
-    externalId: z.string().trim().min(1).max(255),
-  }),
-  company: z.object({
-    name: z.string().trim().min(2).max(160),
-    slug: slugSchema,
-    websiteUrl: z.url().optional(),
-  }),
-  vacancy: z.object({
-    slug: slugSchema,
-    title: z.string().trim().min(2).max(180),
-    summary: z.string().trim().max(500).optional(),
-    description: z.string().trim().min(20).max(50_000),
-    employmentType: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP']),
-    workplaceType: z.enum(['ONSITE', 'HYBRID', 'REMOTE']),
-    seniority: z.string().trim().max(80).optional(),
-    countryCode: z.string().trim().length(2).transform(value => value.toUpperCase()),
-    city: z.string().trim().max(120).optional(),
-    salary: salarySchema.optional(),
-    skills: z.array(z.string().trim().min(1).max(80)).max(30).default([]),
-    relocationOffered: z.boolean().default(false),
-    visaSponsorship: z.boolean().default(false),
-    sourcePublishedAt: z.iso.datetime({ offset: true }).optional(),
-  }),
-})
-
-export const vacancyImportRequestSchema = z.object({
-  items: z.array(vacancyImportItemSchema).min(1).max(50),
-})
-
-export type VacancyImportItem = z.infer<typeof vacancyImportItemSchema>
+import { vacancyImportRequestSchema } from './import-schema'
+import type { VacancyImportItem } from './import-schema'
+import { importedVacancyContent } from './import-content'
+import { prepareVacancyImport } from './import-preview'
+export { vacancyImportItemSchema, vacancyImportRequestSchema } from './import-schema'
+export type { VacancyImportItem } from './import-schema'
 
 export type VacancyImportResult = {
   id: number
@@ -61,10 +16,20 @@ export type VacancyImportResult = {
 
 export async function importVacancies(
   items: VacancyImportItem[],
+  options: { expectedRevision?: string, actorUserID?: number } = {},
 ): Promise<VacancyImportResult[]> {
+  items = vacancyImportRequestSchema.parse({ items }).items
   const db = useDatabase()
 
   return await db.transaction(async (tx) => {
+    // Bounded batches share a lock; preview confirmation and writes are one transaction.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended('talentbay:vacancy-import', 0))`)
+    if (options.expectedRevision) {
+      const preview = await prepareVacancyImport(items, tx, true)
+      if (!preview.valid || preview.revision !== options.expectedRevision) {
+        throw createError({ statusCode: 409, statusMessage: 'Import data changed. Validate the file again before importing.' })
+      }
+    }
     const results: VacancyImportResult[] = []
 
     for (const item of items) {
@@ -113,29 +78,7 @@ export async function importVacancies(
         ))
         .limit(1)
 
-      const vacancyValues = {
-        organisationID: organisation.id,
-        slug: item.vacancy.slug,
-        title: item.vacancy.title,
-        summary: item.vacancy.summary ?? null,
-        description: item.vacancy.description,
-        employmentType: item.vacancy.employmentType,
-        workplaceType: item.vacancy.workplaceType,
-        seniority: item.vacancy.seniority ?? null,
-        countryCode: item.vacancy.countryCode,
-        city: item.vacancy.city ?? null,
-        salaryMin: item.vacancy.salary?.min ?? null,
-        salaryMax: item.vacancy.salary?.max ?? null,
-        salaryCurrency: item.vacancy.salary?.currency ?? null,
-        salaryPeriod: item.vacancy.salary?.period ?? null,
-        skills: [...new Set(item.vacancy.skills)],
-        relocationOffered: item.vacancy.relocationOffered,
-        visaSponsorship: item.vacancy.visaSponsorship,
-        sourceName: item.source.name,
-        sourceUrl: item.source.url,
-        sourceExternalID: item.source.externalId,
-      }
-
+      const vacancyValues = importedVacancyContent(item, organisation.id)
       const columns = getTableColumns(schema.vacancies)
       const contentKeys = Object.keys(vacancyValues) as Array<keyof typeof vacancyValues>
       const contentChanged = sql.join(contentKeys.map(key =>
@@ -146,6 +89,7 @@ export async function importVacancies(
         .insert(schema.vacancies)
         .values({
           ...vacancyValues,
+          createdByUserID: options.actorUserID,
           reviewStatus: 'UNREVIEWED',
           publishedAt: item.vacancy.sourcePublishedAt ? new Date(item.vacancy.sourcePublishedAt) : null,
         })

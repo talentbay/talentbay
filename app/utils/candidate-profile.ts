@@ -1,6 +1,8 @@
 import type { CandidateProfileData } from '#shared/types/candidates'
 
-export const emptyCandidateProfile = (): CandidateProfileData => ({
+export type CandidateProfileDraft = { [Key in keyof CandidateProfileData]: string }
+
+export const emptyCandidateProfile = (): CandidateProfileDraft => ({
   headline: '', about: '', countryCode: '', city: '', phone: '', telegram: '', githubUrl: '', linkedinUrl: '',
 })
 

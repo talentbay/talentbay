@@ -72,7 +72,8 @@ Telegram page tree, invented server capabilities or fake permission/settings con
 
 ## Phase 4 — Minimal real-content workflow
 
-Status: PLANNED; required before useful public beta.
+Status: M4.1-M4.4 CODE IMPLEMENTED in the unmerged MVP line; M4.5 approved real content
+remains pending. Operator verification and exact delivery states are in the execution log.
 
 M4.1 — Protect existing import/review/publish invariants immediately after M2.1, in a
 separate small PR. Reproduce changed re-import exposure; preserve IDs/applications/dedupe,
