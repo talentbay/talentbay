@@ -8,6 +8,13 @@ declare module '#auth-utils' {
     email: SessionUser['email']
     avatarUrl: SessionUser['avatarUrl']
   }
+  interface SecureSessionData {
+    oauthLink?: {
+      provider: 'GOOGLE' | 'GITHUB'
+      userID: number
+      expiresAt: number
+    }
+  }
 }
 
 declare module '#app' {

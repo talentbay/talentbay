@@ -135,7 +135,24 @@ try {
   // Exercise the real compiled HTTP guards, not mocked session functions.
   await assertResponse('/api/v1/profile', 401)
   await assertResponse('/api/v1/applications', 401)
+  await assertResponse('/api/v1/auth/identities', 401)
+  await assertResponse('/api/v1/auth/capabilities', 200, async (response) => {
+    const capabilities = await response.json()
+    if (!['google', 'github', 'telegram'].every(provider => typeof capabilities[provider] === 'boolean')) {
+      throw new Error('Authentication capabilities did not return boolean availability flags')
+    }
+  })
   await assertResponse('/api/v1/admin/dashboard', 403)
+
+  for (const path of ['/api/v1/auth/telegram', '/api/v1/auth/link']) {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://attacker.invalid' },
+      body: '{}', signal: AbortSignal.timeout(5_000),
+    })
+    if (response.status !== 403 || response.headers.getSetCookie().some(cookie => cookie.startsWith('nuxt-session='))) {
+      throw new Error('Cross-origin authentication mutation was not rejected before session writing')
+    }
+  }
 
   for (const provider of ['google', 'github']) {
     for (const query of ['?code=smoke-code', '?code=smoke-code&state=unbound-state']) {

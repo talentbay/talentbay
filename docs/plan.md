@@ -65,9 +65,10 @@ Telegram identity.
 Implement one local TalentBay account with multiple provider identities. Google and
 GitHub web handlers already exist; Telegram identity/session support is still work to do.
 
-Existing code automatically links Google/GitHub identities using verified provider email,
-not an arbitrary client-supplied email. The new identity model and explicit linking are
-planned, not implemented. M2.1 preserves that existing behavior while patching state validation.
+The unified identity branch implements stable provider subjects, Telegram-only users,
+explicit linking and conflicts; see ADR 0007 and the execution log for its checks and
+delivery status. Existing provider rows retain their users. New subjects never auto-link
+by matching email. M2.1 initially preserved the older behavior; M2.2-M2.4 supersede it.
 
 - Validate Telegram `initData` on the server, including signature and bounded age.
 - Treat usernames, display names and client-supplied emails as untrusted identifiers.

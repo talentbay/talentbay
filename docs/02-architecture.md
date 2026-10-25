@@ -58,10 +58,11 @@ Browser-only APIs must remain inside client lifecycle code.
 
 ## Auth and Authorization
 
-- OAuth-first through Google and GitHub.
+- Provider-first through Google, GitHub and server-validated Telegram initData.
 - OAuth identities map to permanent local users.
-- Existing Google/GitHub identities auto-link by verified provider email, not client email.
-  Telegram-only auth, the new identity model and explicit linking are still planned.
+- Existing provider subjects retain their local user IDs. New provider subjects are never
+  auto-linked by email; explicit linking proves the current account and the new provider.
+  Telegram-only users have a NULL email. See ADR 0007 and migration 0002.
 - Server session shape is normalized and typed.
 - Candidate profile/application endpoints require a user session.
 - `/api/v1/admin/**` requires the `ADMIN` role in server middleware.

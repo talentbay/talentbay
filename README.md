@@ -9,7 +9,7 @@ The active product is Web2-only: vacancies, OAuth accounts, candidate profiles, 
 - Nuxt `4.5.1`, Vue `3.5.x`, Nitro.
 - Nuxt UI `4.10.x`, Tailwind CSS `4.3.x`, Manrope.
 - PostgreSQL, Drizzle ORM `0.45.x`.
-- `nuxt-auth-utils` with Google and GitHub OAuth.
+- `nuxt-auth-utils` with Google/GitHub OAuth, explicit provider linking and validated Telegram login.
 - pnpm `10.33.0`, Node.js `22`.
 - Vitest and official Nuxt ESLint flat config.
 

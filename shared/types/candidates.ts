@@ -13,7 +13,7 @@ export type CandidateProfileResponse = {
   user: {
     id: number
     name: string
-    email: string
+    email: string | null
     avatarUrl: string | null
   }
   profile: CandidateProfileData | null

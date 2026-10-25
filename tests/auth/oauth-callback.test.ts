@@ -4,7 +4,7 @@ import type { SessionUser } from '../../shared/types/auth'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineOAuthGoogleEventHandler } from '../../node_modules/nuxt-auth-utils/dist/runtime/server/lib/oauth/google.js'
 import { defineOAuthGitHubEventHandler } from '../../node_modules/nuxt-auth-utils/dist/runtime/server/lib/oauth/github.js'
-import { setUserSession } from '../../node_modules/nuxt-auth-utils/dist/runtime/server/utils/session.js'
+import { getUserSession, replaceUserSession, setUserSession } from '../../node_modules/nuxt-auth-utils/dist/runtime/server/utils/session.js'
 
 const { authenticate, logError } = vi.hoisted(() => ({
   authenticate: vi.fn(),
@@ -15,6 +15,7 @@ vi.mock('#server/services/auth/oauth-user', () => ({ authenticateOAuthUser: auth
 vi.mock('#server/utils/observability', () => ({ logHandledRequestError: logError }))
 
 const sessionWriter = vi.fn(setUserSession)
+const sessionReplacer = vi.fn(replaceUserSession)
 const sessionUser: SessionUser = {
   id: 123, role: 'USER', name: 'Test Candidate',
   email: 'candidate@example.test', avatarUrl: null,
@@ -66,6 +67,8 @@ beforeAll(async () => {
   vi.stubGlobal('defineOAuthGoogleEventHandler', defineOAuthGoogleEventHandler)
   vi.stubGlobal('defineOAuthGitHubEventHandler', defineOAuthGitHubEventHandler)
   vi.stubGlobal('setUserSession', sessionWriter)
+  vi.stubGlobal('getUserSession', getUserSession)
+  vi.stubGlobal('replaceUserSession', sessionReplacer)
   vi.stubGlobal('send', send)
   vi.stubGlobal('createError', createError)
   vi.stubGlobal('$fetch', providerFetch)
@@ -81,6 +84,7 @@ beforeEach(() => {
 afterAll(() => vi.unstubAllGlobals())
 
 describe.each(['google', 'github'] as const)('%s OAuth callback (installed runtime + real route)', (provider) => {
+  const providerName = provider === 'google' ? 'GOOGLE' : 'GITHUB'
   function request(query = '', cookie = '') {
     const app = createApp()
     app.use(`/api/v1/auth/${provider}`, provider === 'google' ? google : github)
@@ -89,9 +93,17 @@ describe.each(['google', 'github'] as const)('%s OAuth callback (installed runti
     }))
   }
 
-  async function start() {
+  async function start(seed?: { user: SessionUser, secure?: { oauthLink: { provider: 'GOOGLE' | 'GITHUB', userID: number, expiresAt: number } } }) {
     const browser = new BrowserCookies()
-    const response = await request()
+    if (seed) {
+      const app = createApp()
+      app.use('/seed', async (event) => {
+        await setUserSession(event, seed)
+        return 'seeded'
+      })
+      browser.update(await toWebHandler(app)(new Request('https://talentbay.test/seed')))
+    }
+    const response = await request('', browser.read())
     expect(response.status).toBe(302)
     const state = new URL(response.headers.get('location')!).searchParams.get('state')!
     expect(state).toMatch(/^[A-Za-z0-9_-]{40,}$/)
@@ -122,6 +134,32 @@ describe.each(['google', 'github'] as const)('%s OAuth callback (installed runti
     expect(logError).not.toHaveBeenCalled()
     expect(response.headers.getSetCookie().some(cookie => cookie.startsWith('nuxt-session=') && cookie.includes('HttpOnly'))).toBe(true)
     expect(response.headers.getSetCookie().some(cookie => cookie.startsWith('nuxt-auth-state=') && /max-age=0/i.test(cookie))).toBe(true)
+  })
+
+  it('connects a provider only with a valid server-sealed intent and replaces the session to consume it', async () => {
+    const { browser, state } = await start({
+      user: sessionUser,
+      secure: { oauthLink: { provider: providerName, userID: sessionUser.id, expiresAt: Date.now() + 60_000 } },
+    })
+    const response = await request(`?code=test-code&state=${state}`, browser.read())
+    expect(response.status).toBe(200)
+    expect(authenticate).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ provider: provider.toUpperCase() }), sessionUser.id)
+    expect(sessionReplacer).toHaveBeenCalledExactlyOnceWith(expect.anything(), { user: sessionUser })
+    expect(sessionWriter).not.toHaveBeenCalled()
+  })
+
+  it.each(['expired', 'wrong provider', 'wrong owner', 'no intent'])('rejects %s for an authenticated browser without linking or replacing its account', async (scenario) => {
+    const intent = {
+      provider: scenario === 'wrong provider' ? (providerName === 'GOOGLE' ? 'GITHUB' as const : 'GOOGLE' as const) : providerName,
+      userID: scenario === 'wrong owner' ? sessionUser.id + 1 : sessionUser.id,
+      expiresAt: Date.now() + (scenario === 'expired' ? -1000 : 60_000),
+    }
+    const { browser, state } = await start({ user: sessionUser, ...(scenario === 'no intent' ? {} : { secure: { oauthLink: intent } }) })
+    const response = await request(`?code=test-code&state=${state}`, browser.read())
+    expect(response.status).toBe(409)
+    expect(authenticate).not.toHaveBeenCalled()
+    expect(sessionWriter).not.toHaveBeenCalled()
+    expect(sessionReplacer).not.toHaveBeenCalled()
   })
 
   it.each(['wrong state', 'missing state', 'missing cookie', 'both missing', 'empty state', 'empty cookie', 'array state'])('rejects %s before persistence or session creation', async (scenario) => {

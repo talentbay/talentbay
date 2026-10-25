@@ -5,6 +5,41 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## M2.2-M2.4 local implementation — 2026-10-26
+
+Branch `codex/telegram-identities`, based on content safety `cb462cc` / PR #27. The user
+explicitly granted full TalentBay project authority, including branch publication, PRs,
+Figma/design changes and testing. Content safety #27 has its own successful CI run:
+https://github.com/talentbay/talentbay/actions/runs/40235987466
+
+Implemented: nullable email/TELEGRAM migration 0002, permanent local provider subjects,
+serialized concurrent identity creation, no new email-only auto-linking, explicit OAuth
+linking with a server-sealed provider/account/expiry intent, validated Telegram login/link,
+account-switch protection, private identity list and boolean provider capabilities.
+Existing account IDs/profiles/applications remain in place. ADR 0007 describes the contract.
+
+Current maintainer evidence found a further OAuth state advisory, fixed in 0.5.32:
+https://github.com/atinux/nuxt-auth-utils/releases/tag/v0.5.32
+Exact auth dependency is now 0.5.32; the app presence guard remains. pnpm lock regeneration
+added auth's @nuxt/schema 4.6.2 dependency and its small transitive tree; other direct
+dependencies stayed unchanged. No deprecated Telegram SDK dependency was added.
+
+Actually passed locally with Node 22.23.1: 74 unit/HTTP/installed-OAuth tests, 18 PostgreSQL
+integration tests (including 8 identity regressions), lint, typecheck, Node production
+build and compiled HTTP smoke. Migration 0002 applied only to the existing disposable PG
+18.6 database; no shared schema/data or provider credentials were changed. Route tests
+include real sealed-session writing, origin/signature/expiry rejection and link intent
+consumption/conflicts. Provider transport is mocked: no live Google/GitHub/TG acceptance.
+
+Code ready / local tests passed / not merged / not deployed / live-provider verification
+pending. Candidate UI and Settings connection controls follow in M3.
+
+New audit follow-up: production dependency graph has 57 advisory entries (4 critical,
+22 high, 23 moderate, 8 low). This includes dev/build tooling pulled through Nuxt; it is
+not a claim of 57 exploitable production endpoints. Triage and compatible security
+updates are the next separate slice before release. Check admin case-variant paths and
+current DB-role authorization rather than relying only on the old session role.
+
 ## Autonomous continuation / early M4.1 — 2026-10-26
 
 The user authorized continued implementation of the shared web/Telegram product,

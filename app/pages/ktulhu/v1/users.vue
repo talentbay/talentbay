@@ -2,7 +2,7 @@
 type AdminUser = {
   id: number
   name: string
-  email: string
+  email: string | null
   role: 'USER' | 'ADMIN'
   avatarUrl: string | null
   createdAt: string
