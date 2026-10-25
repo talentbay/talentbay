@@ -1,52 +1,50 @@
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { parseArgs } from 'node:util'
 import postgres from 'postgres'
 
 const usage = `Usage:
   pnpm db:promote-admin -- user@example.com
   pnpm db:promote-admin -- user@example.com --apply
+  pnpm db:promote-admin -- --user-id 42
+  pnpm db:promote-admin -- --user-id 42 --apply
 
-The first command is a dry run. The user must already exist after OAuth sign-in.
+Commands without --apply are dry runs. The local user must already exist after sign-in.
+--user-id is a TalentBay user ID, not a Telegram/provider subject or username.
 Add --apply only after verifying the target database and user.`
 
 export function parsePromotionArgs(args) {
-  const commandArgs = args.filter(arg => arg !== '--')
-
-  if (commandArgs.includes('--help') || commandArgs.includes('-h')) {
-    return { help: true }
+  const { values, positionals, tokens } = parseArgs({
+    args: args[0] === '--' ? args.slice(1) : args, allowPositionals: true, strict: true, tokens: true,
+    options: { apply: { type: 'boolean' }, 'user-id': { type: 'string' }, help: { type: 'boolean', short: 'h' } },
+  })
+  if (values.help) return { help: true }
+  for (const name of ['apply', 'user-id']) {
+    if (tokens.filter(token => token.kind === 'option' && token.name === name).length > 1) throw new Error(`Duplicate option: ${name}`)
   }
+  const target = normalizeTarget({ email: positionals.length === 1 ? positionals[0] : undefined, userId: values['user-id'] })
+  if (positionals.length > 1) throw new Error('Exactly one target is required')
+  return { help: false, ...target, apply: values.apply ?? false }
+}
 
-  const unknownFlags = commandArgs
-    .filter(arg => arg.startsWith('-') && arg !== '--apply')
-  if (unknownFlags.length > 0) {
-    throw new Error(`Unknown option: ${unknownFlags[0]}`)
+function normalizeTarget({ email, userId }) {
+  if ((email !== undefined) === (userId !== undefined)) throw new Error('Choose exactly one email or --user-id')
+  if (userId !== undefined) {
+    if (!/^[1-9]\d*$/.test(String(userId)) || !Number.isSafeInteger(Number(userId)) || Number(userId) > 2_147_483_647) throw new Error('A positive local user ID is required')
+    return { userId: Number(userId) }
   }
-
-  const positional = commandArgs.filter(arg => !arg.startsWith('-'))
-  if (positional.length !== 1) {
-    throw new Error('Exactly one user email is required')
-  }
-
-  const email = positional[0].trim().toLowerCase()
-  if (
-    email.length > 320
-    || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  ) {
-    throw new Error('A valid user email is required')
-  }
-
-  return {
-    help: false,
-    email,
-    apply: commandArgs.includes('--apply'),
-  }
+  email = String(email).trim().toLowerCase()
+  if (email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('A valid user email is required')
+  return { email }
 }
 
 export async function promoteAdmin({
   email,
+  userId,
   apply,
   connectionString,
 }) {
+  const target = normalizeTarget({ email, userId })
   if (!connectionString) {
     throw new Error('DATABASE_MIGRATION_URL or DATABASE_URL is required')
   }
@@ -61,7 +59,7 @@ export async function promoteAdmin({
       const matches = await transaction`
         select id, email, role
         from users
-        where lower(email) = ${email}
+        where ${target.userId !== undefined ? sql`id = ${target.userId}` : sql`lower(email) = ${target.email}`}
         order by id
         limit 2
         for update
@@ -69,7 +67,7 @@ export async function promoteAdmin({
 
       if (matches.length === 0) {
         throw new Error(
-          'User not found. Complete OAuth sign-in before assigning an admin role.',
+          'User not found. Complete sign-in before assigning an admin role.',
         )
       }
 
@@ -133,6 +131,7 @@ async function main() {
 
     const result = await promoteAdmin({
       email: options.email,
+      userId: options.userId,
       apply: options.apply,
       connectionString: process.env.DATABASE_MIGRATION_URL
         || process.env.DATABASE_URL,

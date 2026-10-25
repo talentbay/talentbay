@@ -5,6 +5,42 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Release preparation — 2026-10-26
+
+Base operator head `b99776f57ca838ffed828cfc37a46dbff92aeecc` / [draft #31](https://github.com/talentbay/talentbay/pull/31)
+has its own [successful CI 40245116366](https://github.com/talentbay/talentbay/actions/runs/40245116366),
+both build and PostgreSQL integration jobs. Branch `codex/mvp-release-readiness` continues
+without merging/deploying or changing cloud data.
+
+The operator bootstrap script now supports exact permanent local `--user-id` as well as
+existing unique email. This handles Telegram-only users without invented emails or unsafe
+username matching. Node's standard argument parser rejects mixed/ambiguous/repeated flags;
+default is dry-run, apply is explicit, existing account only, transactional and idempotent.
+Admin runbook now documents current DB-role revocation and the canonical route.
+
+Actually passed locally: **111 unit/HTTP/OAuth**, **17 tooling**, **32 PostgreSQL** tests,
+full lint and explicit Nuxt build-mode typecheck. Tests cover nullable-email promotion,
+dry-run/no write, idempotent apply and invalid/missing targets. No real account promoted.
+
+Synthetic local restore: dump from disposable loopback PG 18.6 restored to another new
+local cluster. Inventory/counts/all-row digests of **9 tables** including migration history
+matched; repeat migration succeeded and all **32 integration tests** passed on the restored
+copy. Both PG clusters stopped. Initial sandbox shared-memory denial and one transient
+loopback EADDRNOTAVAIL were followed by successful unchanged checks, not hidden/disabled.
+
+Local `NITRO_PRESET=vercel` build passed. Generated output is API v3, **1 real Node22 bundle /
+59 route entries**, required Candidate/auth/admin functions and CSV template present.
+`scripts/assert-vercel-output.mjs` verifies this and is added after existing browser tests
+in CI; it does not link/deploy or require cloud secrets. Package engines override project
+Node metadata: generated runtime is `nodejs22.x`, not 24. Real deployed runtime is still
+unverified. [Readiness/rollback sequence](20-release-readiness.md).
+
+At 02:35 MSK `HEAD https://talentbay.org` returned 404 / DEPLOYMENT_NOT_FOUND. No DNS repair
+was attempted against an unconfirmed owning scope. Hosting budget request remains open;
+no paid plan/trial, archived branch restore, shared migration or production promotion.
+The code/test milestones do not mark M5 accepted: actual preview backup, live OAuth/native
+Telegram, permitted content, legal approval, domain ownership and release approval remain.
+
 ## Minimal operator workflow — 2026-10-26
 
 Branch `codex/admin-file-import`, base Candidate `5ab31646e15a7a3b0a4e4ea8c79723b178f2318e`.

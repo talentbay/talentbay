@@ -64,6 +64,14 @@ jobs:
       - name: Candidate public browser tests
         run: pnpm test:e2e
 
+      - name: Build and inspect Vercel adapter (no deploy)
+        run: |
+          pnpm build
+          node scripts/assert-vercel-output.mjs
+        env:
+          NITRO_PRESET: vercel
+          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+
   integration:
     name: PostgreSQL integration
     runs-on: ubuntu-latest

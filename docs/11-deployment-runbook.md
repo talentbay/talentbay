@@ -1,6 +1,16 @@
 # Deployment Runbook
 
-Last updated: 2026-10-06
+Last updated: 2026-10-26
+
+## Latest readiness
+
+Use [release readiness](20-release-readiness.md) for the current verified checklist.
+26 October reads still find Hobby/no TalentBay Git link and archived Neon branches;
+`talentbay.org` returns DEPLOYMENT_NOT_FOUND. No cloud writes/deployments were performed.
+Local Node and Vercel-adapter builds passed; the generated Vercel runtime is **nodejs22.x**
+through package engines precedence, despite old project metadata showing 24.x. Check the
+real provider build/runtime when an eligible preview is deployed. Synthetic local backup/
+restore passed; preview/production backup acceptance remains separate.
 
 ## Current operating boundary
 

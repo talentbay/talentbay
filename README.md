@@ -73,6 +73,9 @@ disposable loopback `talentbay_ci` database. See [browser verification](docs/17-
 - [Admin operations](docs/13-admin-operations.md)
 - [Founder demo checklist](docs/14-founder-demo-checklist.md)
 - [MVP acceptance record](docs/15-mvp-acceptance-record.md)
+- [Candidate verification](docs/17-candidate-verification.md)
+- [CSV content operations](docs/19-content-operations.md)
+- [Release readiness](docs/20-release-readiness.md)
 - [Architecture decisions](docs/adr/README.md)
 
 This is an alpha/MVP codebase. The documentation distinguishes implemented behavior, preview data and decisions still blocked on external approval.
