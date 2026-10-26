@@ -7,7 +7,8 @@ Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/
 
 ## Managed Application Intake Confirmed - 2026-10-26
 
-Branch `codex/managed-application-intake`, base `c256387` / [draft #35](https://github.com/talentbay/talentbay/pull/35).
+Branch `codex/managed-application-intake`, product commit `a7ac7be` /
+[draft #36](https://github.com/talentbay/talentbay/pull/36), base `c256387` / draft #35.
 The owner supplied the missing product answer: TalentBay receives the application,
 contacts the company and proposes the candidate; the company is also a potential client.
 Keep in-product Apply, not a default source redirect. This supersedes the open model below.
@@ -31,8 +32,9 @@ before interactive state/fonts settled. Wait for enabled/fonts before the same e
 geometry assertion; all 16 then passed and the focused test passed three additional runs.
 Tooling initially hit sandbox loopback EPERM; the unchanged suite passed with local-port
 permission. No tests/assertions were removed. Earlier #35 CI is now confirmed successful
-(`build`, `PostgreSQL integration`, run `40285515181`), not evidence for this unpushed branch.
+(`build`, `PostgreSQL integration`, run `40285515181`), not evidence for this branch.
 
+Draft #36 published; it targets main for CI and includes the prior unmerged stack.
 No merge, deploy, shared database/secret/domain/billing operations or real company contact.
 Local synthetic review remains at 3130/3131. The next runnable product task is minimal
 operator handling, with actual contact/handoff distinct from employer hiring stages;
