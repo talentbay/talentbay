@@ -70,16 +70,9 @@ const published = computed(() => {
             <p class="mt-0.5 text-sm font-medium text-default">{{ vacancy.company.name }}</p>
           </div>
 
-          <UButton
-            :icon="saved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
-            color="neutral"
-            variant="ghost"
-            square
-            size="sm"
-            :aria-label="saved ? 'Remove saved vacancy' : 'Save vacancy'"
-            :aria-pressed="saved"
+          <VacanciesSaveButton
+            :saved="saved"
             :disabled="!initialized"
-            class="min-h-11 min-w-11 shrink-0"
             @click="save"
           />
         </div>

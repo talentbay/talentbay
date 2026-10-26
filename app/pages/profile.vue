@@ -62,7 +62,7 @@ const linkedinUrl = computed(() =>
         color="neutral"
         variant="ghost"
         aria-label="Settings"
-        class="min-h-11 min-w-11"
+        class="size-11 shrink-0 justify-center p-0"
       />
     </div>
     <AuthSignInPanel v-if="!loggedIn" />
@@ -131,7 +131,7 @@ const linkedinUrl = computed(() =>
                 :aria-label="`Edit ${detail.label.toLowerCase()}`"
                 color="neutral"
                 variant="ghost"
-                class="min-h-11 min-w-11 shrink-0"
+                class="size-11 shrink-0 justify-center p-0"
                 @click="editing = true"
               />
             </div>

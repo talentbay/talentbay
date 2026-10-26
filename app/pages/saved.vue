@@ -77,7 +77,7 @@ function remove(slug: string) {
       />
       <UEmpty
         v-else-if="!savedSlugs.length"
-        icon="i-lucide-heart"
+        icon="i-lucide-bookmark"
         title="Your shortlist starts here"
         description="Save a role that interests you and come back to compare it."
         :actions="[{ label: 'Browse jobs', to: '/jobs' }]"
@@ -117,7 +117,7 @@ function remove(slug: string) {
               color="neutral"
               variant="ghost"
               aria-label="Remove unavailable vacancy"
-              class="min-h-11 min-w-11 shrink-0"
+              class="size-11 shrink-0 justify-center p-0"
               @click="remove(entry.slug)"
             />
           </div>

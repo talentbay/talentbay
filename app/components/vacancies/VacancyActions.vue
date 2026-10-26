@@ -100,21 +100,11 @@ async function submit() {
     <div
       class="candidate-bottom-nav fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-default bg-elevated px-4 pt-3 lg:static lg:z-auto lg:flex-col lg:border-0 lg:bg-transparent lg:p-0"
     >
-      <UButton
-        :icon="
-          isSaved(vacancy.slug)
-            ? 'i-lucide-bookmark-check'
-            : 'i-lucide-bookmark'
-        "
-        :label="isSaved(vacancy.slug) ? 'Saved' : 'Save'"
-        :aria-label="
-          isSaved(vacancy.slug) ? 'Remove saved vacancy' : 'Save vacancy'
-        "
-        :aria-pressed="isSaved(vacancy.slug)"
+      <VacanciesSaveButton
+        :saved="isSaved(vacancy.slug)"
         :disabled="!initialized"
-        color="neutral"
-        variant="outline"
-        class="min-h-11 justify-center lg:order-2"
+        with-label
+        class="lg:order-2"
         @click="save"
       />
       <UButton

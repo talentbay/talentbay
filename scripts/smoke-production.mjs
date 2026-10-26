@@ -14,6 +14,7 @@ const server = spawn(process.execPath, ['.output/server/index.mjs'], {
     HOST: '127.0.0.1',
     PORT: port,
     NUXT_SESSION_PASSWORD: sessionPassword,
+    NUXT_PUBLIC_LOCAL_REVIEW_PORTAL: 'http://127.0.0.1:3131',
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 })
@@ -119,7 +120,17 @@ try {
     if (!html.includes('TalentBay') || !html.includes('Demo data')) {
       throw new Error('/jobs did not render the expected SSR preview')
     }
+    if (html.includes('Switch test account')) {
+      throw new Error('Local review controls must not render in production')
+    }
   })
+
+  // The persona chooser belongs to a separate local process, never the app server.
+  await assertResponse('/session/candidate', 404)
+  const localSession = await fetch(`${baseUrl}/session/admin`, { method: 'POST', signal: AbortSignal.timeout(5000) })
+  if (localSession.status !== 404 || localSession.headers.getSetCookie().some(cookie => cookie.startsWith('nuxt-session='))) {
+    throw new Error('Production must not expose the local review session helper')
+  }
 
   await assertResponse('/api/v1/vacancies', 200, async (response) => {
     const body = await response.json()

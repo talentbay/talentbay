@@ -5,6 +5,48 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Interactive product review correction - 2026-10-26
+
+Branch `codex/interactive-product-review`, base `c602b42` / draft #33. Owner reported that
+the preview exposed about two useful screens and no coherent user journey. The previous
+3130 server deliberately had no database/provider credentials; all fallback jobs blocked
+applications. Presenting that as the reviewable product was inadequate. Product acceptance
+remains open, independently of the earlier CI results.
+
+Added `pnpm dev:review`: fresh disposable loopback PostgreSQL 18, committed migrations,
+synthetic vacancies/accounts, real API seeding and a separate local account chooser.
+Candidate/newcomer/operator/guest sessions use the normal signed-initData auth boundary
+with per-run fake credentials. No developer dotenv/cloud DB/real bot is used. The chooser
+requires exact Host/Origin and CSRF nonce, rejects arbitrary identities/oversized requests,
+and never ships as a Nuxt route. Dev-only UI identifies fictional data and account switching.
+Production smoke confirms the banner stays absent even when its env value is present and
+the helper GET/POST routes return 404 without a session.
+
+Existing Nuxt UI/Lucide retained. Saved now uses a shared filled/color bookmark toggle;
+search/back/settings/edit/remove icon targets are centered and stable. Regression tests
+check SVG path fill and search-arrow geometry. No schema/backend domain changes.
+
+Actually passed: `pnpm test` **112**, `node --test tests/tooling/*.test.mjs` **24**, full
+`pnpm lint`, `nuxt typecheck --build --dotenv /private/tmp/talentbay-test.env`, Node build
+with explicit empty dotenv, compiled `pnpm test:smoke`, and `pnpm test:e2e` **16**.
+The full 32-SQL/8-DB-browser suite was not rerun locally for this slice. Manual actual
+HTTP/session/PG browser review covered profile save, salary calculation, new application,
+cover-note detail and persistence after reload; empty newcomer profile/application list;
+CSV no-write preview -> draft import -> review -> publish -> visibility (5 to 6 jobs).
+Screenshots inspected: profile, application list and corrected narrow jobs controls,
+retained locally under `/private/tmp/talentbay-product-review/` (not release evidence).
+
+Initial checks found/fixed an incorrect fixture PATCH vs PUT, a root-SVG assertion that
+missed Lucide's path-level `fill="none"`, and portal `no-referrer` producing an opaque form
+Origin. The latter now uses same-origin referrer policy and an explicit loopback redirect
+destination in CSP, without accepting null/foreign Origin. No failing tests were removed.
+
+Crucial product gap: applications are only recorded, not delivered or operationally
+processed by employers/admins. Real source-backed relocation/job data, live providers,
+native Telegram, hosted release and owner UX acceptance remain unverified/incomplete.
+[Walkthrough and prioritized audit](21-local-product-review.md). No merge/deploy/billing,
+domain or shared database change. Local review server intentionally remains running.
+
 ## Candidate hydration follow-up — 2026-10-26
 
 Branch `codex/candidate-hydration`, base release-preparation `b5f1aea91b7b0c6bb6a3b7c624a6468ceda12d3c`

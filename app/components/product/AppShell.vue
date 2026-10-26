@@ -11,6 +11,7 @@ const { state: host } = useProductHost()
       Skip to content
     </a>
     <ProductCandidateNavigation />
+    <ProductLocalReviewNotice />
     <div
       v-if="host.status === 'connecting'"
       class="product-container pt-3 text-sm text-muted"

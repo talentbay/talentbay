@@ -9,6 +9,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "dev:review": "node scripts/local-review/start.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",

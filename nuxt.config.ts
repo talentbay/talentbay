@@ -5,6 +5,9 @@ export default defineNuxtConfig({
   ssr: true,
   runtimeConfig: {
     telegramBotToken: '',
+    public: {
+      localReviewPortal: '',
+    },
   },
 
   css: [

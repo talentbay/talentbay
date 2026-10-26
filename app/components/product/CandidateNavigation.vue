@@ -3,7 +3,7 @@ const route = useRoute()
 const { loggedIn, user } = useUserSession()
 const tabs = [
   { label: 'Jobs', to: '/jobs', icon: 'i-lucide-search' },
-  { label: 'Saved', to: '/saved', icon: 'i-lucide-heart' },
+  { label: 'Saved', to: '/saved', icon: 'i-lucide-bookmark' },
   {
     label: 'Applications',
     to: '/applications',
@@ -48,7 +48,7 @@ watch(topLevel, (value) => setBackAction(value ? null : goBack), {
           color="neutral"
           variant="ghost"
           aria-label="Go back"
-          class="min-h-11 min-w-11 lg:hidden"
+          class="size-11 shrink-0 justify-center p-0 lg:hidden"
           @click="goBack"
         />
         <NuxtLink

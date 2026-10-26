@@ -66,6 +66,7 @@ async function signOut() {
       </UContainer>
     </header>
 
+    <ProductLocalReviewNotice />
     <main>
       <UContainer class="py-8 sm:py-10">
         <slot />

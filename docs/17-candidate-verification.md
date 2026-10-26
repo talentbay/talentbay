@@ -1,5 +1,26 @@
 # Candidate Browser Verification
 
+## Owner review and focused UI corrections - 2026-10-26
+
+The owner could only inspect the no-DB guest preview: sign-in was unavailable and all
+demo vacancies disallowed applications. That environment was inadequate for reviewing
+the complete implemented journey. Telegram is not required for ordinary web browsing;
+configured Google/GitHub providers serve web sign-in. Neither deployment nor Telegram
+configuration supplies the missing employer-side application workflow.
+
+The repeatable [local review](21-local-product-review.md) now exposes the existing real
+API/SQL workflows with isolated fictional accounts and a visible test-data notice.
+Manual browser verification covered profile edit/save, salary-dependent calculation,
+application submission/read/reload, the empty newcomer profile, and CSV validate/import/
+review/publish/public visibility. This does not verify live provider login or actual hiring.
+
+Design deviations: shared Nuxt UI/Lucide bookmark control now uses the same bookmark
+outline in navigation and a filled primary-color selected state, not bookmark-check.
+Search/filter/back/settings/edit/remove icon controls have stable centered 44px targets.
+Browser regressions check the saved path fill, stable dimensions and arrow centering.
+No new UI library or approved Figma freeze was introduced. These are focused corrections,
+not evidence that every screen or the overall product experience has been accepted.
+
 ## Hydration follow-up — 2026-10-26
 
 A real dev-server check caught Node/Chromium ICU compact-currency default differences

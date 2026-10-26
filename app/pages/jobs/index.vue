@@ -80,7 +80,7 @@ async function submit() {
           icon="i-lucide-arrow-right"
           aria-label="Search"
           variant="outline"
-          class="min-h-11 min-w-11"
+          class="size-11 shrink-0 justify-center p-0"
         />
       </UTooltip>
       <UTooltip text="Filters">
@@ -90,7 +90,7 @@ async function submit() {
           :aria-label="`Filters${count ? ` (${count} active)` : ''}`"
           color="neutral"
           variant="outline"
-          class="min-h-11 min-w-11"
+          class="min-h-11 min-w-11 shrink-0 justify-center"
           @click="filtersOpen = true"
         >
           <span

@@ -27,6 +27,12 @@ Nuxt starts at `http://localhost:3000`.
 
 Without `DATABASE_URL`, the public jobs and relocation routes use an explicitly labelled preview dataset. OAuth, profiles, applications and admin operations require a migrated PostgreSQL database and provider credentials.
 
+For an interactive review without cloud credentials, run `pnpm dev:review` (installed
+PostgreSQL 18 required). Open `http://127.0.0.1:3131` and choose a test candidate, newcomer
+or content operator. This creates a fresh isolated local database and uses real APIs with
+fictional content. It is not a deployed or employer-connected MVP. See the
+[review guide and product gaps](docs/21-local-product-review.md).
+
 `NUXT_SESSION_PASSWORD` is required in every running environment, including public preview deployments. The standalone Nitro server does not load `.env` by itself; export the variables before running `node .output/server/index.mjs`, or use the hosting provider's environment-variable store.
 
 ## Checks
@@ -76,6 +82,7 @@ disposable loopback `talentbay_ci` database. See [browser verification](docs/17-
 - [Candidate verification](docs/17-candidate-verification.md)
 - [CSV content operations](docs/19-content-operations.md)
 - [Release readiness](docs/20-release-readiness.md)
+- [Interactive local review and product gaps](docs/21-local-product-review.md)
 - [Architecture decisions](docs/adr/README.md)
 
 This is an alpha/MVP codebase. The documentation distinguishes implemented behavior, preview data and decisions still blocked on external approval.
