@@ -5,6 +5,29 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Detailed Continuation Planning - 2026-10-26
+
+Branch `codex/mvp-execution-route`, product baseline `af2c4ec` / draft #36.
+Prepared [delivery proposal](23-mvp-delivery-plan.md) and [47 task contracts](24-mvp-backlog.md)
+with dependencies, acceptance, module scopes, autonomy gates and independent-review handoff.
+The owner requested planning first, then model selection, then autonomous implementation.
+No application/runtime code, dependencies, schema, cloud settings or billing changed.
+
+Fresh Git/GitHub reads confirmed #25-#36 open with a cumulative 18-commit line and #24
+still deferred. Both #36 CI jobs are SUCCESS on `af2c4ec` (run `40298267987`). Earlier local
+test evidence remains dated baseline evidence, not new tests of future tasks. Cloud/Figma/
+native clients were not re-audited. Obsidian planning check reports the personal calendar
+plan stale; it is not used to assign project deadlines, and no unrelated calendar is edited.
+
+The proposed first run ends at K1 after tested AUTO tasks. An independent reviewer is then
+selected/run for R; controlled preview/beta H still requires provider/data/owner gates.
+Planning checks: 47 unique tasks; all dependency IDs resolve, the graph is acyclic, and
+all pre-review AUTO tasks feed the K1 review boundary. New relative Markdown links resolve;
+diff/whitespace checks passed. A local Node shim initially refused an untrusted mise config;
+the read-only document checks passed using the already installed explicit Node 22 PATH.
+No runtime suite was rerun for this documentation-only proposal.
+Next action: agree scope/open business gates, choose the executor and start A01/A02/B01.
+
 ## Managed Application Intake Confirmed - 2026-10-26
 
 Branch `codex/managed-application-intake`, product commit `a7ac7be` /

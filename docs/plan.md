@@ -3,6 +3,10 @@
 Last updated: 2026-10-26
 Decision: ship the MVP on Nuxt/Node + Vercel + Neon.
 
+Detailed remaining work: [delivery proposal](23-mvp-delivery-plan.md) and
+[task contracts](24-mvp-backlog.md), prepared 2026-10-26 for scope/model selection.
+They do not authorize a production rollout or start autonomous implementation yet.
+
 ## Active decision
 
 One responsive Nuxt application serves desktop browsers, mobile browsers and Telegram
