@@ -9,6 +9,9 @@
 - 50 задач A–I/R после CEO-сверки: добавлены TB-C06, TB-C07 и TB-I01; старые ID сохранены.
   Базовый сбор вакансий/бот входят в MVP, advanced connectors/notification scope не подменяются
   ими. X01–X06 — post-beta предложения, если отдельный пункт явно не перенесён владельцем.
+- Уточнения владельца 26.10: 11 сохранённых городов приняты; CV upload необязателен и
+  отложен, сейчас достаточно профиля. Bot scope I01 выбран агентом по поручению владельца;
+  запуск/навигация/помощь сейчас, proactive notifications X02 позже.
 - AUTO — код/документы/изолированные проверки в разрешённом repo; без реальной рассылки.
   GATE — внешнее разрешение/данные/участие человека. REVIEW — отдельный независимый запуск.
 - S/M/L — относительная сложность. Не часы, не стоимость API и не обещанный календарь.
@@ -136,6 +139,7 @@
 - Работы: сервер получает профиль/контакт/вакансию, валидирует минимальный согласованный
   пакет и disclosure version; создаёт application + receipt event + snapshot атомарно.
   В UI показать, кому/зачем направляется заявка и какие данные использует TalentBay.
+  CV-файла в этом scope нет; наличие профиля/контакта достаточно, upload не блокирует Apply.
 - Модули: vacancy applications POST, candidate service, VacancyActions/ProfileEditor.
 - Проверки: no-contact/invalid/version errors, public visibility/demo rejection, CSRF,
   double/concurrent submit, profile edit после Apply не изменяет snapshot, auth switch.
@@ -331,13 +335,14 @@
 Зависимости: TB-A01.
 Режим: AUTO. Сложность: M. Приоритет: P0.
 
-- Работы: предложить приоритетные города из фактических вакансий/старого списка, не
-  объявлять все 20 стран обязательными. Поля: валюта/период, living/one-time categories,
+- Работы: взять подтверждённые владельцем 11 городов из раздела 3 маршрута, не
+  запрашивать список повторно и не заменять его 2–3 городами молча. Поля: валюта/период, living/one-time categories,
   источник/дата, допущения налоговой модели, условия и reviewed/stale status.
 - Выход: fixed dataset schema/example на synthetic values, source checklist, reviewer
-  responsibility; live quote и оценка переезда различены.
+  responsibility; live quote и оценка переезда различены. Подтверждённое покрытие не
+  делает sourced/reviewed данные готовыми; пробелы по городу явно видны до D04/D06.
 - Готово: любой номер имеет единицу/период/происхождение или явно отсутствует; rent/flight
-  не названы актуальным предложением бронирования. Финальный city set остаётся gate.
+  не названы актуальным предложением бронирования. City set уже выбран, gate — качество данных.
 
 ### TB-D02 — Валидация данных и границ расчёта
 
@@ -373,7 +378,8 @@
 Зависимости: TB-D01.
 Режим: GATE. Сложность: L. Приоритет: P0.
 
-- Условие: владелец выбрал покрытие и ответственного за предметные данные/допущения.
+- Условие: покрытие из 11 городов уже выбрано владельцем; нужен ответственный за
+  предметные данные/допущения, не повторное согласование списка.
 - Работы: собрать проверяемые источники жилья/расходов/трансфера и официальные налоговые
   источники; зафиксировать дату/границы выборки/пропуски. Несопоставимое не смешивать.
 - Готово: подготовленный reviewed пакет с автором/датой/ограничениями. LLM не присваивает
@@ -588,17 +594,22 @@
 Зависимости: TB-A02, TB-A04.
 Режим: AUTO. Сложность: L. Приоритет: P0.
 
-- Работы: зафиксировать минимальные команды/entry contract по CEO scope, реализовать
-  запуск того же Mini App и обработку согласованных ссылок/ошибок. Переиспользовать
+- Работы: реализовать `/start` и постоянное меню Open TalentBay, `/jobs` и `/applications`
+  с переходом в тот же Mini App, `/help` и `/privacy`, обработку ссылок/ошибок. Это выбор
+  агента по поручению владельца 26.10, не найденный список команд CEO. Переиспользовать
   Nuxt backend/host adapter, а не второй frontend или бессрочный polling без runtime решения.
 - Подготовить защищённую server update обработку/повторов с bounded input, безопасными
   логами и tests по актуальной официальной документации Telegram. Bot update/username не
   создаёт web-session в обход server-validated initData. Никаких admin-команд без нового scope.
 - Проверки: fake provider/secret, повторный/неверный update, ссылки/entry и отключённая
-  конфигурация; production output без тестовых bot tokens. Не обещать exactly-once delivery.
+  конфигурация; production output без тестовых bot tokens. Проверить отсутствие private
+  data в command reply/URL и любых proactive sends; неизвестный текст не имитирует inbox
+  поддержки. Не обещать exactly-once delivery, help ссылается на approved support contact.
 - Готово: базовый bot flow протестирован локально и есть процедура подключения/меню H03.
   Настоящие credentials/menu/отправки не настроены автоматически. SaaS bot не использует
-  Pre-ICO/token flow; автоматические application/job notifications требуют отдельного ответа.
+  Pre-ICO/token flow. В первом выпуске статусы в UI/ручной follow-up, notifications X02
+  позже: явный opt-in/out, secure identity/channel mapping, durable retry/dedupe и реальные
+  delivery semantics. Первый запуск не требует write access и не показывает fake toggle.
 
 ## R. Независимое ревью после K1
 
@@ -705,7 +716,7 @@
 | ID | Направление | Условие нового старта |
 | --- | --- | --- |
 | TB-X01 | Server Saved, миграция local shortlist | Доказана потребность в account sync; merge/privacy/conflict contract |
-| TB-X02 | Bot/email delivery, reminders | Согласованы provider/budget, opt-in, события/retries/idempotency/delivery semantics |
+| TB-X02 | Сначала добровольные важные application updates; job alerts/email отдельно | Рабочий lifecycle B, secure channel mapping, opt-in/out, durable retry/dedupe/blocked-bot handling; без заранее построенной очереди |
 | TB-X03 | Полный Admin/CRM и employer self-service | Отдельный discovery/design gate, роли/тенантность, реальные operator pain points |
 | TB-X04 | Дополнительные connectors/масштабный scraping/XLSX/import history | Первый connector/runner C06/C07 уже в MVP; расширение после approved sources/обоснования масштаба |
 | TB-X05 | Дополнительные города/языки/сценарии переезда | Reviewed data/process и полноценные i18n тексты, не фиктивный language toggle |

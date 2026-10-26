@@ -5,6 +5,24 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Scope Answers and Basic Bot Decision - 2026-10-26
+
+The owner confirmed the preserved 11-city set and that a profile is sufficient for MVP;
+CV file upload is optional later, not a current storage/upload feature or fake disabled UI.
+Bot design was delegated to the agent. Chosen first scope: start/menu into the common
+Mini App, Jobs/Applications links, Help/Privacy. Application progress stays in-product and
+the team performs manual follow-up; no proactive notifications/newsletter service in v1.
+Next notification scope is explicit opt-in important application updates, then separate
+job alerts if needed. Do not request write access at entry or build a speculative queue.
+
+Verified Telegram documentation for menu launch, commands and write-access capabilities.
+This is an engineering product choice under delegation, not a quoted CEO command list.
+Updated route/backlog; task IDs/count unchanged. Geography/CV/bot scope questions are now
+resolved. Data/policy/operator/provider/production gates remain separate. No implementation,
+model switch, actual bot configuration/send, shared DB or release operation was performed.
+Documentation checks passed: 50 unique task IDs, valid acyclic dependencies, 12 relative
+links resolve, diff/whitespace checks. No runtime suite rerun for the Markdown-only change.
+
 ## CEO Excerpt Reconciliation - 2026-10-26
 
 The owner supplied another founder-conversation excerpt. Read it in full and compared

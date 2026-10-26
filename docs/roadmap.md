@@ -15,8 +15,9 @@ not silently added to the first release.
 
 CEO excerpt supplied 2026-10-26 confirms job ingestion, website, Telegram bot and Mini App
 as the first Web2 scope. C06/C07 and I01 now cover the minimal connector/runner/bot rather
-than deferring them wholesale. Notification details remain unresolved. Historical 11-city
-Working list is preserved as the starting candidate, not replaced by an approved 3-city cut.
+than deferring them wholesale. The owner subsequently confirmed the 11-city set and profile
+without CV upload (optional later), and delegated bot scope: basic entry/navigation/help
+in MVP; proactive application/job notifications follow later. No 3-city cut is approved.
 
 This replaces the Cloudflare-first ordering dated 2026-10-03. Phase numbers below refer
 to this revision. Code progress and external environment readiness are tracked separately
