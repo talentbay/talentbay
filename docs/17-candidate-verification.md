@@ -21,6 +21,13 @@ Browser regressions check the saved path fill, stable dimensions and arrow cente
 No new UI library or approved Figma freeze was introduced. These are focused corrections,
 not evidence that every screen or the overall product experience has been accepted.
 
+The subsequent [small application-access slice](22-application-review-contract.md) adds
+confirmed candidate withdrawal and read-only operator detail. VIEWED keeps its employer
+meaning and is never written by opening an administrator record. These are current states,
+not a timeline; no hiring outcome or external delivery is invented. Full admin design
+remains deferred. External/source routing awaits the CEO/product discussion requested by
+the owner, not an infrastructure-driven unilateral change.
+
 ## Hydration follow-up — 2026-10-26
 
 A real dev-server check caught Node/Chromium ICU compact-currency default differences

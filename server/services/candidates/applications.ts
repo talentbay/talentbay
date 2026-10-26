@@ -112,3 +112,16 @@ export async function listCandidateApplications(
     total: items.length,
   }
 }
+
+export async function withdrawApplication(userID: number, id: number) {
+  return await useDatabase().transaction(async (tx) => {
+    const [row] = await tx.select().from(schema.applications)
+      .where(and(eq(schema.applications.id, id), eq(schema.applications.userID, userID))).for('update')
+    if (!row) throw createError({ statusCode: 404, statusMessage: 'Application not found' })
+    if (row.status === 'WITHDRAWN') return { id: row.id, status: row.status }
+    if (row.status === 'REJECTED') throw createError({ statusCode: 409, statusMessage: 'This application is already closed' })
+    const [updated] = await tx.update(schema.applications).set({ status: 'WITHDRAWN' }).where(eq(schema.applications.id, id))
+      .returning({ id: schema.applications.id, status: schema.applications.status })
+    return updated!
+  })
+}

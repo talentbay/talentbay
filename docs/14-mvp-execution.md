@@ -5,6 +5,48 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Application access and product-intent correction - 2026-10-26
+
+Branch `codex/application-review`, base `71b9b8a` / [draft #34](https://github.com/talentbay/talentbay/pull/34).
+Added a small read-only application inbox/detail for current ADMIN and confirmed,
+owner-scoped withdrawal. Existing Nuxt UI and current data/schema are reused. No migration,
+new library, employer delivery, automated hiring decision or employer status writer.
+
+The owner asked to recover the CEO's philosophy before choosing external-source Apply.
+Read the canonical Obsidian map/roadmap/decision log and two reconciled October packages,
+repository scope/plan and the supplied founder conversation. The intended common journey
+includes profile, application and following it; importing jobs is not agreement to replace
+it with external redirects or become a manual recruitment service. No exact delivery
+mechanism for nonparticipating companies was found. [Evidence and open questions](22-application-review-contract.md).
+
+The earlier uncommitted operator NEW -> VIEWED experiment was removed: the preserved
+handoff defines VIEWED as employer viewing. The final queue has no status mutation;
+opening detail cannot change candidate progress. Synthetic seed now uses NEW only.
+Nothing from that experiment was committed, merged or deployed.
+
+Queue is bounded/keyset-paged (25); list omits contact/cover data. Detail reads the current
+profile, not an invented historical snapshot. Withdrawal requires same-origin strict
+bounded JSON, locks the owned row, is idempotent and retains the record. It does not allow
+a second application to the role or imply erasure. Revoked admins fail with old cookies.
+
+Actually passed: **112 unit/HTTP/OAuth, 24 tooling, 37 PostgreSQL, 16 public browser,
+10 DB/session/browser** tests; full lint, explicit build-mode typecheck, Node production
+build and compiled HTTP smoke. The DB/browser suite includes owner denial, revoked roles,
+CSRF/strict body/size limits, absent admin review mutation, read-without-state-change,
+withdraw/cancel/failure/retry/reload and bounded viewport checks. All DB writes used a
+new disposable loopback PostgreSQL 18 cluster, separate from the interactive review.
+
+Initial SQL test imported transitive h3 unavailable to that test config; fixed to the
+existing integration error-stub pattern. Initial 320px screenshots exposed a real wide
+table overflow, not a modal width failure (dialog itself was 288px). The new queue is a
+responsive unframed row grid, not a clipped desktop table. Tests/screenshots remain and
+pass at 320/390/768/1024/1440. Retry and narrow modal screenshots visually inspected.
+
+No merge/deploy, shared DB, real candidate/employer, billing or domain changes. Real
+provider acceptance/content/relocation data and product delivery decision remain open.
+#34 was retargeted to main because CI filters PR bases; its earlier absent checks must
+not be reported as passed. The branch still contains the prior unmerged stack.
+
 ## Interactive product review correction - 2026-10-26
 
 Branch `codex/interactive-product-review`, base `c602b42` / draft #33. Owner reported that

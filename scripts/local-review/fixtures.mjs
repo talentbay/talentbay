@@ -59,6 +59,4 @@ export async function seedReview({ sql, request, signIn, personas }) {
   for (const item of imported.items.slice(1, 3)) {
     await request(`/api/v1/vacancies/${item.id}/applications`, { method: 'POST', cookies: candidate.cookies, body: { coverLetter: 'A fictional application for the local product review.' } })
   }
-  // Seed one non-new state to inspect the existing status UI; this is not delivery evidence.
-  await sql`update applications set status = 'VIEWED' where user_id = ${candidate.user.id} and vacancy_id = ${imported.items[1].id}`
 }

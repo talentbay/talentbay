@@ -83,6 +83,7 @@ disposable loopback `talentbay_ci` database. See [browser verification](docs/17-
 - [CSV content operations](docs/19-content-operations.md)
 - [Release readiness](docs/20-release-readiness.md)
 - [Interactive local review and product gaps](docs/21-local-product-review.md)
+- [Application boundary and CEO/product questions](docs/22-application-review-contract.md)
 - [Architecture decisions](docs/adr/README.md)
 
 This is an alpha/MVP codebase. The documentation distinguishes implemented behavior, preview data and decisions still blocked on external approval.

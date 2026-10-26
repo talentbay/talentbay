@@ -54,9 +54,15 @@ Operator sequence:
 5. Open public site: Data Engineer is now visible. Overview counts come from this DB.
 6. Re-import the same file: it should be unchanged. Altered records require review again.
 
+Application review sequence (follow-up slice): open Content operator -> Applications ->
+Read the Platform Engineer application: its status must not change. Switch to Candidate ->
+Applications. Open its detail -> Withdraw application ->
+cancel or confirm. A confirmed withdrawal moves the record to Closed and survives reload.
+The operator has no employer-status mutation. No record is deleted or forwarded.
+
 All companies, people and jobs are fictional, even when a record has passed the local
-publication workflow. One seeded application has VIEWED set solely to inspect the status
-UI; it is not evidence of an employer reading it. No employer receives any test application.
+publication workflow. All new seeded applications are Submitted; no employer progress is
+invented. No employer receives any test application.
 The relocation dataset is illustrative and does not establish real costs or tax advice.
 
 ## Product Audit
@@ -66,7 +72,7 @@ the actual UI, plus the public automated viewport suite. Findings are ordered by
 
 | Priority | Step / observed gap | User impact | Next acceptance criterion |
 | --- | --- | --- | --- |
-| P0 | Apply records a row; no employer/operational handling exists | Candidate cannot actually progress toward hiring through TalentBay | Choose and implement an honest external-apply or managed delivery/response path; test the receiving side |
+| P0 | Read-only operator access exists, but no employer application/delivery route | Candidate cannot actually progress toward hiring through TalentBay | Recover CEO intent, agree the actual route and test the receiving side; external redirects are not approved |
 | P1 | Previous review had no DB/providers; only non-applicable demo roles | Owner could not assess profile, apply or operator functionality | Repeatable local role chooser now works; still needs owner product acceptance |
 | P1 | Relocation figures and listings are illustrative | The main value proposition cannot yet support a real decision | Approved source-backed jobs and costs, freshness/provenance and stated calculation limits |
 | P1 | Actual Google/GitHub/native Telegram and hosted environment unverified | Local success does not prove real onboarding works | Stable eligible preview, real provider callbacks, native device checks |

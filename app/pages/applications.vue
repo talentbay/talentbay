@@ -52,6 +52,10 @@ const detailsOpen = computed({
     if (!value) selected.value = null
   },
 })
+async function withdrawn() {
+  selected.value = null
+  await refresh()
+}
 watch(loggedIn, () => {
   selected.value = null
 })
@@ -165,7 +169,7 @@ const date = (value: string) =>
       <UModal
         v-model:open="detailsOpen"
         :title="selected?.vacancy.title || 'Application'"
-        description="Your submitted application and current status."
+        description="Submitted to TalentBay. Employer delivery is not confirmed."
       >
         <template #body>
           <div
@@ -200,6 +204,12 @@ const date = (value: string) =>
               color="neutral"
               variant="outline"
               @click="selected = null"
+            />
+            <CandidatesApplicationWithdrawal
+              v-if="!applicationStatuses[selected.status].closed"
+              :id="selected.id"
+              :key="selected.id"
+              @withdrawn="withdrawn"
             />
           </div>
         </template>

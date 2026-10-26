@@ -5,6 +5,7 @@ const { user, clear } = useUserSession()
 const navigation = [
   { label: 'Overview', to: '/ktulhu/v1', icon: 'i-lucide-layout-dashboard' },
   { label: 'Vacancies', to: '/ktulhu/v1/vacancies', icon: 'i-lucide-briefcase-business' },
+  { label: 'Applications', to: '/ktulhu/v1/applications', icon: 'i-lucide-inbox' },
   { label: 'Users', to: '/ktulhu/v1/users', icon: 'i-lucide-users' },
 ]
 

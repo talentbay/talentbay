@@ -91,6 +91,12 @@ server-side authorization; client guards only control navigation.
 Implement the frozen Candidate journey: browse/search, detail, Saved, relocation preview,
 profile editing, application review/submit and current application status.
 
+The minimal [application boundary](22-application-review-contract.md) adds read-only
+operator access and candidate withdrawal, not an employer inbox or delivery. The owner
+asked to recover the CEO's philosophy before deciding imported-source routing. External
+redirects and manual forwarding are unapproved alternatives; preserve the intended common
+profile/application journey and do not equate internal reads with employer progress.
+
 Saved may remain browser-local in the first release and must be labelled accordingly.
 Do not claim cross-device sync until the server-backed relation/API exists. Notifications,
 account export/delete/disconnect and language selection must not appear operational

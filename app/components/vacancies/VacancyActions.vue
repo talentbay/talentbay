@@ -145,7 +145,7 @@ async function submit() {
         >
           <p class="text-sm text-muted">
             Your current TalentBay profile will be associated with this
-            application.
+            application. TalentBay can review it; submission does not confirm delivery to the employer.
           </p>
           <NuxtLink
             to="/profile"

@@ -19,9 +19,9 @@ human review; browser host simulation is not a real native Telegram test.
 Saved remains browser-local; relocation data remains explicitly illustrative. Current
 application statuses are not a timestamped funnel. No delivery/traffic analytics are invented.
 
-**Product acceptance correction, 2026-10-26:** application creation currently records a
-row only. No employer inbox, operator processing workflow, employer delivery or response
-loop is implemented. This is an unfinished product journey, not just a provider/deployment
+**Product acceptance correction, 2026-10-26:** the small application-review follow-up adds
+an operator read-only queue and candidate withdrawal. No employer inbox,
+employer delivery or response loop is implemented. This is an unfinished product journey, not just a provider/deployment
 gate. Before beta, define and implement a truthful completion route for each listing
 (authorized external application, or an actual handled TalentBay application workflow).
 The owner has not accepted the current experience as a complete MVP.
