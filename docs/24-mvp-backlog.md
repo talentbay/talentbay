@@ -6,7 +6,9 @@
 
 ## Как читать и исполнять
 
-- 47 задач A–H/R; X01–X06 — отдельные post-beta предложения, не текущий autonomous scope.
+- 50 задач A–I/R после CEO-сверки: добавлены TB-C06, TB-C07 и TB-I01; старые ID сохранены.
+  Базовый сбор вакансий/бот входят в MVP, advanced connectors/notification scope не подменяются
+  ими. X01–X06 — post-beta предложения, если отдельный пункт явно не перенесён владельцем.
 - AUTO — код/документы/изолированные проверки в разрешённом repo; без реальной рассылки.
   GATE — внешнее разрешение/данные/участие человека. REVIEW — отдельный независимый запуск.
 - S/M/L — относительная сложность. Не часы, не стоимость API и не обещанный календарь.
@@ -278,16 +280,49 @@
 
 ### TB-C05 — Разрешённый real pilot dataset
 
-Зависимости: TB-C02, TB-C03, TB-C04, TB-H02, TB-G05.
+Зависимости: TB-C02, TB-C03, TB-C04, TB-C07, TB-H02, TB-G05.
 Режим: GATE. Сложность: M. Приоритет: P0.
 
 - Условие: конкретные источники/объём разрешены владельцем, reviewed target preview
   и загрузка в него одобрены. Никаких production seed по этой задаче.
-- Работы: подготовить CSV, validate → dry-run → import → human review → publish; источник,
-  company/title/salary/location/support claims сверены, demo не выдать за настоящего работодателя.
+- Работы: пройти approved source run → normalize → dry-run/import → human review → publish;
+  CSV проверить как fallback/correction. Company/title/salary/location/support claims сверены,
+  demo не выдать за настоящего работодателя. Расписание/реальные provider calls согласованы.
 - Проверки: public/detail/count/resolve, archive и повторный import без потери заявок;
   дата загрузки/источник/проверяющий в evidence, без приватных файлов/ключей.
 - Готово: на preview есть согласованное полезное наполнение, не synthetic demonstration.
+
+### TB-C06 — Первый источник: connector и нормализация
+
+Зависимости: TB-A02, TB-C01.
+Режим: AUTO. Сложность: L. Приоритет: P0.
+
+- Работы: выбрать технически/лицензионно пригодный первый источник, проверить реальные
+  API/формат/лимиты по документации. Реализовать bounded adapter с нормализацией к existing
+  import contract, stable source IDs, provenance, salary/currency/period и явными пропусками.
+- Проверить применимость ai-job-search как библиотеки/источника идей, не принимать его
+  лицензии/покрытие/работоспособность на веру. Не создавать универсальный crawler всех сайтов.
+- Проверки: сохранённые разрешённые fixtures, malformed/missing/duplicate/updated records,
+  pagination/timeout/rate-limit, credentials redaction; CI не обращается к live provider.
+- Готово: один конкретный connector нормализует документированный источник и передаёт
+  данные в существующий validation/review путь. Live сбор только после source approval;
+  если его нет, fixture coverage отмечено отдельно и release gate не закрывается.
+
+### TB-C07 — Повторяемый source runner и обновление
+
+Зависимости: TB-C06, TB-C04.
+Режим: AUTO. Сложность: L. Приоритет: P0.
+
+- Работы: bounded запуск connector → validate/dry-run → idempotent draft import с report,
+  безопасным повтором/checkpoint и запретом overlapping run. Сетевой fetch не держит DB locks.
+  Подготовить расписание под подтверждённый runtime, проверив provider duration/quota limits.
+- Модули: source service/runner/entry point, existing import/review, минимальное run state
+  при необходимости; без обязательных Kafka/очереди/нового отдельного backend.
+- Проверки: повтор/частичный ответ/падение страницы/429/timeout, changed vs unchanged,
+  linked applications, отсутствие auto-publish. Сбой источника не архивирует весь каталог.
+- Готово: synthetic run/retry воспроизводим, записи идут в review, CSV остаётся fallback.
+  Live schedule/credentials/общая БД не активируются без H; manual-only CSV не называется
+  завершённым автоматическим сбором вакансий.
 
 ## D. Relocation: данные, формула, доверие
 
@@ -421,11 +456,12 @@
 
 ### TB-E05 — Повторяемый product walkthrough
 
-Зависимости: TB-B09, TB-E02, TB-E03, TB-E04.
+Зависимости: TB-B09, TB-E02, TB-E03, TB-E04, TB-C07, TB-I01.
 Режим: AUTO. Сложность: S. Приоритет: P1.
 
 - Работы: актуализировать chooser/synthetic cases и 5–10 минутный сценарий просмотра:
-  Guest → candidate → relocation → Apply → operator handling → candidate outcome.
+  source run → review, bot entry → общий Mini App, Guest → candidate → relocation → Apply
+  → operator handling → candidate outcome. Simulation и настоящий бот различены.
 - Выход: dev:review, перечисленные routes/personas/действия, screenshot evidence и known gaps.
 - Готово: владелец/независимый reviewer видит целую услугу без реальных ключей и не должен
   угадывать скрытые admin URLs или считать no-login guest preview всем продуктом.
@@ -522,7 +558,7 @@
 
 ### TB-G04 — Abuse и release hardening
 
-Зависимости: TB-A03, TB-B09, TB-F04.
+Зависимости: TB-A03, TB-B09, TB-F04, TB-C07, TB-I01.
 Режим: AUTO. Сложность: M. Приоритет: P0.
 
 - Работы: error leakage/XSS/URL schemes/open redirect/input limits/replay review;
@@ -544,6 +580,25 @@
   placeholders; технически встроить только предоставленные/одобренные versioned тексты.
 - Готово: evidence «кто/что/когда утвердил», pending/noindex снят только с approved версии;
   нет ICO/доходности/custody/гарантий и неподписанных чужим именем legal документов.
+
+## I. Базовый Telegram-бот
+
+### TB-I01 — Bot entry и общий Mini App
+
+Зависимости: TB-A02, TB-A04.
+Режим: AUTO. Сложность: L. Приоритет: P0.
+
+- Работы: зафиксировать минимальные команды/entry contract по CEO scope, реализовать
+  запуск того же Mini App и обработку согласованных ссылок/ошибок. Переиспользовать
+  Nuxt backend/host adapter, а не второй frontend или бессрочный polling без runtime решения.
+- Подготовить защищённую server update обработку/повторов с bounded input, безопасными
+  логами и tests по актуальной официальной документации Telegram. Bot update/username не
+  создаёт web-session в обход server-validated initData. Никаких admin-команд без нового scope.
+- Проверки: fake provider/secret, повторный/неверный update, ссылки/entry и отключённая
+  конфигурация; production output без тестовых bot tokens. Не обещать exactly-once delivery.
+- Готово: базовый bot flow протестирован локально и есть процедура подключения/меню H03.
+  Настоящие credentials/menu/отправки не настроены автоматически. SaaS bot не использует
+  Pre-ICO/token flow; автоматические application/job notifications требуют отдельного ответа.
 
 ## R. Независимое ревью после K1
 
@@ -612,8 +667,9 @@
 Режим: GATE. Сложность: M. Приоритет: P0.
 
 - Условие: console callbacks/bot menu и human login/2FA разрешены/доступны.
-- Работы: Google/GitHub login/link/conflict/sign-out и Telegram launch с реальным
-  initData; iOS/Android/desktop где доступны, browser fallback, theme/back/safe areas.
+- Работы: Google/GitHub login/link/conflict/sign-out, настоящий SaaS bot entry/команды и
+  Telegram launch с реальным initData; iOS/Android/desktop где доступны, browser fallback,
+  theme/back/safe areas. Это не существующий Pre-ICO bot и не host simulation.
 - Готово: device/provider/version/date evidence с PASS/FAIL/BLOCKED. Если устройства
   нет, соответствующий пункт не «PASS по simulation»; owner принимает остаточное покрытие.
 - Найденные дефекты исправить с regression и адресным повторным review, не «обойти» защиту.
@@ -651,7 +707,7 @@
 | TB-X01 | Server Saved, миграция local shortlist | Доказана потребность в account sync; merge/privacy/conflict contract |
 | TB-X02 | Bot/email delivery, reminders | Согласованы provider/budget, opt-in, события/retries/idempotency/delivery semantics |
 | TB-X03 | Полный Admin/CRM и employer self-service | Отдельный discovery/design gate, роли/тенантность, реальные operator pain points |
-| TB-X04 | API connectors/парсеры/XLSX и import history | Approved source/terms/scale; обоснованы durable jobs, mapper и приоритет источников |
+| TB-X04 | Дополнительные connectors/масштабный scraping/XLSX/import history | Первый connector/runner C06/C07 уже в MVP; расширение после approved sources/обоснования масштаба |
 | TB-X05 | Дополнительные города/языки/сценарии переезда | Reviewed data/process и полноценные i18n тексты, не фиктивный language toggle |
 | TB-X06 | Новая инфраструктура/analytics/AI | Метрики/нагрузка/качество оправдывают сложность и расходы, отдельный ADR |
 

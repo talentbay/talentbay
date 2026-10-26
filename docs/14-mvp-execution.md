@@ -5,6 +5,30 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## CEO Excerpt Reconciliation - 2026-10-26
+
+The owner supplied another founder-conversation excerpt. Read it in full and compared
+relevant product statements with the preserved scope/Obsidian; personal/financial chat
+and historic monetization prices are not copied into the implementation specification.
+The excerpt explicitly confirms job ingestion, website, Telegram bot and Mini App as
+the first Web2 blocker; Blockpass/expansion follow later. It repeats managed applications.
+
+Corrected the too-broad deferral of all source connectors/bot work: delivery proposal now
+has **50 task contracts**, adding C06/C07/I01 while preserving previous IDs. CSV remains
+operator fallback/correction, not a substitute for the required source pipeline. A basic
+bot is not proof that application/job notification delivery is agreed or implemented.
+This is a corrected proposal on draft #37, not implementation or a new approved freeze.
+
+The excerpt contains no city/country list. The 2026-06-09 scope and canonical Obsidian
+preserve an 11-city Working list, not an independently verified final CEO approval.
+The agent's 2-3-city suggestion was not adopted and no longer replaces that candidate list.
+Remaining product questions: confirm that working list/latest version; CV file requirement;
+bot commands/notification delivery. Provider/policy/operational gates remain for release,
+not repeated product-discovery questions. No code/runtime/cloud/secret/billing operations.
+Document validation passed: 50 unique tasks, valid acyclic dependencies, all pre-review
+AUTO tasks feed R01; 12 local Markdown links resolve, diff/whitespace checks pass. Runtime
+tests were not rerun for this documentation-only reconciliation.
+
 ## Detailed Continuation Planning - 2026-10-26
 
 Branch `codex/mvp-execution-route`, proposal commit `3dd9b7d` /

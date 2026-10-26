@@ -6,12 +6,17 @@ Active path: MVP first on Nuxt/Node + Vercel + Neon.
 ## Detailed Continuation Proposal - 2026-10-26
 
 The remaining implementation route is decomposed in [the delivery plan](23-mvp-delivery-plan.md)
-and [47 dependency-linked tasks](24-mvp-backlog.md). They distinguish verified code,
+and [50 dependency-linked tasks](24-mvp-backlog.md). They distinguish verified code,
 independent review, hosted/native acceptance and beta. This is a proposal requested by
 the owner before selecting an autonomous executor, not an already launched implementation
 or a new calendar commitment. Existing M1-M8 IDs below remain historical phase references;
 new tasks use TB-A01 etc. Full admin, delivery notifications and platform migrations are
 not silently added to the first release.
+
+CEO excerpt supplied 2026-10-26 confirms job ingestion, website, Telegram bot and Mini App
+as the first Web2 scope. C06/C07 and I01 now cover the minimal connector/runner/bot rather
+than deferring them wholesale. Notification details remain unresolved. Historical 11-city
+Working list is preserved as the starting candidate, not replaced by an approved 3-city cut.
 
 This replaces the Cloudflare-first ordering dated 2026-10-03. Phase numbers below refer
 to this revision. Code progress and external environment readiness are tracked separately

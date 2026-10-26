@@ -120,6 +120,14 @@ or universal spreadsheet mapper a prerequisite.
 
 Initial operator workflow:
 
+CEO scope reconciliation (2026-10-26): a working job-source connector/runner and basic
+Telegram bot are MVP requirements, not blanket post-MVP options. Automated gathering feeds
+the same validation/draft/review/publish boundary; CSV remains fallback/correction, not
+the entire ingestion product. Expanded connectors and notification delivery are distinct.
+See C06/C07/I01 in `docs/24-mvp-backlog.md`; no second frontend is introduced.
+
+CSV fallback/correction workflow:
+
 1. Prepare CSV using a fixed documented template (keep existing JSON import support).
 2. Validate types, field lengths, source identifiers, duplicates and every row.
 3. Show or produce an actionable validation report and a dry-run preview.
