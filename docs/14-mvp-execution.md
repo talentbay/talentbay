@@ -7,7 +7,8 @@ Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/
 
 ## Detailed Continuation Planning - 2026-10-26
 
-Branch `codex/mvp-execution-route`, product baseline `af2c4ec` / draft #36.
+Branch `codex/mvp-execution-route`, proposal commit `3dd9b7d` /
+[draft #37](https://github.com/talentbay/talentbay/pull/37), product baseline `af2c4ec` / draft #36.
 Prepared [delivery proposal](23-mvp-delivery-plan.md) and [47 task contracts](24-mvp-backlog.md)
 with dependencies, acceptance, module scopes, autonomy gates and independent-review handoff.
 The owner requested planning first, then model selection, then autonomous implementation.
@@ -26,7 +27,8 @@ all pre-review AUTO tasks feed the K1 review boundary. New relative Markdown lin
 diff/whitespace checks passed. A local Node shim initially refused an untrusted mise config;
 the read-only document checks passed using the already installed explicit Node 22 PATH.
 No runtime suite was rerun for this documentation-only proposal.
-Next action: agree scope/open business gates, choose the executor and start A01/A02/B01.
+Draft #37 is published/attached; no merge or deployment. Next action: agree scope/open
+business gates, choose the executor and start A01/A03/A04, then A02/B01 by dependencies.
 
 ## Managed Application Intake Confirmed - 2026-10-26
 
