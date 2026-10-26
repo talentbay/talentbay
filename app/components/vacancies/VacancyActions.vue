@@ -89,9 +89,12 @@ async function submit() {
       v-if="outcome"
       :title="
         outcome === 'submitted'
-          ? 'Application submitted'
+          ? 'Application received by TalentBay'
           : 'You have already applied to this vacancy'
       "
+      :description="outcome === 'submitted'
+        ? 'Our team will contact the company about your candidacy and follow up on next steps.'
+        : undefined"
       color="success"
       variant="soft"
       class="mb-4"
@@ -144,8 +147,8 @@ async function submit() {
           @submit.prevent="submit"
         >
           <p class="text-sm text-muted">
-            Your current TalentBay profile will be associated with this
-            application. TalentBay can review it; submission does not confirm delivery to the employer.
+            Your current profile and cover note go to the TalentBay team, not
+            directly to the employer. We contact the company to propose your candidacy.
           </p>
           <NuxtLink
             to="/profile"

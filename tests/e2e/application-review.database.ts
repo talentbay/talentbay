@@ -98,7 +98,7 @@ test('operator can inspect without employer progress; candidate can withdraw wit
     const view = await candidate.newPage()
     await view.setViewportSize({ width: 390, height: 844 })
     await view.goto('/applications')
-    await expect(view.getByText('Submitted', { exact: true })).toBeVisible()
+    await expect(view.getByText('Received by TalentBay', { exact: true })).toBeVisible()
     await view.getByRole('button', { name: 'View application for Review Test Engineer', exact: true }).click()
     const application = view.getByRole('dialog')
     await application.getByRole('button', { name: 'Withdraw application', exact: true }).click()

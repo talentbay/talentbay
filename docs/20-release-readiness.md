@@ -22,8 +22,9 @@ application statuses are not a timestamped funnel. No delivery/traffic analytics
 **Product acceptance correction, 2026-10-26:** the small application-review follow-up adds
 an operator read-only queue and candidate withdrawal. No employer inbox,
 employer delivery or response loop is implemented. This is an unfinished product journey, not just a provider/deployment
-gate. Before beta, define and implement a truthful completion route for each listing
-(authorized external application, or an actual handled TalentBay application workflow).
+gate. The owner has now selected TalentBay-managed intake and manual company outreach.
+Before beta, implement its handling records, approved data-sharing step and follow-up;
+do not mark a submission delivered merely because TalentBay stored it.
 The owner has not accepted the current experience as a complete MVP.
 See [local walkthrough and prioritized gaps](21-local-product-review.md).
 

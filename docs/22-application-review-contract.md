@@ -1,7 +1,22 @@
 # Application Handling Boundary
 
-Updated: 2026-10-26 after the owner asked to recover the CEO/product philosophy before
-choosing external application routing. No external-vs-managed model is approved here.
+Updated: 2026-10-26. The owner supplied the missing product answer: TalentBay receives
+applications, contacts the company and proposes the candidate. The company is also a
+potential client for further cooperation. This supersedes the earlier open routing choice.
+
+## Confirmed Product Decision
+
+The MVP uses **TalentBay-managed applications and manual company outreach**, not a default
+redirect to a source site. An employer account is not required for the first conversation.
+The candidate submits to TalentBay; the team handles contact and follow-up. This establishes
+the business process, not proof that an employer has already received any particular CV.
+
+At submission, confirm receipt by TalentBay and explain the next step. Only a recorded,
+actually completed handoff can justify saying information was sent to the company.
+Do not guarantee an employer reply, interview, hire or fixed turnaround time.
+
+Source: direct product clarification supplied by the owner in this chat, 2026-10-26.
+It is not approval to send a real candidate's data or contact companies from this agent.
 
 ## Evidence and Product Intent
 
@@ -17,8 +32,8 @@ The supplied founder conversation and existing MVP/design documents support thes
 - Early vacancies may be populated by administrators from real sources; early employer
   self-service/participation is not mandatory. This describes content acquisition, not
   permission to send personal data or an agreed mechanism for delivering applications.
-- No explicit agreement was found that all applications leave TalentBay, or that the
-  team becomes a staffed manual recruitment/forwarding service for every imported job.
+- Before the clarification above, the preserved sources did not specify who receives
+  imported-job applications. That gap is now resolved at the product-model level.
 
 Sources: user-supplied founder excerpts in this chat; historical `docs/01-mvp-scope.md`
 (Candidate, Company and Success Criteria); current `docs/plan.md` and Candidate handoff.
@@ -26,14 +41,14 @@ Obsidian's canonical project map/roadmap and the two reconciled October context 
 were also read. These are partial preserved sources, not a claim to possess the full CEO
 conversation. Old targets and long-term ideas are not silently promoted into new scope.
 
-**Consequence:** an external-source Apply path is an option to discuss, not an adopted
-product direction. Internal registration alone is equally insufficient to claim delivery.
-Do not replace the intended end-to-end product with a pure aggregator for convenience.
+**Consequence:** retain the common in-product profile/application journey and build the
+minimal operator workflow around it. Internal registration alone does not prove delivery.
 
 ## Safe Bounded Code Slice
 
 The current branch adds an administrator read-only application queue and owner-scoped
-candidate withdrawal. It does not implement or choose the missing delivery model.
+candidate withdrawal. The current follow-up clarifies receipt/preflight/detail copy for
+the confirmed managed model; it does not implement a send service or outreach event log.
 
 - Queue: current ADMIN only, at most 25 records, status filter and keyset pagination.
   List responses omit email, cover note and contact details.
@@ -57,17 +72,22 @@ An earlier uncommitted experiment mapping administrator review to VIEWED was rem
 it conflicted with the existing employer-status contract. Tests now protect the absence
 of that mutation and preserve the distinction. No such change was merged or deployed.
 
-## Questions To Resolve With The CEO
+## Next Operator Slice (Not Yet Implemented)
 
-1. For a vacancy whose company has not joined TalentBay, what exactly happens after Apply,
-   who receives it, and what evidence lets us tell the candidate it arrived?
-2. Is the first release intended to complete the application inside TalentBay, or may a
-   clearly labelled source handoff complete it temporarily? This is a product choice.
-3. If TalentBay accepts applications, who operates the receiving/response process before
-   employer accounts exist, with what permission and candidate-facing promise?
+1. Separate TalentBay handling from employer hiring stages. Record actual company contact
+   and candidate-information handoff with operator, time and a bounded reference; opening
+   the application must never set employer VIEWED.
+2. Before sharing, show the candidate what is being shared, with which company and for
+   what purpose. Define consent and the retained application snapshot with the approved
+   privacy/terms; do not treat old submissions as silently granting new permissions.
+3. Provide an actionable operator queue and expose only truthful progress to the candidate.
+   Distinguish a manually recorded handoff from confirmed receipt/read by an employer.
+4. Specify who performs outreach/follow-up, the communication channel and handling of
+   unavailable companies/withdrawals. No person, staffing level or SLA is assigned by code.
 
-Until clarified, preserve the common profile/application journey and do not publish an
-unsupported delivery promise. The local review remains an explicit synthetic environment.
+Manual outreach can exist outside the app, but it is not an implemented automated delivery
+feature. Actual employer contact, personal-data sharing and a production release were not
+performed. The local review remains an explicit synthetic environment.
 
 The withdrawal uses the existing transaction pattern and the
 [Drizzle transaction API](https://orm.drizzle.team/docs/transactions), checked 2026-10-26.

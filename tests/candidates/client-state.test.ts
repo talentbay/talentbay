@@ -21,7 +21,7 @@ describe('candidate presentation contracts', () => {
     expect(profileSections({ headline: ' ', city: 'Berlin', countryCode: null, about: '', phone: '123', telegram: null, githubUrl: null, linkedinUrl: null }).filter(value => value.complete).map(value => value.label)).toEqual(['Location', 'Contact'])
   })
   it('treats an offer as active, not a fabricated completed hire', () => {
-    expect(applicationStatuses.NEW.label).toBe('Submitted')
+    expect(applicationStatuses.NEW.label).toBe('Received by TalentBay')
     expect(applicationStatuses.OFFER.closed).toBe(false)
     expect(applicationStatuses.REJECTED.closed).toBe(true)
     expect(applicationStatuses.WITHDRAWN.closed).toBe(true)

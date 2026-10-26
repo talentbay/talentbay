@@ -61,7 +61,7 @@ cancel or confirm. A confirmed withdrawal moves the record to Closed and survive
 The operator has no employer-status mutation. No record is deleted or forwarded.
 
 All companies, people and jobs are fictional, even when a record has passed the local
-publication workflow. All new seeded applications are Submitted; no employer progress is
+publication workflow. All new seeded applications are Received by TalentBay; no employer progress is
 invented. No employer receives any test application.
 The relocation dataset is illustrative and does not establish real costs or tax advice.
 
@@ -72,7 +72,7 @@ the actual UI, plus the public automated viewport suite. Findings are ordered by
 
 | Priority | Step / observed gap | User impact | Next acceptance criterion |
 | --- | --- | --- | --- |
-| P0 | Read-only operator access exists, but no employer application/delivery route | Candidate cannot actually progress toward hiring through TalentBay | Recover CEO intent, agree the actual route and test the receiving side; external redirects are not approved |
+| P0 | Managed intake/manual outreach is confirmed; operator contact/share records are missing | Candidate progress beyond receipt cannot be verified in the product | Implement the agreed manual handling and approved share/follow-up steps; do not default to external redirects |
 | P1 | Previous review had no DB/providers; only non-applicable demo roles | Owner could not assess profile, apply or operator functionality | Repeatable local role chooser now works; still needs owner product acceptance |
 | P1 | Relocation figures and listings are illustrative | The main value proposition cannot yet support a real decision | Approved source-backed jobs and costs, freshness/provenance and stated calculation limits |
 | P1 | Actual Google/GitHub/native Telegram and hosted environment unverified | Local success does not prove real onboarding works | Stable eligible preview, real provider callbacks, native device checks |

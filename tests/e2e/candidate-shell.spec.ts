@@ -38,6 +38,8 @@ test('save, read, remove and undo stay on the same browser-local shortlist', asy
   const first = page.locator('article').first()
   const title = await first.getByRole('link').first().innerText()
   const savedButton = first.getByRole('button', { name: 'Save vacancy', exact: true })
+  await expect(savedButton).toBeEnabled()
+  await page.evaluate(() => document.fonts.ready)
   const before = await savedButton.boundingBox()
   await expect(savedButton.locator('svg path')).toHaveCSS('fill', 'none')
   await first.getByRole('button', { name: 'Save vacancy', exact: true }).click()

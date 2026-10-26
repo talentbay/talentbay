@@ -169,7 +169,9 @@ const date = (value: string) =>
       <UModal
         v-model:open="detailsOpen"
         :title="selected?.vacancy.title || 'Application'"
-        description="Submitted to TalentBay. Employer delivery is not confirmed."
+        :description="selected?.status === 'NEW'
+          ? 'Your application is with TalentBay. Our team handles company outreach and follow-up.'
+          : 'Your application and current status.'"
       >
         <template #body>
           <div

@@ -93,9 +93,11 @@ profile editing, application review/submit and current application status.
 
 The minimal [application boundary](22-application-review-contract.md) adds read-only
 operator access and candidate withdrawal, not an employer inbox or delivery. The owner
-asked to recover the CEO's philosophy before deciding imported-source routing. External
-redirects and manual forwarding are unapproved alternatives; preserve the intended common
-profile/application journey and do not equate internal reads with employer progress.
+confirmed on 2026-10-26 that TalentBay receives applications and manually contacts companies
+to propose candidates and begin potential client relationships. Keep in-product Apply;
+do not default to external redirects. Receipt by TalentBay, company contact, actual profile
+handoff and employer viewing are different facts. The operator handling log/share approval
+remains to be implemented; current receipt copy is not proof of completed delivery.
 
 Saved may remain browser-local in the first release and must be labelled accordingly.
 Do not claim cross-device sync until the server-backed relation/API exists. Notifications,

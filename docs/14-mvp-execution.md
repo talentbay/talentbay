@@ -5,6 +5,39 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
 
+## Managed Application Intake Confirmed - 2026-10-26
+
+Branch `codex/managed-application-intake`, base `c256387` / [draft #35](https://github.com/talentbay/talentbay/pull/35).
+The owner supplied the missing product answer: TalentBay receives the application,
+contacts the company and proposes the candidate; the company is also a potential client.
+Keep in-product Apply, not a default source redirect. This supersedes the open model below.
+[Contract and next operator slice](22-application-review-contract.md).
+
+Preflight, success, NEW and detail copy now name TalentBay as the receiver and explain
+manual company outreach/follow-up. They do not claim an employer already received/read
+the application or guarantee a response, interview, hire or turnaround. No backend,
+schema, delivery integration or contact log was added in this small follow-up. Actual
+handling/share records, approved information sharing and follow-up remain unimplemented.
+
+Actually passed: `pnpm test` **112**, `node --test tests/tooling/*.test.mjs` **24**,
+`pnpm lint`, `nuxt typecheck --build --dotenv /private/tmp/talentbay-test.env`, Node build
+with explicit empty dotenv/DB/provider values, compiled `pnpm test:smoke`, public browser
+**16**, DB/session/browser **10** on the isolated loopback PostgreSQL cluster. Updated
+browser assertions cover receipt/preflight copy and persisted NEW status; mobile screenshot
+visually inspected. The separate 37-SQL domain suite was not rerun locally: no DB code changed.
+
+The first public run found a geometry-test readiness race: it measured the SSR button
+before interactive state/fonts settled. Wait for enabled/fonts before the same exact
+geometry assertion; all 16 then passed and the focused test passed three additional runs.
+Tooling initially hit sandbox loopback EPERM; the unchanged suite passed with local-port
+permission. No tests/assertions were removed. Earlier #35 CI is now confirmed successful
+(`build`, `PostgreSQL integration`, run `40285515181`), not evidence for this unpushed branch.
+
+No merge, deploy, shared database/secret/domain/billing operations or real company contact.
+Local synthetic review remains at 3130/3131. The next runnable product task is minimal
+operator handling, with actual contact/handoff distinct from employer hiring stages;
+this is not a finished MVP or a new approved design freeze.
+
 ## Application access and product-intent correction - 2026-10-26
 
 Branch `codex/application-review`, base `71b9b8a` / [draft #34](https://github.com/talentbay/talentbay/pull/34).

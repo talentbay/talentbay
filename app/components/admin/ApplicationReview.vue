@@ -35,7 +35,7 @@ const details = computed(() => {
       </div>
     </section>
     <section><h3 class="font-semibold">Cover note</h3><p class="mt-2 whitespace-pre-wrap text-sm leading-6">{{ data.coverLetter || 'No cover note added.' }}</p></section>
-    <p class="text-sm text-muted">Employer delivery is not confirmed. Viewing this record does not change its status.</p>
+    <p class="text-sm text-muted">Company outreach is handled by TalentBay. Delivery to the company has not been recorded here.</p>
     <div class="flex flex-wrap gap-3 border-t border-default pt-4">
       <UButton :to="`/jobs/${data.vacancy.slug}`" label="Open vacancy" color="neutral" variant="outline" trailing-icon="i-lucide-arrow-up-right" />
     </div>

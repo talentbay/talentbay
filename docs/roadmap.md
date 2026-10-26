@@ -67,9 +67,10 @@ M3.5 — Settings, first launch/deep links and loading/empty/error/offline recov
 M3.6 — Browser and Telegram validation at 320, 390, 768, 900, 1024 and 1440px, including
 keyboard navigation, focus, reduced motion, safe areas and no horizontal overflow.
 M3.7 — Candidate withdrawal and read-only minimal operator access. Preserve the record
-and employer-status meaning; verify both participants. Before beta, agree
-and implement the actual application route for imported vs partner vacancies; an internal
-review is not employer delivery. See `docs/22-application-review-contract.md`.
+and employer-status meaning; verify both participants. The owner confirmed managed Apply:
+TalentBay receives the application and manually contacts the company. Before beta, complete
+operator handling, approved information sharing and truthful candidate progress; an internal
+read or receipt is not employer delivery. See `docs/22-application-review-contract.md`.
 
 Exit: one application usable as desktop web, mobile web and Telegram Mini App. No duplicate
 Telegram page tree, invented server capabilities or fake permission/settings controls.

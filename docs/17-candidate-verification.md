@@ -25,8 +25,10 @@ The subsequent [small application-access slice](22-application-review-contract.m
 confirmed candidate withdrawal and read-only operator detail. VIEWED keeps its employer
 meaning and is never written by opening an administrator record. These are current states,
 not a timeline; no hiring outcome or external delivery is invented. Full admin design
-remains deferred. External/source routing awaits the CEO/product discussion requested by
-the owner, not an infrastructure-driven unilateral change.
+remains deferred. The owner subsequently confirmed managed intake: TalentBay receives the
+application and contacts the company. Preflight, success and NEW/detail copy now explain
+that receiver and next step; they do not assert the employer has received or read anything.
+Operator handling/share records remain a separate unimplemented slice, not a new Figma freeze.
 
 ## Hydration follow-up — 2026-10-26
 
