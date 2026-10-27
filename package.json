@@ -16,7 +16,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
-    "test:integration": "node --env-file=.env.integration node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts",
+    "test:integration": "node scripts/testing/integration.mjs",
     "test:smoke": "node scripts/smoke-production.mjs",
     "test:recovery": "node scripts/recovery/rehearse.mjs",
     "test:e2e": "playwright test",

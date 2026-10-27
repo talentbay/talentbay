@@ -2,10 +2,39 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/privacy-boundaries`; verified parent `5a503c1` / #54.
+Current work branch: `codex/disposable-integration`; verified parent `0cdbb55` / #55.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Safe default SQL tests / legacy upgrade / representative volume (G03)
+
+#55 both CI jobs SUCCESS40518198669, only integration FF0cdbb55; main/production unchanged.
+Legacy `test:integration` implicitly read .env.integration and direct Vitest config had no
+target assertion. Default entry now creates its own fresh PG18 from the existing clean
+environment/owned-cluster helper, no dotenv/target arguments/shared/cloud. Config itself
+guards before test collection. Negative subprocess tests reject shared URL without secret
+echo and injected target args.180s stages and SIGINT/SIGTERM cleanup owned child group/PG;
+actual interrupted rehearsal returned1/no false PASS after upgrade, normal final run90/90
+SQL PASS and owned cluster stopped. CI keeps disposable service and now verifies upgrade.
+
+Actual committed0000/0001 with six legacy row types -> all through0009: fields/IDs/provider/
+profile/application preserved, no invented snapshot/events; new nullable Telegram identity
+and exact migration replay inventory PASS. Existing concurrent Apply/withdraw/share/assign/
+correction/reopen/import/review/source/dataset/bot regressions retained.5000 synthetic roles/
+1000 applications:3428 public matches walked completely,50-row/<128KiB public and25-row
+admin pages, full counts/dashboard/private projection and actual indexes/FTS plan PASS.
+One observed full walk+queues3502ms, selective GIN1.205ms; not production SLA and complete
+cross-join OR search is not proven GIN by this separate selective probe. docs34 records
+scope, rollback reader compatibility and limits. Initial new volume tests used wrong
+cursor/index names; corrected to actual contracts, no production API/schema change.
+
+PASS181 unit/90 SQL/30 tooling/typecheck/lint zero warnings/Node build/HTTP smoke.
+First tooling run without listener permission hit sandbox EPERM; permitted loopback rerun
+30/30 PASS, no weakened test. App runtime unchanged since #55 full20public/31DB/recovery/
+Vercel check; these are parent evidence, not rerun claims for this tooling-only slice.
+No deps/schema/provider/shared migration/main/deploy/real data/outreach changes. Next AUTO
+E04 host/popup edge cases, E05 walkthrough and G04/K1; independent R/real H remain gates.
 
 ### Private API / processing inventory (G01/G02)
 

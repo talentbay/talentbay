@@ -41,6 +41,7 @@ fictional content. It is not a deployed or employer-connected MVP. See the
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:integration
 pnpm build
 pnpm test:smoke
 pnpm exec playwright install chromium
@@ -62,9 +63,15 @@ an empty database configuration. `playwright.database.config.ts` additionally ex
 real sessions, profile edits and applications, but refuses any target other than a marked
 disposable loopback `talentbay_ci` database. See [browser verification](docs/17-candidate-verification.md).
 
+`test:integration` requires an already installed PostgreSQL18. It ignores developer DB/
+provider credentials and dotenv, creates its own temporary loopback database, verifies
+legacy migration upgrade, runs the SQL suite and stops its cluster. Direct Vitest
+integration runs require the explicit disposable guard; shared/cloud targets are refused.
+
 ## Documentation
 
 - [Current state](docs/09-current-state.md)
+- [Disposable database verification](docs/34-database-verification.md)
 - [MVP scope](docs/01-mvp-scope.md)
 - [Architecture](docs/02-architecture.md)
 - [Local development](docs/03-local-development.md)

@@ -97,25 +97,29 @@ CI and automated browser/integration tests use disposable loopback PostgreSQL na
 migration URLs pointing to it. Run `node scripts/assert-ci-database.mjs` before migrations.
 The actual commands are in `.github/workflows/ci.yml`; no cloud secrets are required.
 
-The following `.env.integration` command is a **legacy manual, opt-in** path. Use it only
-after verifying an isolated target and approval; it is not the default automated test path:
+Default local integration command (installed PostgreSQL18 required; no installer):
 
 ```bash
 pnpm test:integration
 ```
 
-The workflow creates unique user, organisation, vacancy, profile and application
-records, verifies the admin and candidate service paths, and removes all test
-records. Never point `.env.integration` at Preview or Production.
+This creates an owned fresh loopback cluster without reading dotenv or inheriting DB/
+provider credentials, applies0000/0001, seeds synthetic legacy rows, upgrades to HEAD and
+compares original fields/IDs plus unchanged replay. It then runs the full SQL suite and
+stops its database before reporting PASS. No existing-target arguments are accepted.
+`PG_BIN` may select an already installed PostgreSQL18 bin directory.
 
-To run the compiled-server smoke against a database:
+Vitest's integration config itself invokes the guard **before** test-module imports, so a
+direct `pnpm exec vitest run --config vitest.integration.config.ts` also refuses unmarked,
+shared/cloud/mismatched targets. CI's empty disposable service uses the same upgrade
+verification. Upgrade verification refuses any existing public/drizzle table; it does not
+drop/reset a database. Do not use ignored `.env.integration` as an implicit target or
+change the guard to make a shared environment pass. Approved Neon integration needs a
+separate verified-target adapter/approval, not merely a copied URL or cleanup promise.
 
-```bash
-node --env-file=.env.integration scripts/smoke-production.mjs
-```
-
-When `DATABASE_URL` is present, the smoke test compares the vacancy API total
-with PostgreSQL instead of only checking the fallback catalogue.
+Compiled-server smoke with no DB is `pnpm test:smoke`. Real DB-backed browser tests require
+the existing disposable guard and compiled Node output; see docs17. Production/preview
+database migration and release remain separate operations, never a test/build side effect.
 
 ## OAuth Callbacks
 

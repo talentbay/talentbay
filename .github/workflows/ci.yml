@@ -117,8 +117,8 @@ jobs:
       - name: Verify disposable database target
         run: node scripts/assert-ci-database.mjs
 
-      - name: Apply committed migrations to the disposable database
-        run: pnpm db:migrate
+      - name: Verify legacy upgrade and committed migrations on the disposable database
+        run: node scripts/testing/migration-upgrade.mjs
 
       - name: Database-backed workflow tests
         # Use injected runner env, not the developer's ignored .env.integration.

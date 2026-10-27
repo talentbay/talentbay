@@ -1,5 +1,9 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+import { assertCiDatabaseEnvironment } from './scripts/assert-ci-database.mjs'
+
+// Refuse unsafe connections before importing any test module or its SQL clients.
+assertCiDatabaseEnvironment()
 
 export default defineConfig({
   resolve: {
