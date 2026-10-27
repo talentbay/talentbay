@@ -1,5 +1,14 @@
 # Candidate Browser Verification
 
+## Reviewed Apply Context - 2026-10-27
+
+R02 adds a required shown-context precondition, not a new product route/Figma freeze. A
+changed role/recipient produces412, keeps the note and resets acknowledgment; Reload listing
+shows fresh content before explicit renewed confirmation. Original compiled test caught a
+stale checkbox accessible name while visible company text updated; the context-keyed
+control now updates both. Focused scenario and full41 DB /20 public browser PASS; renewed
+recipient mobile screenshot inspected. Detail: docs14/22. Not real-provider/native approval.
+
 ## Host Edge Cases - 2026-10-27
 
 E04 uses actual compiled Chromium/API/isolated PostgreSQL plus fake HMAC credentials and

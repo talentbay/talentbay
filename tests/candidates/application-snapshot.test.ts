@@ -14,9 +14,9 @@ const candidate: CandidateProfileResponse = {
 
 describe('application submission contract', () => {
   it('requires a versioned explicit acknowledgment and rejects injected authority', () => {
-    const valid = { disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true }
+    const valid = { disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true, expectedContext: `v1:${'a'.repeat(64)}` }
     expect(applicationInputSchema.parse(valid)).toEqual(valid)
-    for (const body of [{}, { ...valid, shareAcknowledged: false }, { ...valid, disclosureVersion: 'old' }, { ...valid, userID: 8 }, { ...valid, recipient: 'Other' }, { ...valid, coverLetter: 'a'.repeat(5001) }]) {
+    for (const body of [{}, { ...valid, expectedContext: undefined }, { ...valid, expectedContext: 'old' }, { ...valid, shareAcknowledged: false }, { ...valid, disclosureVersion: 'old' }, { ...valid, userID: 8 }, { ...valid, recipient: 'Other' }, { ...valid, coverLetter: 'a'.repeat(5001) }]) {
       expect(applicationInputSchema.safeParse(body).success).toBe(false)
     }
   })

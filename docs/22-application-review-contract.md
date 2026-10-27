@@ -145,6 +145,26 @@ current app stops further package access after withdrawal; it cannot control a h
 previously copied information outside the app. One handoff is recorded per application;
 correction/re-sharing requires a future explicit reviewed workflow, not another send key.
 
+### Displayed Context Precondition (R02)
+
+Database-backed public vacancy DTOs include `applicationContext`, a versioned SHA-256
+fingerprint of material vacancy fields and recipient ID/name. It excludes observation,
+publication and moderation timestamps. This is an optimistic precondition, **not** an
+authentication token, legal approval or proof that an arbitrary client rendered a page.
+The supported UI sends that shown value as required `expectedContext` with the unchecked
+acknowledgment. Missing/malformed values return400; the transaction locks current public
+vacancy/company rows and rejects a mismatch with412 before creating a snapshot or receipt.
+The modal retains its cover note, refreshes the role and requires a new unchecked review;
+412 must never be presented as the409 duplicate-application outcome.
+
+New snapshots retain that exact context fingerprint. Package preparation/manual handoff
+rechecks it under the existing locks and public/closure/assignee constraints. Timestamp-only
+historical snapshots keep their conservative old check; no fingerprint/consent is backfilled.
+An unchanged recheck preserves updatedAt while updating review provenance, so it does not
+invalidate the old eligibility solely by refreshing a check date. Already stale historical
+snapshots are not repaired or silently approved. Real material/recipient changes still block
+sharing. Version the fingerprint contract if its field set/encoding changes in future.
+
 The points below preserve the earlier follow-up checklist; real operational/policy gates
 are still open even where the corresponding synthetic code now exists.
 

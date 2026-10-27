@@ -72,7 +72,8 @@ export async function reviewVacancy(id: number, review: VacancyReview, expectedR
         talentbayPublishedAt: publishing ? newPublication ? now : current.talentbayPublishedAt : null,
         reviewedAt: reset ? null : decided ? actorUserID === undefined ? null : now : current.reviewedAt,
         reviewedByUserID: reset ? null : decided ? actorUserID ?? null : current.reviewedByUserID,
-        updatedAt: now,
+        // An unchanged recheck refreshes provenance, not the legacy content revision.
+        updatedAt: review.status === current.status && review.reviewStatus === current.reviewStatus ? current.updatedAt : now,
       })
       .where(eq(schema.vacancies.id, id))
       .returning({

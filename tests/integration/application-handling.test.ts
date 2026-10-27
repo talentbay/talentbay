@@ -7,7 +7,8 @@ import { candidateApplicationProgress } from '#server/services/candidates/applic
 import { handleApplication, prepareApplicationPackage } from '#server/services/admin/application-handling'
 import { getAdminApplication } from '#server/services/admin/applications'
 import type { ApplicationCommand } from '#shared/schemas/application-command'
-import { applicationDisclosureVersion } from '#shared/types/application-handling'
+import { applicationInputFor } from './helpers/application-input'
+import { reviewVacancy } from '#server/services/vacancies/review-vacancy'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
 const users: number[] = []
@@ -25,7 +26,7 @@ async function application(legacy = false) {
   const [vacancy] = await sql`insert into vacancies (organisation_id,slug,title,description,status,review_status,employment_type,workplace_type,country_code) values (${company!.id},${slug},'Handling Engineer','Synthetic handling role','PUBLISHED','VERIFIED','FULL_TIME','REMOTE','GB') returning id`
   const row = legacy
     ? (await sql`insert into applications (user_id,vacancy_id) values (${user!.id},${vacancy!.id}) returning id`)[0]!
-    : await createApplication(user!.id, vacancy!.id, { disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true })
+    : await createApplication(user!.id, vacancy!.id, await applicationInputFor(vacancy!.id))
   return { id: row.id as number, userID: user!.id as number, vacancyID: vacancy!.id as number, revision: legacy ? 0 : 1 }
 }
 async function contacted(legacy = false) {
@@ -55,6 +56,12 @@ afterAll(async () => {
 })
 
 describe('serialized manual application handling', () => {
+  it('keeps an unchanged rechecked listing shareable without rewriting the submitted snapshot', async () => {
+    const row = await contacted()
+    const before = await prepareApplicationPackage(operatorID, row.id)
+    await reviewVacancy(row.vacancyID, { status: 'PUBLISHED', reviewStatus: 'VERIFIED' }, undefined, operatorID)
+    await expect(prepareApplicationPackage(operatorID, row.id)).resolves.toEqual(before)
+  })
   it('assigns, starts and contacts without changing the employer stage or writing on package preview', async () => {
     const row = await contacted()
     const before = await sql`select id from application_handling_events where application_id=${row.id}`
@@ -95,12 +102,23 @@ describe('serialized manual application handling', () => {
     const legacy = await contacted(true)
     await expect(prepareApplicationPackage(operatorID, legacy.id)).rejects.toMatchObject({ statusCode: 409 })
     const row = await contacted()
-    await sql`update vacancies set updated_at=updated_at + interval '1 second' where id=${row.vacancyID}`
+    await sql`update vacancies set description='Materially different duties', updated_at=updated_at + interval '1 second' where id=${row.vacancyID}`
     await expect(prepareApplicationPackage(operatorID, row.id)).rejects.toMatchObject({ statusCode: 409 })
     await expect(handleApplication(operatorID, row.id, { ...base(row.revision), action: 'SHARE', ...contact(), confirmCompleted: true })).rejects.toMatchObject({ statusCode: 409 })
     const hidden = await contacted()
     await sql`update vacancies set status='ARCHIVED' where id=${hidden.vacancyID}`
     await expect(prepareApplicationPackage(operatorID, hidden.id)).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('preserves timestamp-only legacy eligibility on an unchanged recheck, without inventing new consent', async () => {
+    const row = await contacted()
+    await sql`update applications set submission_snapshot=submission_snapshot #- '{vacancy,contextRevision}' where id=${row.id}`
+    const before = await prepareApplicationPackage(operatorID, row.id)
+    await reviewVacancy(row.vacancyID, { status: 'PUBLISHED', reviewStatus: 'VERIFIED' }, undefined, operatorID)
+    await expect(prepareApplicationPackage(operatorID, row.id)).resolves.toEqual(before)
+    expect(before.snapshot.vacancy.contextRevision).toBeUndefined()
+    await sql`update vacancies set title='Changed legacy duties',updated_at=updated_at+interval '1 second' where id=${row.vacancyID}`
+    await expect(prepareApplicationPackage(operatorID, row.id)).rejects.toMatchObject({ statusCode: 409 })
   })
 
   it('rechecks current actor and target roles even when a stale ADMIN session might exist', async () => {

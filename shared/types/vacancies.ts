@@ -28,6 +28,7 @@ export type VacancySalary = {
 
 export type VacancyListItem = {
   id: number
+  applicationContext?: string
   slug: string
   title: string
   summary: string

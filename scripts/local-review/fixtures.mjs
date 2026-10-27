@@ -60,7 +60,8 @@ export async function seedReview({ sql, request, signIn, personas }) {
   })
   const applications = []
   for (const item of imported.items.slice(1, 5)) {
-    applications.push(await request(`/api/v1/vacancies/${item.id}/applications`, { method: 'POST', cookies: candidate.cookies, body: { coverLetter: 'A fictional application for the local product review.', disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } }))
+    const vacancy = await request(`/api/v1/vacancies/${encodeURIComponent(item.slug)}`)
+    applications.push(await request(`/api/v1/vacancies/${item.id}/applications`, { method: 'POST', cookies: candidate.cookies, body: { coverLetter: 'A fictional application for the local product review.', disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext: vacancy.applicationContext } }))
   }
   const command = async (id, revision, action, extra = {}) => request(`/api/v1/admin/applications/${id}/handling`, {
     method: 'POST', cookies: admin.cookies, body: { action, expectedRevision: revision, commandKey: randomUUID(), ...extra },

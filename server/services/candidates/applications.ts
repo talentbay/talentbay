@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
 import { captureApplicationSnapshot } from './application-snapshot'
+import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
 import { applicationDisclosureVersion } from '#shared/types/application-handling'
 import type {
   CandidateApplicationItem,
@@ -13,6 +14,7 @@ export const applicationInputSchema = z.object({
   coverLetter: z.string().trim().max(5_000).nullable().optional(),
   disclosureVersion: z.literal(applicationDisclosureVersion),
   shareAcknowledged: z.literal(true),
+  expectedContext: z.string().regex(/^v1:[a-f0-9]{64}$/),
 }).strict()
 
 export type ApplicationInput = z.infer<typeof applicationInputSchema>
@@ -34,11 +36,8 @@ export async function createApplication(
   return await db.transaction(async (tx) => {
     const [vacancy] = await tx
       .select({
-        id: schema.vacancies.id, slug: schema.vacancies.slug, title: schema.vacancies.title,
-        sourceUrl: schema.vacancies.sourceUrl, sourceExternalID: schema.vacancies.sourceExternalID,
-        city: schema.vacancies.city, countryCode: schema.vacancies.countryCode,
+        ...applicationContextSelection,
         vacancyRevision: schema.vacancies.updatedAt, organisationRevision: schema.organisations.updatedAt,
-        organisationID: schema.organisations.id, companyName: schema.organisations.name,
       })
       .from(schema.vacancies)
       .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
@@ -57,6 +56,10 @@ export async function createApplication(
       })
     }
 
+    if (applicationContextRevision(vacancy) !== body.expectedContext) {
+      throw createError({ statusCode: 412, statusMessage: 'Review the changed vacancy before applying' })
+    }
+
     // Read profile and account in the same transaction as the immutable receipt.
     const [user] = await tx.select().from(schema.users).where(eq(schema.users.id, userID)).for('share')
     if (!user) throw createError({ statusCode: 404, statusMessage: 'User not found' })
@@ -67,7 +70,7 @@ export async function createApplication(
         headline: profile.headline, about: profile.about, city: profile.city, countryCode: profile.countryCode,
         phone: profile.phone, telegram: profile.telegram, githubUrl: profile.githubUrl, linkedinUrl: profile.linkedinUrl,
       } : null,
-    }, { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID, revision: vacancy.vacancyRevision.toISOString() },
+    }, { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID, revision: vacancy.vacancyRevision.toISOString(), contextRevision: body.expectedContext },
     { organisationID: vacancy.organisationID, name: vacancy.companyName, revision: vacancy.organisationRevision.toISOString() }, new Date())
 
     const [application] = await tx

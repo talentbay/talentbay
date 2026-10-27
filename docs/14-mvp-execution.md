@@ -2,14 +2,20 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/ci-feedback-loop`; verified review target `6278108` / #59.
+Current work branch: `codex/application-context-consent`; R01 target `6278108` / #59.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Resumed Feedback / Independent Review - 2026-10-27
 
-Owner explicitly resumed work and authorized a separate read-only reviewer. R01 is running
-against frozen `6278108e3576c3ecca7ebbc2c6885e86c41e183c`, not the mutable CI branch;
-no independent verdict is claimed yet. Exact #59 CI40527239793 is now confirmed SUCCESS
+CI-only7a3a2ef / draft #60 exact CI40572511707: scope/build/PostgreSQL all SUCCESS.
+Observed build2m16/SQL3m13, not a benchmark. Separate read-only CI reviewer found no
+confirmed defects;6 focused tests PASS, hosted permissions outside review scope.
+R01 has now returned two P1 application findings (docs35); fixes are in R02, not accepted
+as K2 readiness. PostgreSQL unchanged-recheck regression first failed409 as reported.
+
+Owner explicitly resumed work and authorized a separate read-only reviewer. R01 reviewed
+frozen `6278108e3576c3ecca7ebbc2c6885e86c41e183c`, not the mutable CI branch;
+its findings/limits are in docs35. Exact #59 CI40527239793 is now confirmed SUCCESS
 for both jobs. Its SQL job took13m58, with11m31 spent on Chromium's system package step;
 logs show slow Ubuntu mirror downloads. Build took3m7. These are observations, not an SLA.
 
@@ -24,6 +30,34 @@ actual27dec55..6278108 documentation diff classified correctly. Runtime/SQL/sche
 their suites are retained in the new exact-head CI, not relabelled local reruns here.
 
 ## Autonomous Run Started - 2026-10-27
+
+### R02: bind shown Apply context and preserve unchanged review eligibility
+
+R01 confirmed two P1 defects, not external policy gates. Actual PostgreSQL unchanged
+recheck regression first rejected409. The public DB-backed vacancy now carries a versioned
+material-context fingerprint; Apply requires the shown value and compares it under existing
+vacancy/company share locks before any snapshot/receipt. Changed duties, company name or
+recipient ID return412; malformed/missing precondition is400, genuine duplicate remains409.
+New snapshots retain that exact fingerprint; share/package checks compare material content,
+not observation/moderation times. Timestamp-only historical snapshots keep conservative
+checks and are not backfilled. An unchanged recheck preserves updatedAt while refreshing
+review provenance. No schema migration or automated repair of old consent.
+
+The modal retains its cover note after412, resets acknowledgment, refreshes the actual
+listing and requires explicit renewed review. A compiled browser test exposed a stale
+accessible checkbox name despite updated visible text; keying only the consent control by
+context fixes it without remounting/losing the note. The original assertion passed, then
+full41 DB browser and20 public browser PASS. Mobile renewed-recipient screenshot inspected.
+Updated existing positive fixtures use real public context, not dummy hashes; strict input,
+origin/ownership/duplicate expectations retained. SQL tests cover role change without
+timestamp change, same-name company replacement, no receipt on conflict and current/legacy
+unchanged recheck. Existing immutable snapshots, withdrawal/share concurrency and publication
+invariants remain tested.193 unit,94 SQL with legacy upgrade,40 tooling, typecheck/lint zero
+warnings/Node build/smoke PASS. Actual two-cluster recovery12tables/52rows PASS, including
+new Apply contract; owned verification databases/processes stopped. No real data/providers.
+
+Next: exact R02 CI and independent R03. Main/production/shared databases, hosting/billing,
+domain/bot/provider settings and outbound contacts remain untouched. K2/K3 gates unchanged.
 
 ### K1 Queue Reconciliation (implementation, not independent acceptance)
 
@@ -44,9 +78,9 @@ before claiming the candidate remote-verified. Exact review procedure: docs35.
 | TB-G01..G04 | CODE_VERIFIED | Access/PII/cache/raw-body/output/audit/upgrade/volume review; actual provider/policy limits remain gates |
 | TB-I01 | CODE_VERIFIED | Protected default-off bot contract/receipt/API + offline entry preview; no native transport acceptance |
 | TB-C05, TB-D04, TB-D06, TB-G05 | GATE | CEO source permissions, reviewed city data, approved sharing/privacy/retention/support/content |
-| TB-R01 | NEXT_REVIEW | Owner-selected independent reviewer, exact final PR59 SHA/CI; docs35, not executor self-approval |
-| TB-R02 | WAIT_R01 | Narrow confirmed findings/regressions, no speculative scope expansion |
-| TB-R03 | WAIT_R02 | Separate final independent code verdict |
+| TB-R01 | REVIEWED_FINDINGS | Owner-authorized independent read-only review6278108 found two P1 defects; bounded probes/limits in docs35 |
+| TB-R02 | CODE_VERIFIED | Displayed-context precondition and unchanged-recheck fix; SQL/browser/legacy/recovery regressions above |
+| TB-R03 | NEXT_REVIEW | Independent exact R02 verdict still required, not executor self-approval |
 | TB-H01..H05 | GATE | Eligible target/budget/approved operations -> protected HTTPS/native/data/human verification -> explicit beta go/no-go |
 
 Coverage:37 pre-review AUTO code slices + A05 explicit fallback =38;9 external-gate tasks;

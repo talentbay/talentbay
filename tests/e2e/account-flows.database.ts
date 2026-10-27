@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import type { BrowserContext } from '@playwright/test'
 import postgres from 'postgres'
+import { getApplicationContext } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
@@ -93,7 +94,8 @@ test('real session → profile edit/retry → application list survives reload',
   await expect(page.locator('article')).toHaveCount(1)
   await page.screenshot({ path: testInfo.outputPath('applications-mobile.png'), fullPage: true })
   expect(await sql`select id from applications where user_id = ${user.id} and vacancy_id = ${vacancyID}`).toHaveLength(1)
-  const duplicate = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin: 'http://127.0.0.1:3129' }, data: { coverLetter: 'Duplicate', disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
+  const expectedContext = await getApplicationContext(context.request, slug)
+  const duplicate = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin: 'http://127.0.0.1:3129' }, data: { coverLetter: 'Duplicate', disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext } })
   expect(duplicate.status()).toBe(409)
 })
 
@@ -198,7 +200,8 @@ test('authenticated profile, applications and vacancy remain usable at every tar
   await signIn(context, subject + 5)
   const profile = await context.request.put('/api/v1/profile', { headers: { origin: 'http://127.0.0.1:3129' }, data: { headline: 'SeniorSoftwareArchitectureAndPlatformEngineering'.repeat(3), city: 'Berlin', countryCode: 'DE', telegram: '@browser_fixture' } })
   expect(profile.status()).toBe(200)
-  const application = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin: 'http://127.0.0.1:3129' }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
+  const expectedContext = await getApplicationContext(context.request, slug)
+  const application = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin: 'http://127.0.0.1:3129' }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext } })
   expect(application.status()).toBe(200)
   for (const width of [320, 390, 768, 900, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 })

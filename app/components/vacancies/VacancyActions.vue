@@ -5,7 +5,8 @@ import { applicationContacts, canSubmitApplication } from '#shared/utils/applica
 import { safeHttpUrl } from '~/utils/safe-http-url'
 import type { VacancyListItem } from '#shared/types/vacancies'
 
-const props = defineProps<{ vacancy: VacancyListItem }>()
+const props = defineProps<{ vacancy: VacancyListItem; refreshing?: boolean }>()
+const emit = defineEmits<{ refresh: [] }>()
 const { loggedIn, user, fetch: refreshSession } = useUserSession()
 const { initialized, isSaved, toggleSaved } = useSavedVacancies()
 const { haptic } = useProductHost()
@@ -16,6 +17,7 @@ const submitting = ref(false)
 const error = ref('')
 const outcome = ref<'submitted' | 'already' | null>(null)
 const acknowledged = ref(false)
+const contextChanged = ref(false)
 const editingProfile = ref(false)
 const sessionExpired = ref(false)
 let profileEditOwner: number | undefined
@@ -43,12 +45,24 @@ watch(
     error.value = ''
     outcome.value = null
     acknowledged.value = false
+    contextChanged.value = false
     editingProfile.value = false
     profileEditOwner = undefined
     sessionExpired.value = false
     open.value = false
   },
 )
+watch(() => props.vacancy.applicationContext, () => {
+  acknowledged.value = false
+  contextChanged.value = false
+  error.value = ''
+})
+watch(() => props.refreshing, (value, previous) => {
+  if (value || !previous) return
+  acknowledged.value = false
+  contextChanged.value = false
+  error.value = ''
+})
 function editProfile() {
   if (!loggedIn.value || submitting.value) return
   profileEditOwner = user.value?.id
@@ -87,6 +101,7 @@ async function submit() {
     applied.value ||
     props.vacancy.source.status === 'DEMO'
     || !acknowledged.value || !profileReady.value
+    || !props.vacancy.applicationContext || contextChanged.value || props.refreshing
   )
     return
   submitting.value = true
@@ -95,7 +110,7 @@ async function submit() {
   try {
     await $fetch(`/api/v1/vacancies/${props.vacancy.id}/applications`, {
       method: 'POST',
-      body: { coverLetter: draft.value || null, disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true },
+      body: { coverLetter: draft.value || null, disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true, expectedContext: props.vacancy.applicationContext },
     })
     if (user.value?.id !== owner) return
     outcome.value = 'submitted'
@@ -114,7 +129,11 @@ async function submit() {
       } else error.value = 'Your session could not be confirmed. Try submitting again.'
       return
     }
-    if ((cause as { statusCode?: number }).statusCode === 409) {
+    if ([404, 412].includes((cause as { statusCode?: number }).statusCode ?? 0)) {
+      acknowledged.value = false
+      contextChanged.value = true
+      error.value = 'This listing changed. Reload it and review the company and role again before applying. Your cover note is still here.'
+    } else if ((cause as { statusCode?: number }).statusCode === 409) {
       outcome.value = 'already'
       open.value = false
       await refresh()
@@ -233,7 +252,7 @@ async function submit() {
               class="w-full"
             />
           </UFormField>
-          <UCheckbox v-model="acknowledged" :label="`I ask TalentBay to contact ${vacancy.company.name } and share this application with them for this role.`" :disabled="!profileReady" />
+          <UCheckbox :key="vacancy.applicationContext" v-model="acknowledged" :label="`I ask TalentBay to contact ${vacancy.company.name } and share this application with them for this role.`" :disabled="!profileReady || contextChanged || refreshing" />
           <p class="text-xs text-muted">You can withdraw in Applications. Withdrawal stops further handling here; it cannot recall information already shared outside TalentBay. No employer response or placement is guaranteed.</p>
           <UAlert
             v-if="error"
@@ -241,6 +260,7 @@ async function submit() {
             title="Application failed"
             :description="error"
           />
+          <UButton v-if="contextChanged" label="Reload listing" icon="i-lucide-refresh-cw" variant="outline" :loading="refreshing" @click="emit('refresh')" />
         </form>
       </template>
       <template
@@ -261,7 +281,7 @@ async function submit() {
             label="Submit application"
             icon="i-lucide-send"
             :loading="submitting"
-            :disabled="submitting || applied || !acknowledged || !profileReady || profileStatus === 'pending' || Boolean(profileError)"
+            :disabled="submitting || applied || !acknowledged || !profileReady || profileStatus === 'pending' || Boolean(profileError) || contextChanged || refreshing || !vacancy.applicationContext"
           />
         </div>
       </template>

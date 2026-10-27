@@ -4,12 +4,13 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { closeDatabase } from '#server/db'
 import { createApplication, withdrawApplication } from '#server/services/candidates/applications'
 import { getAdminApplication } from '#server/services/admin/applications'
-import { applicationDisclosureVersion } from '#shared/types/application-handling'
+import { applicationInputFor } from './helpers/application-input'
+import { getVacancyBySlug } from '#server/repositories/vacancies'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
 const suffix = randomUUID()
 const users: number[] = []
-const input = { disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true as const, coverLetter: 'Original cover note.' }
+const replacementCompanies: number[] = []
 let vacancyID: number, companyID: number
 
 async function candidate(profile = true) {
@@ -30,6 +31,7 @@ afterAll(async () => {
   if (users.length) await sql`delete from users where id in ${sql(users)}`
   if (vacancyID) await sql`delete from vacancies where id=${vacancyID}`
   if (companyID) await sql`delete from organisations where id=${companyID}`
+  if (replacementCompanies.length) await sql`delete from organisations where id in ${sql(replacementCompanies)}`
   await sql.end()
   vi.unstubAllGlobals()
 })
@@ -37,7 +39,7 @@ afterAll(async () => {
 describe('immutable managed-application intake', () => {
   it('creates one receipt and snapshot; later profile/role edits cannot change the submitted package', async () => {
     const userID = await candidate()
-    const application = await createApplication(userID, vacancyID, input)
+    const application = await createApplication(userID, vacancyID, { ...await applicationInputFor(vacancyID), coverLetter: 'Original cover note.' })
     const before = await getAdminApplication(application.id)
     expect(before.submissionSnapshot).toMatchObject({ candidate: { email: null, profile: { headline: 'Original headline', telegram: '@snapshot_fixture' } }, recipient: { organisationID: companyID, name: 'Original Snapshot Company' }, vacancy: { id: vacancyID, title: 'Original Snapshot Role' } })
     await sql`update candidate_profiles set headline='Changed headline', telegram='@different_fixture' where user_id=${userID}`
@@ -53,6 +55,7 @@ describe('immutable managed-application intake', () => {
 
   it('rejects missing profile/contact without creating an application or receipt', async () => {
     const userID = await candidate(false)
+    const input = await applicationInputFor(vacancyID)
     await expect(createApplication(userID, vacancyID, input)).rejects.toMatchObject({ statusCode: 422 })
     await sql`insert into candidate_profiles (user_id,github_url,telegram) values (${userID},'https://example.invalid/cv',' ')`
     await expect(createApplication(userID, vacancyID, input)).rejects.toMatchObject({ statusCode: 422 })
@@ -62,6 +65,7 @@ describe('immutable managed-application intake', () => {
 
   it('serializes concurrent submission retries and withdrawal without duplicating events', async () => {
     const userID = await candidate()
+    const input = await applicationInputFor(vacancyID)
     const results = await Promise.allSettled(Array.from({ length: 4 }, () => createApplication(userID, vacancyID, input)))
     expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1)
     for (const result of results) if (result.status === 'rejected') expect(result.reason).toMatchObject({ statusCode: 409 })
@@ -69,6 +73,35 @@ describe('immutable managed-application intake', () => {
     await Promise.all(Array.from({ length: 4 }, () => withdrawApplication(userID, row!.id)))
     expect(await sql`select kind,revision from application_handling_events where application_id=${row!.id} order by revision`).toEqual([{ kind: 'RECEIVED', revision: 1 }, { kind: 'WITHDRAWN', revision: 2 }])
     expect((await sql`select status,handling_stage,handling_revision from applications where id=${row!.id}`)[0]).toEqual({ status: 'WITHDRAWN', handling_stage: 'CLOSED', handling_revision: 2 })
+  })
+
+  it('rejects stale displayed content or recipient without an application or receipt, then accepts renewed review', async () => {
+    const userID = await candidate()
+    const shown = await getVacancyBySlug(suffix)
+    const input = { ...await applicationInputFor(vacancyID), expectedContext: shown!.applicationContext! }
+    for (const mutation of ['role', 'company'] as const) {
+      if (mutation === 'role') await sql`update vacancies set description=description || ' Changed duties.' where id=${vacancyID}`
+      else await sql`update organisations set name='Different recipient' where id=${companyID}`
+      await expect(createApplication(userID, vacancyID, input)).rejects.toMatchObject({ statusCode: 412 })
+      expect(await sql`select id from applications where user_id=${userID}`).toHaveLength(0)
+      expect(await sql`select id from application_handling_events where actor_user_id=${userID}`).toHaveLength(0)
+    }
+    const refreshed = await getVacancyBySlug(suffix)
+    expect(refreshed!.applicationContext).not.toBe(input.expectedContext)
+    const accepted = await createApplication(userID, vacancyID, { ...input, expectedContext: refreshed!.applicationContext! })
+    expect((await getAdminApplication(accepted.id)).submissionSnapshot).toMatchObject({ recipient: { name: 'Different recipient' }, vacancy: { contextRevision: refreshed!.applicationContext } })
+  })
+
+  it('binds the actual recipient ID even when a replacement company has the same displayed name', async () => {
+    const userID = await candidate()
+    const input = await applicationInputFor(vacancyID)
+    const [replacement] = await sql`insert into organisations (name,slug,status) select name,${randomUUID()},'ACTIVE' from organisations where id=${companyID} returning id`
+    replacementCompanies.push(replacement!.id)
+    try {
+      await sql`update vacancies set organisation_id=${replacement!.id} where id=${vacancyID}`
+      await expect(createApplication(userID, vacancyID, input)).rejects.toMatchObject({ statusCode: 412 })
+      expect(await sql`select id from applications where user_id=${userID}`).toHaveLength(0)
+    } finally { await sql`update vacancies set organisation_id=${companyID} where id=${vacancyID}` }
   })
 
   it('preserves legacy rows without inventing a snapshot, acknowledgment or earlier history', async () => {

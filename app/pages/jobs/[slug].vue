@@ -11,7 +11,7 @@ import {
 definePageMeta({ layout: 'product', key: (route) => String(route.params.slug) })
 const route = useRoute()
 const slug = String(route.params.slug)
-const { data: vacancy, error } = await useFetch<VacancyListItem>(
+const { data: vacancy, error, refresh, status } = await useFetch<VacancyListItem>(
   `/api/v1/vacancies/${slug}`,
 )
 if (error.value || !vacancy.value)
@@ -50,6 +50,10 @@ const location = computed(() =>
 )
 const relocationOpen = ref(false)
 const { ready, goBack } = useCandidateBack()
+async function refreshListing() {
+  await refresh()
+  if (error.value || !vacancy.value) showError({ statusCode: error.value?.statusCode || 404, statusMessage: 'Vacancy not found' })
+}
 </script>
 
 <template>
@@ -203,7 +207,7 @@ const { ready, goBack } = useCandidateBack()
         class="space-y-5 lg:sticky lg:top-24"
         aria-label="Vacancy actions and estimate"
       >
-        <VacanciesVacancyActions :key="vacancy.id" :vacancy="vacancy" />
+        <VacanciesVacancyActions :key="vacancy.id" :vacancy="vacancy" :refreshing="status === 'pending'" @refresh="refreshListing" />
         <div
           v-if="relocationLocation"
           class="hidden lg:block"

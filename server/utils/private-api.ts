@@ -21,7 +21,7 @@ export function isPrivateApiRequest(value: string) {
 
 const messages: Record<number, string> = {
   400: 'Invalid request', 401: 'Authentication required', 403: 'Forbidden', 404: 'Resource not found',
-  409: 'Request conflicts with current state', 413: 'JSON request is too large', 415: 'Use uncompressed application/json',
+  409: 'Request conflicts with current state', 412: 'Review the changed resource', 413: 'JSON request is too large', 415: 'Use uncompressed application/json',
   422: 'Invalid request data', 429: 'Too many requests', 500: 'Service unavailable', 503: 'Service unavailable',
 }
 

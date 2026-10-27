@@ -22,7 +22,7 @@ export type ApplicationSnapshot = {
     profile: CandidateProfileData
   }
   recipient: { organisationID: number; name: string; revision?: string }
-  vacancy: { id: number; slug: string; title: string; city: string | null; countryCode: string; sourceUrl: string | null; sourceExternalID: string | null; revision?: string }
+  vacancy: { id: number; slug: string; title: string; city: string | null; countryCode: string; sourceUrl: string | null; sourceExternalID: string | null; revision?: string; contextRevision?: string }
 }
 
 export type HandlingEventData = {

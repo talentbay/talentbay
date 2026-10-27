@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { closeDatabase } from '#server/db'
-import { applicationDisclosureVersion } from '#shared/types/application-handling'
+import { applicationInputFor } from './helpers/application-input'
 import {
   createApplication,
   listCandidateApplications,
@@ -149,7 +149,7 @@ describe('database-backed MVP workflows', () => {
     const application = await createApplication(
       userID,
       vacancyID,
-      { coverLetter: 'Integration test application.', disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true },
+      { ...await applicationInputFor(vacancyID), coverLetter: 'Integration test application.' },
     )
 
     expect(application.status).toBe('NEW')

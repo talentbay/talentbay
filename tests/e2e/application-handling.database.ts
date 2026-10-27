@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import type { BrowserContext } from '@playwright/test'
 import postgres from 'postgres'
+import { getApplicationContext } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
@@ -35,7 +36,8 @@ test('candidate → operator contact/package/manual handoff → candidate progre
   try {
     await login(candidate, subject, 'Handling Browser Candidate')
     await candidate.request.put('/api/v1/profile', { headers: { origin }, data: { headline: 'Submitted headline', telegram: '@handling_browser' } })
-    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, coverLetter: 'Submitted browser note.' } })
+    const expectedContext = await getApplicationContext(candidate.request, suffix)
+    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, coverLetter: 'Submitted browser note.', expectedContext } })
     expect(receipt.status()).toBe(200)
     applicationID = (await receipt.json()).id
     const admin = await login(operator, subject + 1, 'Handling Browser Operator')
@@ -140,7 +142,8 @@ test('closed handling → reopen with lost-response retry → append correction 
   try {
     await login(candidate, subject + 3, 'Recovery Browser Candidate')
     await candidate.request.put('/api/v1/profile', { headers: { origin }, data: { telegram: '@recovery_fixture' } })
-    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
+    const expectedContext = await getApplicationContext(candidate.request, suffix)
+    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext } })
     expect(receipt.status()).toBe(200)
     const id = (await receipt.json()).id
     const admin = await login(operator, subject + 4, 'Recovery Browser Operator')

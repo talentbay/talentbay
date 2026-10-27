@@ -112,7 +112,7 @@ try {
   await after.request('/api/v1/profile', { method: 'PUT', cookies: newCandidate.cookies, body: { telegram: '@synthetic_restore_candidate' } })
   const jobs = await after.request('/api/v1/vacancies')
   assert.equal(jobs.data.total, 6)
-  const application = await after.request(`/api/v1/vacancies/${jobs.data.items[0].id}/applications`, { method: 'POST', cookies: newCandidate.cookies, body: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
+  const application = await after.request(`/api/v1/vacancies/${jobs.data.items[0].id}/applications`, { method: 'POST', cookies: newCandidate.cookies, body: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext: jobs.data.items[0].applicationContext } })
   await after.request(`/api/v1/applications/${application.data.id}/withdraw`, { method: 'POST', cookies: newCandidate.cookies, body: {} })
   // A running process is not DB readiness. Return a real error, never an empty fake queue.
   phase = 'liveness versus database failure'

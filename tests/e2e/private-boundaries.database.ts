@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import type { BrowserContext } from '@playwright/test'
 import postgres from 'postgres'
+import { getApplicationContext } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
@@ -71,7 +72,8 @@ test('owner, another candidate and current/revoked admin receive only their perm
     await sql`update users set role='ADMIN' where id=${admin.id}`
     await signIn(adminContext, 4)
     expect((await context.request.put('/api/v1/profile', { headers, data: { telegram: '@PRIVATE_OWNER_CONTACT', about: 'PRIVATE_OWNER_ABOUT' } })).status()).toBe(200)
-    const created = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, coverLetter: 'PRIVATE_OWNER_NOTE' } })
+    const expectedContext = await getApplicationContext(context.request, slug)
+    const created = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, coverLetter: 'PRIVATE_OWNER_NOTE', expectedContext } })
     expect(created.status()).toBe(200)
     const id = (await created.json()).id
     for (const [revision, action, extra] of [[1, 'ASSIGN', { assigneeID: admin.id }], [2, 'START', {}], [3, 'CONTACT', { channel: 'EMAIL', occurredAt: new Date().toISOString(), reference: 'PRIVATE_INTERNAL_REFERENCE', privateNote: 'PRIVATE_INTERNAL_NOTE' }]] as const) {

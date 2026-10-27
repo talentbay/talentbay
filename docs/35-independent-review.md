@@ -3,6 +3,21 @@
 Prepared:2026-10-27. This is the executor's evidence handoff, **not independent approval**,
 owner acceptance, a security certification, a hosted preview or release permission.
 
+## R01 Result - 2026-10-27
+
+Owner explicitly authorized a separate read-only reviewer after resuming work. The review
+target was exactly6278108 below, excluding CI-only PR60. Reviewer confirmed two P1 defects:
+Apply did not bind acknowledgment to the displayed vacancy/recipient version; an unchanged
+listing recheck advanced updatedAt and blocked previously eligible application packages.
+Both were reproduced with synthetic in-memory service adapters, not independent PostgreSQL.
+The reviewer also exercised narrow OAuth state/session, independently signed Telegram
+negative cases, role, relocation, source-limit and database-target probes. Full SQL,
+browser/build/typecheck and real providers were **not** independently exercised.
+
+Verdict: R02 fixes required; not accepted for K2. This is a bounded code review, not a
+certification or new release permission. Subsequent exact fix SHA/checks/R03 verdict are
+tracked in docs14 rather than silently replacing this frozen historical target.
+
 ## Exact Target
 
 - Repository: `github.com/talentbay/talentbay`, private.

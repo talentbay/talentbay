@@ -8,6 +8,8 @@ import {
 import type { VacancySearch } from '#server/services/vacancies/search-vacancies'
 import { decodeVacancyCursor, encodeVacancyCursor, parseVacancySearch } from '#server/services/vacancies/search-query'
 import { olderVacancies, pageDate, salaryPresent, vacancyOrder } from './vacancy-page'
+import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
+import type { ApplicationContextRow } from '#server/services/vacancies/application-context'
 import type {
   VacancyDataStatus,
   VacancyListItem,
@@ -134,65 +136,25 @@ export async function getVacancyBySlug(slug: string): Promise<VacancyListItem | 
 }
 
 const vacancySelection = {
-  id: schema.vacancies.id,
-  slug: schema.vacancies.slug,
-  title: schema.vacancies.title,
-  summary: schema.vacancies.summary,
-  description: schema.vacancies.description,
-  companyName: schema.organisations.name,
-  countryCode: schema.vacancies.countryCode,
-  city: schema.vacancies.city,
-  workplaceType: schema.vacancies.workplaceType,
-  employmentType: schema.vacancies.employmentType,
-  seniority: schema.vacancies.seniority,
-  salaryMin: schema.vacancies.salaryMin,
-  salaryMax: schema.vacancies.salaryMax,
-  salaryCurrency: schema.vacancies.salaryCurrency,
-  salaryPeriod: schema.vacancies.salaryPeriod,
-  skills: schema.vacancies.skills,
-  relocationOffered: schema.vacancies.relocationOffered,
-  visaSponsorship: schema.vacancies.visaSponsorship,
+  ...applicationContextSelection,
   talentbayPublishedAt: schema.vacancies.talentbayPublishedAt,
   sourcePublishedAt: schema.vacancies.sourcePublishedAt,
   sourceFetchedAt: schema.vacancies.sourceFetchedAt,
   lastImportedAt: schema.vacancies.lastImportedAt,
   reviewedAt: schema.vacancies.reviewedAt,
-  sourceName: schema.vacancies.sourceName,
-  sourceUrl: schema.vacancies.sourceUrl,
   reviewStatus: schema.vacancies.reviewStatus,
 }
 
 type VacancyRecord = typeof schema.vacancies.$inferSelect
-type VacancyRow = Pick<
+type VacancyRow = ApplicationContextRow & Pick<
   VacancyRecord,
-  | 'id'
-  | 'slug'
-  | 'title'
-  | 'summary'
-  | 'description'
-  | 'countryCode'
-  | 'city'
-  | 'workplaceType'
-  | 'employmentType'
-  | 'seniority'
-  | 'salaryMin'
-  | 'salaryMax'
-  | 'salaryCurrency'
-  | 'salaryPeriod'
-  | 'skills'
-  | 'relocationOffered'
-  | 'visaSponsorship'
   | 'talentbayPublishedAt'
   | 'sourcePublishedAt'
   | 'sourceFetchedAt'
   | 'lastImportedAt'
   | 'reviewedAt'
-  | 'sourceName'
-  | 'sourceUrl'
   | 'reviewStatus'
-> & {
-  companyName: string
-}
+>
 
 function toVacancyListItem(row: VacancyRow): VacancyListItem {
   const sourceStatus: VacancyDataStatus = row.reviewStatus === 'VERIFIED'
@@ -202,6 +164,7 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
 
   return {
     id: row.id,
+    applicationContext: sourceStatus === 'VERIFIED' ? applicationContextRevision(row) : undefined,
     slug: row.slug,
     title: row.title,
     summary: row.summary ?? '',
