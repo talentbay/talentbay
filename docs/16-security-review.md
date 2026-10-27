@@ -3,6 +3,23 @@
 Updated: 2026-10-27. Scope: repository dependency graph and admin authorization; this is not
 a penetration-test certification or evidence of a production deployment.
 
+## Diagnostic/Recovery Boundary - 2026-10-27
+
+F04 removes raw dynamic IDs/slugs/unknown paths from app request logs, arbitrary private
+error names/sources and all payload copying. Fixed operation/outcome fields distinguish
+replay/invalid validation/conflict/failure without actor/profile/source IDs. Unknown API
+fallback first failed an actual runtime privacy probe; now fixed JSON404/no-store avoids
+URL echo/Vue rendering. Known session/auth/admin routes retain priority and authorization;
+Vercel output guard checks fallback placement. No WAF/security control was relaxed.
+
+Rehearsal creates only its own two fresh loopback PG18 clusters, reads no dotenv/inherited
+DB/PG service/Node injection credentials and accepts no arbitrary target/dump. All-row
+digests/counts/sequences/indexes/migration replay and actual restored identity/application
+paths/log redaction pass. Artifacts are synthetic-only private temp files; this does not
+approve a real backup retention/storage/restore or arbitrary supplied database code.
+Actual database-down HTTP error is not faked zero data; health stays liveness only. Full
+local checks and remaining real/independent gates: docs14/docs32. No certification claim.
+
 ## History Recovery Boundary - 2026-10-27
 
 Recovery commands reuse locked revision/current-role/idempotency. Corrections append a

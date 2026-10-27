@@ -2,10 +2,44 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/relocation-hydration`; verified parent `74df2d3` / #52.
+Current work branch: `codex/operations-recovery`; verified parent `b961bb8` / #53.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Bounded diagnostics and repeatable synthetic recovery (F04)
+
+#53 both CI jobs SUCCESS (`40509644513`); only integration FF from fecfb57 to b961bb8,
+main/production unchanged. Request logs now use fixed route templates rather than raw
+IDs/slugs/unknown paths, plus allowlisted error names/sources/status and six bounded
+operation tags/outcomes. No candidate/contact/note/source/provider identifiers or input
+payloads. HTTP completion is not message delivery; replay/invalid preview/failed source
+state remain distinct. Connection establishment now has5s bound, not a promised whole
+request SLA. Existing authorization, no-store, transaction bounds and WAF stay intact.
+
+`pnpm test:recovery` accepts no existing DB/archive/credential target, ignores inherited
+secrets/PG services/Node injection, creates two new owned loopback PG18 clusters and uses
+real compiled HTTP auth/profile/import/review/handling fixtures + actual synthetic DRAFT
+dataset CLI. Custom dump -> empty second DB -> full canonical row digests/counts/sequence/
+index equality -> unchanged migration replay -> permanent IDs/corrected history/privacy/
+no repeat package/new profile+Apply+withdraw. Then stop DB while process lives: health200,
+dashboard500/request ID/no fake counts/connection leak. Actual operation/replay and private
+log absence asserted, owned apps/clusters stopped before PASS. No shared data/real provider
+or user/company contact. Final rehearsal:12 tables/52 rows PASS; only synthetic local
+artifacts retained in the printed temporary folder, not Git/vault/PR attachments.
+
+An extra real-runtime negative probe first failed unknown API privacy: fallback echoed a
+path and reached renderer diagnostics. Fixed a specific JSON404/no-store catch-all after
+known API handlers, no URL echo/SSR fallback. Same probe then PASS, including log absence.
+Vercel build output PASS73 routes/one actual nodejs22.x bundle; catch-all presence/order
+now required by output guard with negative regression. Node output restored and smoke
+passed again. PASS178 unit/88 SQL/28 tooling/types/lint zero warnings/Node build/smoke,
+full20 public/28 DB browser. Full browser runs preceded only pure operation-result helper
+extraction; final unit/types/lint/build/rehearsal/HTTP cover the identical helper behavior.
+No dependencies/schema/provider/main/deploy/shared backup changes. docs32 contains triage,
+app-vs-DB rollback and real backup/alert/people gates, not fictional on-call/RPO/RTO/legal
+retention approval. Local chooser3133 still HTTP200. Next AUTO G01/G02 authorization/PII
+matrix, remaining E/G and K1; independent R and real data/provider/policy/H remain separate.
 
 ### Relocation pre-hydration input safety (focused E02/E03 follow-up)
 

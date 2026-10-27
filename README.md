@@ -79,6 +79,7 @@ disposable loopback `talentbay_ci` database. See [browser verification](docs/17-
 - [Admin operations](docs/13-admin-operations.md)
 - [Operator shift, handoff and support runbook](docs/31-operator-runbook.md)
 - [Operational metric definitions](docs/30-operations-metrics.md)
+- [Incident triage and synthetic recovery rehearsal](docs/32-incidents-and-recovery.md)
 - [Founder demo checklist](docs/14-founder-demo-checklist.md)
 - [MVP acceptance record](docs/15-mvp-acceptance-record.md)
 - [Candidate verification](docs/17-candidate-verification.md)

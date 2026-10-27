@@ -7,6 +7,7 @@ import { previewVacancyImport } from '#server/services/vacancies/import-preview'
 import { importVacancies } from '#server/services/vacancies/import-vacancies'
 import { vacancyCsvByteLimit } from '#shared/types/vacancy-import'
 import type { VacancyImportPreview } from '#shared/types/vacancy-import'
+import { setRequestOperation } from '#server/utils/observability'
 
 const requestSchema = z.discriminatedUnion('mode', [
   z.object({ mode: z.literal('preview'), csv: z.string().max(vacancyCsvByteLimit) }),
@@ -21,8 +22,10 @@ export default defineEventHandler(async (event) => {
   const parsedBody = requestSchema.safeParse(await readBoundedJson(event, vacancyCsvByteLimit * 6 + 1024))
   if (!parsedBody.success) throw createError({ statusCode: 400, statusMessage: 'Invalid file import request' })
   const body = parsedBody.data
+  setRequestOperation(event, body.mode === 'preview' ? 'vacancy.file.preview' : 'vacancy.file.import')
   const parsed = parseVacancyCsv(body.csv)
   if (parsed.issues.length) {
+    setRequestOperation(event, body.mode === 'preview' ? 'vacancy.file.preview' : 'vacancy.file.import', 'invalid')
     const preview: VacancyImportPreview = {
       valid: false, rowCount: parsed.rowCount, issues: parsed.issues, revision: null, rows: [],
       summary: { created: 0, updated: 0, unchanged: 0, withdrawnPublished: 0 },

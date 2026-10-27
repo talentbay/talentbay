@@ -5,7 +5,7 @@ import * as schema from '#server/db/schema'
 function createDatabase(connectionString: string) {
   // `prepare: false` keeps the client compatible with transaction-pooling
   // PostgreSQL providers such as Neon.
-  const client = postgres(connectionString, { prepare: false })
+  const client = postgres(connectionString, { prepare: false, connect_timeout: 5 })
   return {
     client,
     database: drizzle(client, { schema }),

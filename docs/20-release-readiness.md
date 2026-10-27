@@ -5,13 +5,18 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 
 ## Code Progress - 2026-10-27
 
-#38–#51 have both CI jobs SUCCESS; integration is fecfb57, main/production unchanged.
+#38–#53 have both CI jobs SUCCESS; integration is b961bb8, main/production unchanged.
+F04 diagnostics/recovery code passes local178unit/88SQL/28tooling/types/lint/Node/smoke,
+full20public/28DB and actual12-table/52-row synthetic dump/restore/sequence/index/migration/
+HTTP/log checks. Unknown API privacy regression red->fixed JSON404/no-store->green. Vercel
+output73routes/one Node22 bundle and fallback order PASS, Node restored. Actual provider
+backups/retention/alerts/people, G/E acceptance and independent R still remain (docs32).
 F01/F02 `74df2d3` / #52 both CI SUCCESS40508773000, with local176unit/88SQL/25tooling/
 types/lint/Node/smoke/full28DB. Metric dictionary/drilldowns/oldest work and F03 operator
 runbook are in docs30/31. Public18/19 found intermittent relocation input loss; separate
 E02/E03 held-JS regression first failed, then mounted input/destination guard passed
 focused15/15 repeats and final full20public/28DB/types/lint/Node/smoke. Integration has not
-yet advanced beyond fecfb57 pending that fix's CI. F04/remaining E/G,
+advanced to b961bb8 after #53 CI40509644513 success. Remaining E/G,
 independent R and all real data/provider/support/privacy/production gates remain open.
 Managed Apply now has a versioned acknowledgment, immutable profile/vacancy snapshot,
 operator assignment/contact/manual-handoff records and owner-only public event history.

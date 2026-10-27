@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path'
 import { test } from 'node:test'
 import { assertVercelOutput } from '../../scripts/assert-vercel-output.mjs'
 
-const destinations = ['/jobs', '/jobs/[slug]', '/profile', '/api/v1/auth/telegram', '/api/v1/admin/vacancies/file', '/api/v1/admin/vacancies/[id]', '/api/v1/bot/telegram']
+const destinations = ['/jobs', '/jobs/[slug]', '/profile', '/api/v1/auth/telegram', '/api/v1/admin/vacancies/file', '/api/v1/admin/vacancies/[id]', '/api/v1/bot/telegram', '/api/[...path]']
 function fixture(run, runtime = 'nodejs22.x') {
   const root = mkdtempSync(join(tmpdir(), 'talentbay-vercel-test-'))
   const put = (name, value) => { const path = join(root, name); mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, typeof value === 'string' ? value : JSON.stringify(value)) }
@@ -32,6 +32,10 @@ test('rejects a missing application route', () => fixture((root, put) => {
 test('rejects an omitted bot webhook in the deployment adapter', () => fixture((root, put) => {
   put('config.json', { version: 3, routes: destinations.filter(dest => dest !== '/api/v1/bot/telegram').map(dest => ({ src: dest, dest })) })
   assert.throws(() => assertVercelOutput(root), /Missing route: \/api\/v1\/bot\/telegram/)
+}))
+test('requires the unknown API privacy fallback after the specific API handlers', () => fixture((root, put) => {
+  put('config.json', { version: 3, routes: [...destinations].reverse().map(dest => ({ src: dest, dest })) })
+  assert.throws(() => assertVercelOutput(root), /fallback must follow/)
 }))
 test('rejects incomplete bundles and missing static templates', () => fixture((root) => {
   rmSync(join(root, 'functions/jobs.func/index.mjs'))

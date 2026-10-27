@@ -100,6 +100,11 @@ async function assertDatabaseCatalog(body) {
 try {
   await waitUntilReady()
 
+  await assertResponse('/api/unknown/private%40example.invalid', 404, async (response) => {
+    if (response.headers.get('cache-control') !== 'no-store') throw new Error('Unknown API response must not be cached')
+    const result = await response.json()
+    if (result.statusMessage !== 'API endpoint not found' || 'url' in result) throw new Error('Unknown API response must not echo the URL or render a page')
+  })
   await assertResponse('/api/health', 200, async (response) => {
     const body = await response.json()
     if (body.status !== 'ok' || body.service !== 'talentbay') {

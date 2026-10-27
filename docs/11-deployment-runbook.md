@@ -177,6 +177,11 @@ Console before the browser journey can pass.
 
 ## Runtime Protection and Logs
 
+Current application diagnostics, normalized/PII-minimal operation logs and repeatable
+synthetic restore: [diagnostics and recovery](32-incidents-and-recovery.md). Health is
+liveness, not DB/provider readiness. This does not refresh the historical firewall state
+below or authorize any real backup/restore/provider/billing change.
+
 July verification found the `TalentBay API rate limit` Vercel Firewall
 rule: 120 requests per 60 seconds per IP for paths starting with `/api/`.
 Changing or removing it is an operational change and must be recorded here.

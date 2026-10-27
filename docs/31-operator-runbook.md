@@ -117,6 +117,7 @@ privacy reviewer and coverage/retention policy (G05/H04). No owner is invented h
 - A non-author human must perform this walkthrough at H04. Automated/local developer
   verification is evidence, not their acceptance or a standing support/on-call guarantee.
 
-Technical incidents/backups/app rollback/DB restore remain in deployment runbook and F04;
+Technical incidents/backups/app rollback/DB restore: [diagnostics and recovery](32-incidents-and-recovery.md)
+and deployment runbook;
 schema downgrade is never an incident shortcut. Real preview recovery and alerts require
 actual environment checks/people, not a synthetic restore result.
