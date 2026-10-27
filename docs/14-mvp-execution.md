@@ -2,10 +2,47 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/operations-recovery`; verified parent `b961bb8` / #53.
+Current work branch: `codex/privacy-boundaries`; verified parent `5a503c1` / #54.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Private API / processing inventory (G01/G02)
+
+#54 final HEAD both CI jobs SUCCESS (`40512658640`); integration only FF to5a503c1,
+main/production unchanged. Direct compiled negative matrix first reproduced401/404
+no-cache (not promised no-store) and a70KB whitespace profile JSON accepted200. New profile
+and linking writes use existing fatal-UTF8/uncompressed bounded parser64KiB/2KiB plus strict
+field allowlists, not a new auth framework. Identity/role/email/passport fields cannot be
+submitted as profile edits; current-user/provider proof and origin checks remain intact.
+
+Installed Nitro2 source confirms404 overwrites earlier cache policy and default errors
+can echo URL/data or print raw unhandled API diagnostics. An API-only handler is prepended
+through the standard config hook, retaining the original Nuxt HTML renderer after it;
+compiled chain order verified. API failure status is preserved, message/body keys are fixed,
+no URL/stack/input/SQL/cause. Early cache-only middleware covers private session/auth/profile/
+application/admin and sensitive anonymous salary responses. No new auth requirement for
+public jobs/calculator, no public positive listing cache bypass or relaxed API protections.
+
+All3 focused HTTP matrices red->green: guest, owner, other candidate, current/revoked ADMIN,
+package/progress/private notes, body/transport/unknown fields, ownership/no-store/unchanged
+roles/profile. Full20 public/31 DB browser PASS,181 unit/88 SQL/28 tooling, lint zero warnings,
+Node/Vercel builds (73routes/one Node22 bundle/fallback order) PASS. Node restored, serial
+Nuxt+CLI typecheck and final HTTP smoke PASS. Initial concurrent build/typecheck regenerated
+shared Nuxt metadata mid-check and produced missing auto-import/inference errors; serial
+check after build passed without fake globals/casts or disabled tests. Build/typegen are
+now serialized for this config change. Final `pnpm test:recovery` after the private-cache
+addition PASS:12 tables/52 rows, restored inventory/identities/history/new Apply/withdraw,
+DB-unavailable negative probe and redacted logs; owned processes stopped before PASS.
+
+docs33 inventories actual profile/snapshot/event/provider/receipt/client/log/backup copies,
+authorized projections and existing destructive cascade risks. No deletion/export endpoint
+or invented legal basis/retention period/support owner is added. Salary is absent from
+navigation/localStorage, but existing GET API query can be seen in browser/provider logs;
+no-store/app query stripping is not a promise to erase those metadata. H02/G05 must resolve
+the real logging/transport policy. No dependencies/schema/provider/main/shared DB/outreach
+change. Next AUTO G03 disposable test entry/upgrade-volume-concurrency checks, then remaining
+E/G/K1; independent R and real data/provider/privacy/operational gates remain separate.
 
 ### Bounded diagnostics and repeatable synthetic recovery (F04)
 

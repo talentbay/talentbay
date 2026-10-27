@@ -34,4 +34,9 @@ describe('candidateProfileInputSchema', () => {
   it('rejects invalid country codes', () => {
     expect(candidateProfileInputSchema.safeParse({ countryCode: '12' }).success).toBe(false)
   })
+  it('does not accept identity, privilege or undeclared private fields', () => {
+    for (const value of [{ userID: 42 }, { role: 'ADMIN' }, { passport: 'not a profile field' }, { email: 'client-cannot-replace-provider@example.invalid' }]) {
+      expect(candidateProfileInputSchema.safeParse(value).success).toBe(false)
+    }
+  })
 })

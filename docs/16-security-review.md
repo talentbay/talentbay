@@ -3,6 +3,23 @@
 Updated: 2026-10-27. Scope: repository dependency graph and admin authorization; this is not
 a penetration-test certification or evidence of a production deployment.
 
+## Private API Boundary - 2026-10-27
+
+G01/G02 direct compiled HTTP regressions reproduced accepted70KB whitespace profile JSON,
+and no-cache on401/404 despite a no-store contract. Profile/link now use existing bounded
+UTF-8 JSON parser and strict fields; no current-role/account-link proof changes. An early
+cache middleware plus API-only fixed error handler address the installed Nitro404 override,
+URL/data echo and raw default API error diagnostics. Standard HTML error rendering is
+retained after this handler; full public browser paths still pass. Public positive job
+listing behavior/auth controls/WAF unchanged. Salary computations also use no-store, not
+a login requirement. Existing GET income query still has provider/network exposure, explicitly
+recorded for H02/G05 rather than described as fully browser-local.
+
+181unit/88SQL/28tooling/full20public/31DB/types/lint/Node/Vercel/smoke and synthetic recovery
+evidence: docs14. Actual PII copies/projections/cascades and pending retention/export/erasure/
+support policy are mapped in docs33. No automatic destructive privacy operation, legal
+approval, independent audit or production/native/provider acceptance is inferred.
+
 ## Diagnostic/Recovery Boundary - 2026-10-27
 
 F04 removes raw dynamic IDs/slugs/unknown paths from app request logs, arbitrary private

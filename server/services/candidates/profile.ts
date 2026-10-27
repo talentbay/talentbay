@@ -21,7 +21,7 @@ export const candidateProfileInputSchema = z.object({
   telegram: optionalText(80),
   githubUrl: optionalUrl,
   linkedinUrl: optionalUrl,
-})
+}).strict()
 
 export type CandidateProfileInput = z.infer<typeof candidateProfileInputSchema>
 

@@ -1,5 +1,10 @@
 # Relocation Outcome Working Contract
 
+Privacy clarification (G02): drafts are absent from navigation URLs/localStorage, not from
+all network metadata. Existing estimate requests include salary in GET query parameters;
+responses use no-store and app logs strip queries, but provider/browser network exposure
+still needs H02/G05 review. See [private data inventory](33-private-data-and-access.md).
+
 Date: 2026-10-27. D05 / relocation part of E01, under the owner's design-iteration mandate.
 Candidate v1 remains the baseline, not a new approved freeze. Live Figma read confirmed
 page2057:3/root2060:2, section2060:44, mobile2063:594 and desktop2063:532. Mobile design

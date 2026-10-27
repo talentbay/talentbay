@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -49,6 +51,15 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'system',
     fallback: 'light',
+  },
+
+  hooks: {
+    'nitro:config': (config) => {
+      const handler = fileURLToPath(new URL('./server/errors/api.ts', import.meta.url))
+      const existing = config.errorHandler ? Array.isArray(config.errorHandler) ? config.errorHandler : [config.errorHandler] : []
+      // Prepend the API-only boundary; keep Nuxt's normal HTML error renderer after it.
+      config.errorHandler = [handler, ...existing.filter(value => value !== handler)]
+    },
   },
 
 })

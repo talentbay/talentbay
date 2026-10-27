@@ -20,4 +20,7 @@ test('SSR relocation controls wait for hydration, then retain the first user inp
   await income.fill('60000')
   await expect(tool.getByRole('region', { name: 'Disposable income', exact: true })).toContainText('£150')
   await expect(income).toHaveValue('60000')
+  const response = await page.request.get('/api/v1/relocation/preview?location=london&annualGross=60000')
+  expect(response.status()).toBe(200)
+  expect(response.headers()['cache-control']).toBe('no-store')
 })

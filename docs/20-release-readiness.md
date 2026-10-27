@@ -5,7 +5,14 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 
 ## Code Progress - 2026-10-27
 
-#38–#53 have both CI jobs SUCCESS; integration is b961bb8, main/production unchanged.
+#38–#54 have both CI jobs SUCCESS; integration is5a503c1, main/production unchanged.
+G01/G02 local181unit/88SQL/28tooling/types/lint/Node/Vercel/smoke/full20public/31DB PASS.
+Bounded/strict profile/link, private no-store and API-only fixed error response retain
+normal Nuxt HTML errors. Own/other/current/revoked projection matrix is actual HTTP/SQL,
+not a client-guard assertion. Processing inventory/cascades/no automatic erasure are in
+docs33. Salary GET query/provider metadata exposure remains an explicit H02/G05 decision;
+app no-store/query-redaction alone is not universal privacy. G03/remaining E/G/K1, real
+policy/data/native/provider/human acceptance and independent R remain open.
 F04 diagnostics/recovery code passes local178unit/88SQL/28tooling/types/lint/Node/smoke,
 full20public/28DB and actual12-table/52-row synthetic dump/restore/sequence/index/migration/
 HTTP/log checks. Unknown API privacy regression red->fixed JSON404/no-store->green. Vercel
