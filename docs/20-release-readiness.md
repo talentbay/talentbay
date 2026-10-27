@@ -15,7 +15,7 @@ F01/F02 `74df2d3` / #52 both CI SUCCESS40508773000, with local176unit/88SQL/25to
 types/lint/Node/smoke/full28DB. Metric dictionary/drilldowns/oldest work and F03 operator
 runbook are in docs30/31. Public18/19 found intermittent relocation input loss; separate
 E02/E03 held-JS regression first failed, then mounted input/destination guard passed
-focused15/15 repeats and final full20public/28DB/types/lint/Node/smoke. Integration has not
+focused15/15 repeats and final full20public/28DB/types/lint/Node/smoke. Integration has
 advanced to b961bb8 after #53 CI40509644513 success. Remaining E/G,
 independent R and all real data/provider/support/privacy/production gates remain open.
 Managed Apply now has a versioned acknowledgment, immutable profile/vacancy snapshot,
