@@ -3,6 +3,18 @@
 Updated: 2026-10-27. Scope: repository dependency graph and admin authorization; this is not
 a penetration-test certification or evidence of a production deployment.
 
+## Basic Bot Boundary - 2026-10-27
+
+I01 reuses H3/Zod/Drizzle, adds no SDK/dependency. Webhook remains default-off until full
+server-only config is valid. Separate secret header is checked before bounded UTF-8 JSON
+or persistence; no browser-origin exception weakens the existing auth handlers. Bot update
+ID/username never creates a user/session. Groups/other senders/edited/channel/media updates
+do not produce private-data replies. Errors suppress raw SQL/input/config, no provider
+token URL is constructed by the runtime. Static webhook replies are not delivery evidence.
+Only bot/update IDs/preparation time persist; review retention/abuse/operational policy
+before activation. Exact local tests/negative/concurrency/output evidence: docs14/docs28.
+No live credentials/menu/send, shared migration or independent security certification.
+
 ## Dataset Tooling Follow-up - 2026-10-27
 
 D03 makes already locked TSX4.22.4 an explicit dev dependency for the TypeScript operator

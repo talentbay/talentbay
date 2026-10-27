@@ -5,6 +5,10 @@ export default defineNuxtConfig({
   ssr: true,
   runtimeConfig: {
     telegramBotToken: '',
+    telegramBotID: '',
+    telegramBotUsername: '',
+    telegramWebhookSecret: '',
+    telegramAppOrigin: '',
     public: {
       localReviewPortal: '',
     },

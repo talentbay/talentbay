@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { defineConfig, devices } from '@playwright/test'
-import { testBotToken } from './tests/e2e/support/telegram'
+import { testBotToken, testEntryBotID, testWebhookSecret } from './tests/e2e/support/telegram'
 
 // Refuse remote/shared databases before a server or a fixture can write anything.
 execFileSync(process.execPath, ['scripts/assert-ci-database.mjs'], { stdio: 'inherit' })
@@ -18,6 +18,8 @@ export default defineConfig({
     env: {
       HOST: '127.0.0.1', PORT: '3129', DATABASE_URL: process.env.DATABASE_URL!, DATABASE_MIGRATION_URL: process.env.DATABASE_MIGRATION_URL!,
       NUXT_SESSION_PASSWORD: 'playwright-database-session-fixture-at-least-32-characters', NUXT_TELEGRAM_BOT_TOKEN: testBotToken,
+      NUXT_TELEGRAM_BOT_ID: testEntryBotID, NUXT_TELEGRAM_BOT_USERNAME: 'talentbay_test_bot',
+      NUXT_TELEGRAM_WEBHOOK_SECRET: testWebhookSecret, NUXT_TELEGRAM_APP_ORIGIN: 'https://talentbay.example',
       NUXT_OAUTH_GOOGLE_CLIENT_ID: '', NUXT_OAUTH_GOOGLE_CLIENT_SECRET: '', NUXT_OAUTH_GITHUB_CLIENT_ID: '', NUXT_OAUTH_GITHUB_CLIENT_SECRET: '',
     },
   },

@@ -15,6 +15,7 @@ const server = spawn(process.execPath, ['.output/server/index.mjs'], {
     PORT: port,
     NUXT_SESSION_PASSWORD: sessionPassword,
     NUXT_PUBLIC_LOCAL_REVIEW_PORTAL: 'http://127.0.0.1:3131',
+    NUXT_TELEGRAM_BOT_ID: '', NUXT_TELEGRAM_BOT_USERNAME: '', NUXT_TELEGRAM_WEBHOOK_SECRET: '', NUXT_TELEGRAM_APP_ORIGIN: '',
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 })
@@ -143,6 +144,13 @@ try {
 
   await assertResponse('/terms', 200)
   await assertResponse('/api/_auth/session', 200)
+
+  const disabledBot = await fetch(`${baseUrl}/api/v1/bot/telegram`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(5000),
+  })
+  if (disabledBot.status !== 503 || disabledBot.headers.getSetCookie().length || disabledBot.headers.get('cache-control') !== 'no-store') {
+    throw new Error('Unconfigured bot webhook must remain disabled without creating a session')
+  }
 
   // Exercise the real compiled HTTP guards, not mocked session functions.
   await assertResponse('/api/v1/profile', 401)

@@ -2,10 +2,45 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/relocation-outcome-ux`; verified parent `25e7571` / #48.
+Current work branch: `codex/telegram-entry-bot`; verified parent `9e53485` / #49.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Basic Telegram Entry Bot (I01 local code)
+
+#49 both CI jobs SUCCESS (`40498893290`); only integration FF to9e53485. I01 adds a
+default-off Nitro webhook for private `/start`, `/jobs`, `/applications`, `/help`, `/privacy`
+and fixed unknown-text guidance. Inline Web App buttons open the same existing routes;
+Privacy is a normal notice link. No private application/profile reply, chat support inbox,
+Pre-ICO flow, permission prompt, proactive sends, polling daemon, queue or new SDK.
+
+Official Telegram JSON webhook reply is the transport. It cannot report actual delivery;
+atomic bot/update receipt precedes prepared reply, duplicates only acknowledge. A crash/
+lost response after commit may lose that reply; repeating the command as a new update is
+the recovery. No exactly-once/delivered/read claim. Receipt0007 stores only bot/update/time,
+not names/chat IDs/text/profiles/tokens; migration only on disposablePG56381. No existing
+tables altered by0007. Retention/abuse/support/privacy/provider policy remains G/H.
+
+Separate32+ webhook secret checked before body/DB;64KiB uncompressed fatal-UTF8 JSON,
+safe IDs, private sender/chat match, no bot/group/edited/channel actions, current config
+gates and safe503 errors. No username/update creates a session. DB concurrent claims5->1,
+changed duplicate target has no second reply. Body utility now uses purpose-neutral JSON
+size copy. Local review/public/smoke deliberately clear bot-entry env; real credentials
+are neither loaded by tests nor included in their artifacts.
+
+PASS172 unit/80 SQL/25 tooling, typecheck/lint zero warnings, Node build/HTTP smoke,
+full19 public +25 DB browser/HTTP tests and final focused bot HTTP PASS. First compiled
+test correctly found config503: Nitro `destr` converts numeric env ID into a number;
+parser now accepts only safe integer number or validated decimal string and normalizes
+to string (not coercing booleans/floats). Unit+compiled regressions pass. Vercel adapter
+PASS:72 routes,1 actual bundle,nodejs22.x, required webhook route/output guard included;
+Node output restored and smoke passed again. Test-token/name scans of Node/Vercel bundles
+found no fixture secrets. No dependency/install/secret/provider/deploy change.
+
+docs28 contains current official references and connection/menu/commands/rollback steps;
+no live webhook/menu/send was configured. No native-bot/provider/independent-R acceptance.
+Next AUTO: B04/B09 correction/reopen, remaining E/F/G; D04/D06 and H need real approvals.
 
 ### Candidate Relocation Outcome (D05 local code)
 

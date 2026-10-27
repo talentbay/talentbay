@@ -5,7 +5,7 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 
 ## Code Progress - 2026-10-27
 
-#38–#48 have both CI jobs SUCCESS; integration is25e7571, main/production unchanged.
+#38–#49 have both CI jobs SUCCESS; integration is9e53485, main/production unchanged.
 Managed Apply now has a versioned acknowledgment, immutable profile/vacancy snapshot,
 operator assignment/contact/manual-handoff records and owner-only public event history.
 First-time profile completion returns to the same Apply. These facts supersede the older
@@ -21,7 +21,10 @@ guard passes own CI, not shared execution/real dataset acceptance. D05 outcome/s
 assumption UX passes local159unit/78SQL, full19public/23DB and final focused2public/3DB,
 types/lint/Node/smoke. Figma read works, draft writes are read-only; no new freeze exists.
 Owner confirms no approved real source pages yet; CEO clarification remains necessary.
-Remaining UX/operations/security/basic bot work, independent R and real provider/data/
+Basic I01 entry webhook now passes local172unit/80SQL/25tooling/types/lint/Node/smoke,
+full19public/25DB and Vercel Node22 output guard. It is default-off; no real Telegram bot,
+menu/webhook change or actual delivery is verified. docs28 defines semantics/setup/rollback.
+Remaining UX/operations/security and B04/B09 follow-up, independent R and real provider/data/
 native/hosting/legal/owner H gates remain. No complete/accepted/deployed MVP claim.
 Exact slice commands/revisions/results: docs14. Provider facts below remain dated26.10;
 they were not silently refreshed by writing this section.

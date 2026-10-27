@@ -7,7 +7,7 @@ export function assertVercelOutput(directory = '.vercel/output') {
   const config = JSON.parse(readFileSync(join(directory, 'config.json'), 'utf8'))
   assert.equal(config.version, 3, 'Expected Vercel Build Output API v3')
   const routes = config.routes ?? []
-  for (const destination of ['/jobs', '/jobs/[slug]', '/profile', '/api/v1/auth/telegram', '/api/v1/admin/vacancies/file', '/api/v1/admin/vacancies/[id]']) {
+  for (const destination of ['/jobs', '/jobs/[slug]', '/profile', '/api/v1/auth/telegram', '/api/v1/admin/vacancies/file', '/api/v1/admin/vacancies/[id]', '/api/v1/bot/telegram']) {
     assert(routes.some(route => route.dest === destination), `Missing route: ${destination}`)
     assert(existsSync(join(directory, 'functions', `${destination.slice(1)}.func`)), `Missing function: ${destination}`)
   }

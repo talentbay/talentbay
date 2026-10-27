@@ -30,7 +30,7 @@ export async function readBoundedJson(event: H3Event, limit = 2 * 1024 * 1024): 
     event.node.req.resume()
     throw createError({
       statusCode: (error as { type?: string }).type === 'entity.too.large' ? 413 : 400,
-      statusMessage: (error as { type?: string }).type === 'entity.too.large' ? 'Import request is too large' : 'Invalid UTF-8 JSON body',
+      statusMessage: (error as { type?: string }).type === 'entity.too.large' ? 'JSON request is too large' : 'Invalid UTF-8 JSON body',
     })
   }
 }
