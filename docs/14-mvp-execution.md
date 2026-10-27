@@ -2,10 +2,33 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
-Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
+Current work branch: `codex/vacancy-pagination`; verified parent `e492f8f` / #43.
+Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Full public vacancy pagination (C02)
+
+#43 both CI jobs SUCCESS (`40478884987`); integration FF to `e492f8f`, no main/production.
+C02 replaces the public hard cap with bounded cursor pages and stable date/ID ordering,
+explicit NULL placement/microsecond-safe SQL keys, same-snapshot count and strict filter/
+limit binding. Salary sort now needs a single explicit currency/period, not mixed units.
+Jobs URL, results anchor, restart and detail/back/scroll preserve context; demo follows
+the same contract. API compatibility/limitations/index evidence are in docs02.
+
+Local PASS:137 unit/64 SQL, types/lint, Node build/smoke, full18 DB browser tests, focused
+C02 and final broad public16 reruns after grid fix. The first SQL fixture was
+incorrectly a default DRAFT company; corrected fixture to ACTIVE without relaxing visibility.
+The first full browser run found real320px long-title overflow; fixed mobile grid track/
+min-width, not the overflow assertion. Narrow/wide screenshots inspected. EXPLAIN test
+asserts a51-row bounded query on111 fixtures (Limit/Sort/Nested Loop/Index Scan/Seq Scan,
+0.262ms observed in one focused local measurement, not an SLO); no production benchmark,
+new index migration, shared data change or external search engine.
+
+Next AUTO queue: C03 complete admin queues -> remaining C04 source/date maintenance -> D
+relocation data/math/import -> remaining E/F/G/I tasks by dependencies. B04/B09 event
+correction/reopen remains explicit follow-up. C06/C07 have synthetic code acceptance, not
+real source approval/activated cron; H data/provider/hosting/operations gates and R remain.
 
 ### Source runner / operator entry (C07) in verification
 

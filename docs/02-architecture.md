@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-10-06 (code/context reconciliation; not a new deployment verification)
+Last updated: 2026-10-27 (code/test reconciliation; not a new deployment verification)
 
 ## System Shape
 
@@ -36,7 +36,8 @@ Browser-only APIs must remain inside client lifecycle code.
 - Redirected legacy pages no longer compile their former Bootstrap/SCSS UI.
 - New UI is grouped by domain within Nuxt directories rather than strict FSD.
 - Figma is the review surface for foundations, components and page concepts.
-- July UI is partial. Frozen Candidate v1.0 is a design contract, not fully implemented UI.
+- Responsive Candidate v1.0 is implemented in the integration line, with focused workflow
+  deviations in docs17; remaining UX tasks and independent acceptance are not called done.
 - Relocation preserves vacancy context/back state; handoff node `2078:35` does not require
   a new top-level route. See `docs/10-design-direction.md`.
 
@@ -55,6 +56,41 @@ Browser-only APIs must remain inside client lifecycle code.
   the vacancy/company during submission so an import cannot invalidate the eligibility
   check before the application is inserted. IDs and existing applications are retained.
 - Relocation reads prefer `VERIFIED` PostgreSQL records and expose source provenance, review status and effective dates; demo cities remain labelled fallback data.
+
+### Public Vacancy Pages (TB-C02)
+
+`GET /api/v1/vacancies` returns `items`, filtered `total`, `dataStatus`, `nextCursor`.
+Each request allows1..50 records (default20). `before=nextCursor` selects the next bounded
+page; no expanding limit, offset scan or catalogue-wide response. Newest order is
+`published_at DESC NULLS LAST, id DESC`. SQL cursors preserve microseconds as UTC text;
+JS Date millisecond truncation must not drop timestamp ties. Legacy NULL dates sort last.
+Rows/count use the same read-only repeatable-read snapshot. Across requests this is a live
+catalogue, not a frozen export: changed/re-published records can move; archive is always
+rechecked, including when the cursor row itself disappears.
+
+The opaque, non-secret cursor is <=512 characters, strict/versioned and bound to normalized
+filters, order and page size. It is not an authorization token: public visibility filters
+always apply. Invalid/stale-filter cursors and invalid limits return400, not a silent reset.
+Country/currency normalize to uppercase. `salary-desc` now requires both `salaryCurrency`
+and `salaryPeriod` and filters to those exact units; comparing USD/year with EUR/month is
+not a ranking. This intentionally rejects the old unqualified salary-sort API; current
+Jobs UI uses newest order. No FX/annualization guess is introduced.
+
+Jobs keeps the cursor with existing filters in the URL. Older/Newest links target the
+results anchor, because Nuxt4.6.2 intentionally keeps position for same-path query-only
+navigation. Native router history restores the exact page/scroll after detail; tested with
+111 real SQL fixtures and SSR first page. Filter/search changes omit the old cursor.
+An invalid cursor retains a usable Newest restart link. Demo data uses the same cursor
+contract, not a separate unbounded fallback. Source published date/fetch/human verification
+remain distinct; the existing legacy epoch display sentinel is a C04 follow-up, not proof
+of publication on that date.
+
+Existing indexes include public status/date, company/location and GIN description/title
+search. Real EXPLAIN on a 111-record fixture verifies a bounded 51-row query; it is not a
+representative production benchmark or proof of index selection at scale. No speculative
+index migration or external search engine is added; remeasure the approved pilot volume
+and search mix before changing indexes. [PostgreSQL ordering](https://www.postgresql.org/docs/18/queries-order.html)
+and [LIMIT](https://www.postgresql.org/docs/18/queries-limit.html) semantics checked27.10.
 
 ## Auth and Authorization
 
@@ -86,9 +122,10 @@ Client route guards are UX only; server authorization is the security boundary.
 
 - Neon service-level integration passed in July; that does not prove present readiness.
   October metadata shows archived branches; SQL/schema/data have not been reverified.
-- Disposable PostgreSQL CI exists in unmerged PR #25; real browser auth journeys remain unproven.
-- The reconciled baseline used OAuth dependency 0.5.29; the bounded M2.1 patch is tracked
-  separately in `docs/14-mvp-execution.md`. Do not equate PR implementation with deployment.
+- Disposable PostgreSQL CI and real API/session/browser tests pass on the integration
+  line with synthetic providers/data; real Google/GitHub/native Telegram acceptance remains open.
+- Current integration uses nuxt-auth-utils0.5.32; the old0.5.29 baseline is historical.
+  Dependency residuals are in docs16. Do not equate tested code with deployment.
 - Vercel metadata Node 24.x differs from Node 22 engines/CI; do not change cloud settings implicitly.
 - The relocation calculator uses demo figures until approved sources are loaded and reviewed.
 - Company self-service is deferred; admin-managed vacancy ingestion is the first workflow.

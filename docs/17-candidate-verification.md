@@ -1,5 +1,16 @@
 # Candidate Browser Verification
 
+## Vacancy pagination / long-content correction - 2026-10-27
+
+Replaced the hidden50-result ceiling with URL-bound Older/Newest pages, retaining existing
+filters, Saved/card routes and native detail/back history. Results-anchor navigation is
+used for same-path page changes; no global router override or extra state store. Strict
+bad cursors have an explicit restart path. A111-job real-SQL/browser fixture proves SSR
+first page, no overlapping results, page2 detail/back/scroll, last page and filter reset.
+Long unbroken titles exposed mobile auto-grid min-content overflow at320px. Explicit
+single-column minmax track/min-w-0 fixes it; final320/390/1440 screenshots were inspected.
+This is an engineering workflow refinement, not a new approved design freeze.
+
 ## Focused source-operator entry - 2026-10-27
 
 C07 adds only the source selection/progress/next-batch preview/confirmation surface beside

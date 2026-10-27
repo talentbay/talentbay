@@ -19,6 +19,7 @@ export function useVacancySearch() {
     visaSponsorship: filters.value.visaSponsorship ? 'true' : undefined,
     salaryDisclosed: filters.value.salaryDisclosed ? 'true' : undefined,
     sort: 'newest', limit: 50,
+    before: text('before') || undefined,
   }))
   const update = (next: JobPreferences, replace = false) => router[replace ? 'replace' : 'push']({
     query: {

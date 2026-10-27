@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, or, sql } from 'drizzle-orm'
+import { and, count, eq, inArray, or, sql } from 'drizzle-orm'
 import { isDatabaseConfigured, schema, useDatabase } from '#server/db'
 import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
 import {
@@ -6,6 +6,8 @@ import {
   searchVacancies as searchDemoVacancies,
 } from '#server/services/vacancies/search-vacancies'
 import type { VacancySearch } from '#server/services/vacancies/search-vacancies'
+import { decodeVacancyCursor, encodeVacancyCursor, parseVacancySearch } from '#server/services/vacancies/search-query'
+import { olderVacancies, pageDate, salaryPresent, vacancyOrder } from './vacancy-page'
 import type {
   VacancyDataStatus,
   VacancyListItem,
@@ -30,12 +32,14 @@ export async function resolveVacancies(slugs: string[]): Promise<VacancyResolveR
   }
 }
 
-export async function listVacancies(query: VacancySearch): Promise<VacancySearchResponse> {
+export async function listVacancies(input: VacancySearch): Promise<VacancySearchResponse> {
+  const query = parseVacancySearch(input)
   if (!isDatabaseConfigured()) {
     return searchDemoVacancies(query)
   }
 
   const db = useDatabase()
+  const cursor = decodeVacancyCursor(query)
   const conditions = [
     publicVacancyConditions(),
   ]
@@ -67,43 +71,44 @@ export async function listVacancies(query: VacancySearch): Promise<VacancySearch
   }
 
   if (query.salaryDisclosed) {
-    conditions.push(sql<boolean>`${schema.vacancies.salaryMin} is not null`)
+    conditions.push(salaryPresent())
   }
+  if (query.salaryCurrency) conditions.push(eq(schema.vacancies.salaryCurrency, query.salaryCurrency))
+  if (query.salaryPeriod) conditions.push(eq(schema.vacancies.salaryPeriod, query.salaryPeriod))
+  if (query.sort === 'salary-desc') conditions.push(salaryPresent())
 
   const where = and(...conditions)
-  const orderBy = query.sort === 'salary-desc'
-    ? [desc(schema.vacancies.salaryMax), desc(schema.vacancies.publishedAt)]
-    : [desc(schema.vacancies.publishedAt)]
-
-  const [rows, totals] = await Promise.all([
-    db
-      .select(vacancySelection)
+  return await db.transaction(async (tx) => {
+    const rows = await tx
+      .select({ ...vacancySelection, pageDate })
       .from(schema.vacancies)
       .innerJoin(
         schema.organisations,
         eq(schema.vacancies.organisationID, schema.organisations.id),
       )
-      .where(where)
-      .orderBy(...orderBy)
-      .limit(query.limit),
-    db
+      .where(and(where, cursor ? olderVacancies(query, cursor) : undefined))
+      .orderBy(...vacancyOrder(query))
+      .limit(query.limit + 1)
+    const totals = await tx
       .select({ value: count() })
       .from(schema.vacancies)
       .innerJoin(
         schema.organisations,
         eq(schema.vacancies.organisationID, schema.organisations.id),
       )
-      .where(where),
-  ])
-
-  const items = rows.map(toVacancyListItem)
-  return {
-    items,
-    total: totals[0]?.value ?? 0,
-    dataStatus: items.every(item => item.source.status === 'VERIFIED')
-      ? 'VERIFIED'
-      : 'DEMO',
-  }
+      .where(where)
+    const page = rows.slice(0, query.limit)
+    const last = page.at(-1)
+    const items = page.map(toVacancyListItem)
+    return {
+      items,
+      total: totals[0]?.value ?? 0,
+      dataStatus: items.every(item => item.source.status === 'VERIFIED')
+        ? 'VERIFIED'
+        : 'DEMO',
+      nextCursor: rows.length > query.limit && last ? encodeVacancyCursor(query, { id: last.id, date: last.pageDate, salary: last.salaryMax }) : null,
+    }
+  }, { isolationLevel: 'repeatable read', accessMode: 'read only' })
 }
 
 export async function getVacancyBySlug(slug: string): Promise<VacancyListItem | undefined> {

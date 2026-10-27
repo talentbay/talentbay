@@ -8,6 +8,7 @@ useSeoMeta({
     'Compare international technical roles and destination costs before your next move.',
 })
 const { query, filters, search, update } = useVacancySearch()
+const route = useRoute()
 const { data, status, error, refresh } = await useFetch<VacancySearchResponse>(
   '/api/v1/vacancies',
   { query },
@@ -173,15 +174,16 @@ async function submit() {
       class="mt-4 min-h-12 justify-between lg:hidden"
       @click="relocationOpen = true"
     />
-    <div class="mt-5 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
+    <div class="mt-5 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
       <section
+        class="min-w-0"
         aria-labelledby="results-title"
         :aria-busy="status === 'pending'"
       >
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2
             id="results-title"
-            class="text-2xl font-semibold text-highlighted"
+            class="scroll-mt-24 text-2xl font-semibold text-highlighted"
           >
             {{ data?.total ?? 0 }} roles
           </h2>
@@ -221,13 +223,10 @@ async function submit() {
           title="No matching vacancies"
           description="Change the search or remove a filter."
         />
-        <p
-          v-if="data && data.total > data.items.length"
-          class="mt-4 text-sm text-muted"
-        >
-          Showing the {{ data.items.length }} newest matches. Narrow your search
-          to find more specific roles.
-        </p>
+        <nav class="mt-5 flex flex-wrap gap-3" aria-label="Vacancy pages">
+          <UButton v-if="route.query.before" :to="{ query: { ...route.query, before: undefined }, hash: '#results-title' }" icon="i-lucide-arrow-up" label="Newest roles" color="neutral" variant="outline" :disabled="status === 'pending'" />
+          <UButton v-if="!error && data?.nextCursor" :to="{ query: { ...route.query, before: data.nextCursor }, hash: '#results-title' }" trailing-icon="i-lucide-arrow-right" label="Older roles" color="neutral" variant="outline" :disabled="status === 'pending'" />
+        </nav>
       </section>
       <div class="hidden lg:block">
         <RelocationPreview />

@@ -51,6 +51,7 @@ export type VacancySearchResponse = {
   items: VacancyListItem[]
   total: number
   dataStatus: VacancyDataStatus
+  nextCursor: string | null
 }
 
 export type VacancyResolveResponse = {
