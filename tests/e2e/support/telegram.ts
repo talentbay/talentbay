@@ -4,8 +4,8 @@ import { createHmac } from 'node:crypto'
 export const testBotToken = 'playwright-fake-bot-credential'
 export const testEntryBotID = '9999991234567'
 export const testWebhookSecret = 'playwright_only_webhook_secret_at_least_32_chars'
-export function signedLaunch(id: number, firstName = 'Browser Candidate', startParam?: string) {
-  const params = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000)), user: JSON.stringify({ id, first_name: firstName }) })
+export function signedLaunch(id: number, firstName = 'Browser Candidate', startParam?: string, authDate = Math.floor(Date.now() / 1000)) {
+  const params = new URLSearchParams({ auth_date: String(authDate), user: JSON.stringify({ id, first_name: firstName }) })
   if (startParam) params.set('start_param', startParam)
   params.sort()
   const secret = createHmac('sha256', 'WebAppData').update(testBotToken).digest()

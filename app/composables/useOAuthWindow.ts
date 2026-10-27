@@ -15,12 +15,18 @@ export function useOAuthWindow() {
     busy.value = null
   }
 
+  function closePopup() {
+    try { popup?.close() }
+    catch { /* A restricted WebView may reject a stale window handle. */ }
+  }
+
   async function open(provider: OAuthProvider, mode: 'login' | 'link' = 'login') {
-    if (busy.value) return false
+    if (disposed || busy.value) return false
     error.value = ''
     busy.value = provider
     // Open from the click before requesting the server-sealed linking intent.
-    popup = window.open('about:blank', 'talentbay-auth', 'width=520,height=680,scrollbars=yes')
+    try { popup = window.open('about:blank', 'talentbay-auth', 'width=520,height=680,scrollbars=yes') }
+    catch { popup = null }
     if (!popup) {
       cleanUp()
       error.value = 'Allow the sign-in window in your browser and try again.'
@@ -28,7 +34,7 @@ export function useOAuthWindow() {
     }
     try {
       const { url } = mode === 'link'
-        ? await $fetch<{ url: string }>('/api/v1/auth/link', { method: 'POST', body: { provider } })
+        ? await $fetch<{ url: string }>('/api/v1/auth/link', { method: 'POST', body: { provider }, timeout: 10_000 })
         : { url: `/api/v1/auth/${provider.toLowerCase()}` }
       if (disposed || popup.closed) { cleanUp(); return false }
       popup.location.href = url
@@ -44,7 +50,7 @@ export function useOAuthWindow() {
                 await refreshSession()
                 if (!loggedIn.value) throw new Error('not signed in')
                 if (mode === 'link') {
-                  const identities = await $fetch<{ items: { provider: string }[] }>('/api/v1/auth/identities')
+                  const identities = await $fetch<{ items: { provider: string }[] }>('/api/v1/auth/identities', { timeout: 10_000 })
                   if (!identities.items.some(item => item.provider === provider)) throw new Error('not connected')
                 }
                 resolve(true)
@@ -57,7 +63,7 @@ export function useOAuthWindow() {
             })()
           }
           else if (Date.now() - startedAt > 120_000) {
-            popup.close()
+            closePopup()
             cleanUp()
             error.value = 'The sign-in window timed out. Try again.'
             resolve(false)
@@ -66,12 +72,12 @@ export function useOAuthWindow() {
       })
     }
     catch {
-      popup.close()
+      closePopup()
       cleanUp()
       error.value = 'Sign-in could not be started. Try again shortly.'
       return false
     }
   }
-  onBeforeUnmount(() => { disposed = true; cleanUp(); popup?.close(); settle?.(false) })
+  onBeforeUnmount(() => { disposed = true; cleanUp(); closePopup(); settle?.(false) })
   return { busy, error, open }
 }

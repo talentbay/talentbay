@@ -2,10 +2,38 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/disposable-integration`; verified parent `0cdbb55` / #55.
+Current work branch: `codex/host-edge-cases`; local verified parent `e612e6f` / #56.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Browser / Telegram launch and popup failures (E04)
+
+G03 `e612e6f` / #56 CI40519754874: PostgreSQL job SUCCESS; build still running at Chromium
+installation when checked. Integration remains0cdbb55; no premature FF/main/deployment.
+Seven actual client lifecycle tests cover blocked/thrown popup open, cancel, refresh after
+closure, duplicate click, link identity proof,120s timeout/intent error/unmount/stale close.
+Thrown open first failed; now safe false/error/busy reset. Intent/identity transport10s
+bounds; original server proof/session protocol retained, no new provider SDK/framework.
+
+Seven compiled host/SQL matrices cover unsigned SDK guest, expired/tampered401/no-store/no
+identity, SDK download failure, optional methods throwing, clamped insets/repeated launch,
+slow auth/user navigation and separate cookie stores409/no silent switch. Initial three
+negative launches retained fragment; finally now clears only the original launch hash
+after SDK use on both success/failure, not a later unrelated anchor. First full37/38 had
+one incorrect Settings locator; changed to existing banner link. Next focused6/7 exposed
+a genuine slow-auth race: user-clicked Profile was pending while launch job redirect won.
+Short-lived router beforeEach tracks navigation intent. Actual profile JS is held to make
+that race deterministic; three repeated matrices21/21 PASS, final full38 DB browser PASS.
+Positive signed job launch/back/theme tests remain intact; no timeout/assertion weakening.
+
+Final full20 public browser, Nuxt+CLI typecheck/lint zero warnings/Node build/HTTP smoke PASS;
+188 unit PASS including7 new lifecycle cases.90 SQL/30 tooling/upgrade evidence is parent
+G03 (no schema/backend logic change here), not claimed as new reruns. docs17 records exact
+simulation limits/deviations; no Figma freeze/provider/native/owner/independent R acceptance.
+Existing local chooser3133 verified200. No deps/schema/provider/main/shared data/outreach
+changes. Next AUTO E05 full walkthrough, G04 remaining body/abuse/output review and K1;
+real sources/hosting/provider/policy/H and independent R remain gates.
 
 ### Safe default SQL tests / legacy upgrade / representative volume (G03)
 

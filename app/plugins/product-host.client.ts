@@ -44,6 +44,8 @@ export default defineNuxtPlugin((nuxtApp) => {
   async function initialize() {
     const launch = new URLSearchParams(window.location.hash.slice(1))
     if (!window.Telegram?.WebApp?.initData && !launch.has('tgWebAppData')) return
+    let navigationStarted = false
+    const stopTrackingNavigation = router.beforeEach(() => { navigationStarted = true })
     state.value.status = 'connecting'
     try {
       if (!window.Telegram?.WebApp) {
@@ -74,8 +76,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       await session.fetch()
       const start = new URLSearchParams(host.initData).get('start_param') || ''
       const job = start.length <= 124 ? /^job_([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(start) : null
-      if (job && ['/', '/jobs'].includes(router.currentRoute.value.path)) await router.replace(`/jobs/${job[1]}`)
-      if (launch.has('tgWebAppData')) window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+      if (job && !navigationStarted && ['/', '/jobs'].includes(router.currentRoute.value.path)) await router.replace(`/jobs/${job[1]}`)
       state.value.status = 'ready'
     }
     catch (error) {
@@ -84,6 +85,14 @@ export default defineNuxtPlugin((nuxtApp) => {
       state.value.message = status === 409
         ? 'This browser is signed in to another account. Manage your sign-in methods in Settings.'
         : 'Telegram sign-in is unavailable. You can still browse jobs or use another sign-in method.'
+    }
+    finally {
+      stopTrackingNavigation()
+      // The SDK must read the launch hash first; failures must not retain it either.
+      const current = new URLSearchParams(window.location.hash.slice(1))
+      if (launch.has('tgWebAppData') && current.get('tgWebAppData') === launch.get('tgWebAppData')) {
+        window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+      }
     }
   }
 

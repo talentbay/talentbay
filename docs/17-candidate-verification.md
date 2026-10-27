@@ -1,5 +1,34 @@
 # Candidate Browser Verification
 
+## Host Edge Cases - 2026-10-27
+
+E04 uses actual compiled Chromium/API/isolated PostgreSQL plus fake HMAC credentials and
+host capabilities, not a real provider/native-device acceptance. A plain SDK-shaped object/
+initDataUnsafe is not login. Expired/tampered launches401/no-store/no new identity, blocked
+SDK download and optional ready/back/settings/haptics/event methods throwing retain usable
+browser navigation. Repeated launch preserves the local user/one identity; independent
+cookie stores start independently and server409 prevents replacing an existing account.
+Existing back/theme/safe-area/deep-link tests remain; insets stay bounded.
+
+Regressions exposed thrown window.open leaving the flow rejected/busy and retained launch
+hash after failed auth/SDK. Popup capability/open/close now fail safely, intent/identity
+fetches have10s bounds,120s popup timeout/cancel/unmount settles. The actual installed
+session refresh still determines login; these client tests are not real OAuth success.
+Launch hash is cleared after SDK use in both success/failure, without deleting a different
+anchor selected while auth was pending. No initDataUnsafe authentication or second app tree.
+
+A slow-auth test then reproduced a genuine navigation race: clicked Profile was still
+loading while the launch job redirect won. A short-lived router beforeEach tracks started
+navigation, not just committed currentRoute, so user navigation takes precedence. The
+regression holds the actual compiled profile chunk until auth settles;21/21 repeated host
+cases pass after the fix. Original signed job launch still has its own positive regression.
+One intermediate test looked for Settings in the four-tab navigation; corrected to the
+existing fallback-banner link, not an added product control or longer timeout.
+
+No design-system/page-tree/provider/session-protocol change or new Figma freeze. Actual
+full final suite results/delivery are recorded in docs14 after completion; native Telegram,
+real Google/GitHub, owner acceptance and independent R remain separate.
+
 ## SSR Interactivity - 2026-10-27
 
 The public outcome failure was investigated rather than accepted after warm reruns.
