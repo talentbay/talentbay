@@ -71,6 +71,7 @@ integration runs require the explicit disposable guard; shared/cloud targets are
 ## Documentation
 
 - [Current state](docs/09-current-state.md)
+- [Independent review handoff](docs/35-independent-review.md)
 - [Disposable database verification](docs/34-database-verification.md)
 - [MVP scope](docs/01-mvp-scope.md)
 - [Architecture](docs/02-architecture.md)

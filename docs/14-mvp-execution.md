@@ -7,6 +7,35 @@ Historical foundation/security PRs: #25/#26 (included in the reconciled integrat
 
 ## Autonomous Run Started - 2026-10-27
 
+### K1 Queue Reconciliation (implementation, not independent acceptance)
+
+One current fallback queue is this section; docs24 remains task contracts, not a second
+status tracker. GitHub org Project access was blocked by missing project scope (A05
+evidence below); no token scope or duplicate board was created. Read final PR59 own head/CI
+before claiming the candidate remote-verified. Exact review procedure: docs35.
+
+| Task IDs | Current state | Evidence / next boundary |
+| --- | --- | --- |
+| TB-A01..A04 | CODE_VERIFIED | Integration ancestry, actual CI, dependency/environment/runbook evidence |
+| TB-A05 | FALLBACK_ACTIVE | Explicit repo execution queue; org Project is not claimed configured |
+| TB-B01..B09 | CODE_VERIFIED | Managed intake/snapshot/handling/correction/progress/withdrawal + SQL/browser/negative/concurrency tests |
+| TB-C01..C04, TB-C06..C07 | CODE_VERIFIED | Source contract, bounded public/admin pages, provenance/review, offline Lever connector/durable runner; registry empty |
+| TB-D01..D03, TB-D05 | CODE_VERIFIED |11-city contract/math/local dataset importer/outcome; real reviewed data not invented |
+| TB-E01..E05 | CODE_VERIFIED | Local prototype fallback, complete routes, hydration/host/navigation/keyboard/width/error/retry tests and repeatable chooser/tour |
+| TB-F01..F04 | CODE_VERIFIED | Operational definitions/dashboard/runbooks/redacted telemetry/actual two-cluster synthetic recovery |
+| TB-G01..G04 | CODE_VERIFIED | Access/PII/cache/raw-body/output/audit/upgrade/volume review; actual provider/policy limits remain gates |
+| TB-I01 | CODE_VERIFIED | Protected default-off bot contract/receipt/API + offline entry preview; no native transport acceptance |
+| TB-C05, TB-D04, TB-D06, TB-G05 | GATE | CEO source permissions, reviewed city data, approved sharing/privacy/retention/support/content |
+| TB-R01 | NEXT_REVIEW | Owner-selected independent reviewer, exact final PR59 SHA/CI; docs35, not executor self-approval |
+| TB-R02 | WAIT_R01 | Narrow confirmed findings/regressions, no speculative scope expansion |
+| TB-R03 | WAIT_R02 | Separate final independent code verdict |
+| TB-H01..H05 | GATE | Eligible target/budget/approved operations -> protected HTTPS/native/data/human verification -> explicit beta go/no-go |
+
+Coverage:37 pre-review AUTO code slices + A05 explicit fallback =38;9 external-gate tasks;
+2 independent-review tasks and1 post-review repair task =50. CODE_VERIFIED is synthetic
+implementation/check evidence only, not merged-main/deployed/owner-accepted/legal-approved.
+No X post-beta work is silently promoted. No deadlines/hours/people are assigned here.
+
 ### Repeatable whole-product review entry (E05)
 
 #58 both CI SUCCESS40524069539, only integration FFa172ad8; main/production unchanged.
