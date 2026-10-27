@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   contextLabel?: string
 }>(), {
   initialLocation: 'london',
-  initialAnnualGross: 110_000,
+  initialAnnualGross: null,
   contextKey: 'jobs',
   contextLabel: '',
 })
@@ -47,7 +47,7 @@ const query = computed(() => ({
   location: location.value,
   annualGross: debouncedGross.value,
 }))
-const valid = computed(() => locationItems.value.some(item => item.value === location.value) && typeof debouncedGross.value === 'number' && Number.isFinite(debouncedGross.value) && debouncedGross.value > 0 && debouncedGross.value <= 2_000_000)
+const valid = computed(() => locationItems.value.some(item => item.value === location.value) && typeof debouncedGross.value === 'number' && Number.isFinite(debouncedGross.value) && debouncedGross.value >= 0 && debouncedGross.value <= 2_000_000)
 
 const { data, status, error, execute, clear } = await useFetch<RelocationPreviewResponse>(
   '/api/v1/relocation/preview',
@@ -100,8 +100,9 @@ const retainedPercent = computed(() => {
         <UInput
           v-model.number="annualGross"
           type="number"
-          min="1"
+          min="0"
           max="2000000"
+          step="0.01"
           inputmode="numeric"
           class="w-full"
         />

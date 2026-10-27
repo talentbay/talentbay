@@ -1,5 +1,16 @@
 import { expect, test } from '@playwright/test'
 
+test('standalone relocation never invents a salary; explicit zero shows the negative budget', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.goto('/jobs')
+  const income = page.getByRole('spinbutton', { name: 'Annual gross salary' })
+  await expect(income).toHaveValue('')
+  await expect(page.getByRole('region', { name: 'Disposable income' })).toHaveCount(0)
+  await income.fill('0')
+  await expect(page.getByRole('region', { name: 'Disposable income' })).toContainText('-£3,350')
+  await page.screenshot({ path: testInfo.outputPath('relocation-zero-desktop.png'), fullPage: true })
+})
+
 for (const width of [320, 390, 768, 900, 1024, 1440]) {
   test(`candidate navigation and cards fit ${width}px`, async ({ page }, testInfo) => {
     const errors: string[] = []

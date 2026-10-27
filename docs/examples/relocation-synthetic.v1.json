@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "purpose": "SYNTHETIC",
+  "units": {
+    "amounts": "MAJOR_CURRENCY_UNITS",
+    "income": "YEAR",
+    "living": "MONTH",
+    "move": "ONCE",
+    "taxRates": "BASIS_POINTS"
+  },
+  "records": [{
+    "destination": "london",
+    "currency": "GBP",
+    "status": "DRAFT",
+    "monthlyCosts": { "rent": 1000, "utilities": 100, "groceries": 200, "transport": 50, "healthcare": 50, "other": 100 },
+    "oneTimeCosts": { "flight": 200, "visa": 100, "deposit": 1000, "temporaryHousing": 300, "other": 100 },
+    "taxModel": { "type": "effective_rate", "rateBps": 2000 },
+    "sources": [{
+      "label": "Fictional fixture only, not London cost or tax evidence",
+      "url": "https://example.invalid/synthetic-relocation",
+      "accessedAt": "2026-01-01",
+      "covers": ["TAX", "RENT", "LIVING", "MOVE"]
+    }],
+    "effectiveFrom": "2026-01-01",
+    "assumptions": {
+      "household": "ONE_ADULT",
+      "employment": "SALARIED_EMPLOYEE",
+      "taxResidency": "Synthetic residence assumption, not a legal determination",
+      "taxYear": "Synthetic 2026 fixture, not a UK tax-year model",
+      "includedTaxes": ["Fictional effective deduction only, not actual UK tax"],
+      "excludedTaxes": ["All real personal tax and social contribution calculations"],
+      "housing": "Fictional single-adult monthly rent; not an available property",
+      "moveRoute": "Fictional origin to London; no live airfare or booking quote",
+      "exclusions": ["No family costs, tax advice, visa eligibility or booking guarantee"]
+    },
+    "review": null
+  }]
+}

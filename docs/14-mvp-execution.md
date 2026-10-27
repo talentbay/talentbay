@@ -2,10 +2,40 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/vacancy-provenance`; verified parent `949c682` / #45.
+Current work branch: `codex/relocation-data-contract`; verified parent `9e3f8f1` / #46.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Relocation dataset/math boundary (D01/D02)
+
+#46 both CI jobs SUCCESS (`40488246587`); only integration FF to9e3f8f1. Added a strict
+version1 package with fixed11-city coverage, major-unit/period/basis-point declarations,
+tax/housing/move assumptions, evidence groups, dated review/reference/explicit validity
+and MISSING/DRAFT/VERIFIED/STALE coverage. Example is fictional DRAFT only, not actual
+London tax/cost data. No implicit Amsterdam addition to the approved pilot: historical
+demo remains documented separately. Current SQL still needs D03 package metadata/import.
+
+Runtime checks complete cost/tax/source/review-date structure instead of trusting only
+VERIFIED. Invalid/future/unreviewed/unknown-currency records cannot reach the public
+calculation. Narrow SQL projection excludes unused notes. Progressive thresholds and
+terminal bracket/rates/allowance, supported income bounds, zero/negative/rounding and
+unsafe sources are tested. Unknown income/destination no longer silently becomes
+London/110000: API requires both and standalone UI starts blank. Explicit zero shows
+negative budget; MONTH annualization and currency/HOUR non-assumptions are retained.
+
+PASS151 unit/73 SQL, full21 DB browser (real malformed/future/null-review/currency rows,
+missing/invalid amount, mobile zero and existing flows) and public17 (desktop blank->zero
+and inspected negative-budget screenshot), lint zero warnings/typecheck/Node build/smoke.
+Final projection has additional focused SQL and compiled-HTTP browser PASS; final Node
+build/types/smoke PASS, exact-head adapter checks run in PR CI. No migration/dependency change, actual rates/quotes, shared data, booking, tax/legal
+approval or independent R. Full new assumptions/validUntil are not retroactively attached
+to legacy SQL rows: D03 must persist/review them before a real dataset release. docs26
+records limits including the nominal2M income ceiling across different currencies.
+
+Next AUTO: D03 bounded validated dataset import/review, D05 outcome/source/assumption UI,
+remaining E/F/G/I and B04/B09. D04/D06/H remain real data/provider/owner gates; no city-list
+question is reopened. Strong independent R still follows K1, not this same-session check.
 
 ### Vacancy source/publication/review facts (C04)
 

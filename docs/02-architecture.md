@@ -56,7 +56,10 @@ Browser-only APIs must remain inside client lifecycle code.
   Applications use the same visibility conditions, reject labelled demo content and lock
   the vacancy/company during submission so an import cannot invalidate the eligibility
   check before the application is inserted. IDs and existing applications are retained.
-- Relocation reads prefer `VERIFIED` PostgreSQL records and expose source provenance, review status and effective dates; demo cities remain labelled fallback data.
+- Relocation reads require `VERIFIED` plus valid cost/tax/source/review date structure,
+  not just the status string; invalid rows are excluded. Demo remains labelled fallback.
+  D01/D02 package,11-city coverage, math/input limits and remaining data gates: docs26.
+  Preview API requires explicit location/annualGross; no hidden London/110000 default.
 
 ### Public Vacancy Pages (TB-C02)
 

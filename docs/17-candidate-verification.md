@@ -1,5 +1,13 @@
 # Candidate Browser Verification
 
+## Relocation input honesty - 2026-10-27
+
+D02 preserves the existing component but removes the invented standalone110000 salary;
+only a same-currency vacancy midpoint or explicit user value supplies income. Zero is a
+valid scenario, with negative disposable shown rather than hidden. Missing/invalid input
+does not call the estimate as a default success. Existing monthly/hourly/currency behavior
+is retained; full source/assumption/outcome design is D05, not a claimed new Figma freeze.
+
 ## Provenance / truthful age - 2026-10-27
 
 C04 adds an unframed definition list using existing tokens at the source/footer and review
