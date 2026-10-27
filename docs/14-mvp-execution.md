@@ -2,10 +2,45 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/relocation-dataset-import`; verified parent `3587cf8` / #47.
+Current work branch: `codex/relocation-outcome-ux`; verified parent `25e7571` / #48.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Candidate Relocation Outcome (D05 local code)
+
+#48 both CI jobs SUCCESS (`40494621854`); only integration FF to25e7571. D05 keeps the
+existing side calculator/dialog, Nuxt UI/Lucide/tokens, one host tree and server math.
+Stable11-city scenario keys are distinct from current calculation IDs; missing data is
+visible without fake prices or requests. Public details contain actual modeled monthly/
+moving groups, sources/access/effective/review/validUntil and assumptions, not reviewer/
+approval reference/import actor. Demo never invents source review or category details.
+
+Currency change clears income, same-currency scenarios retain it. Mismatched/late results
+are hidden while inputs change; Nuxt's installed request cancellation/deduplication is
+reused. Error/retry preserves inputs, reviewed->demo downgrade clears old values, zero/
+shortfall stays signed. Financial drafts live in memory per vacancy and reset on account
+change; no financial route/localStorage history. Dialog owns its context/header rather
+than repeating a nested framed tool/title. Back/close returns to the same job/search.
+
+PASS159 unit/78 SQL/24 tooling, Nuxt+CLI typecheck/lint (zero warnings), Node build/HTTP
+smoke. Full19 public +23 DB browser PASS before the final presentation-only refinements;
+final focused2 public +3 DB browser PASS covers flat dialog/header geometry, all six
+widths, sources/long strings, stale downgrade and sign-out privacy reset. Initial new
+tests wrongly expected Apply for demo/guest; corrected to actual Preview only/sign-in
+contract. Screenshot inspection found a real long-header close overlap/flex shrink issue:
+fixed reserved close width/shrink-0/min-h-0, added geometry assertions. Mid-animation
+translucent capture was replaced with animation-disabled screenshot, not accepted as QA.
+Tooling first hit sandbox listen EPERM; rerun with local-listener permission24 PASS.
+
+Active Figma read succeeded; draft write failed at createPage with read-only mode before
+any mutation (docs27). No Figma sync/new freeze or independent R is claimed. Local working
+prototype/screenshots are the allowed E01 fallback. No dependencies/schema/shared data/
+production change. Final review server remains local3132/chooser3133 with fictional data.
+
+Owner confirmed on27Oct no pre-approved career pages/boards; clarify with CEO before
+real ingestion. Registry stays empty/cron off. Next AUTO: basic bot I01, remaining E/F/G
+and B04/B09 correction/reopen. D04/D06/H still need actual data/provider/policy acceptance.
 
 ### Bounded relocation package ingestion (D03 local code)
 

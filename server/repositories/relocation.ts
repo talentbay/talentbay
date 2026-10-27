@@ -26,11 +26,12 @@ type RelocationRow = Pick<typeof schema.relocationLocations.$inferSelect, keyof 
 function calculationInput(row: RelocationRow) {
   const dataset = reviewedDatasetSnapshot(row.datasetSnapshot, new Date().toISOString().slice(0, 10))
   if (!dataset || !sameDatasetValues(row, dataset.values)) return undefined
-  return parseReviewedRelocation({
+  const input = parseReviewedRelocation({
     key: `location-${row.id}`, city: row.city, countryCode: row.countryCode, currency: row.currency,
     monthlyCosts: row.monthlyCosts, oneTimeCosts: row.oneTimeCosts, taxModel: row.taxModel,
     sources: row.sources, effectiveFrom: row.effectiveFrom, reviewedAt: row.reviewedAt,
   })
+  return input ? { input, context: { assumptions: dataset.record.assumptions, validUntil: dataset.record.review!.validUntil } } : undefined
 }
 
 export async function listRelocationLocations(): Promise<RelocationLocationOption[]> {
@@ -54,7 +55,7 @@ export async function listRelocationLocations(): Promise<RelocationLocationOptio
     .orderBy(asc(schema.relocationLocations.city))
 
   const valid = rows.flatMap(row => calculationInput(row) ?? [])
-  const verifiedItems = valid.map(row => ({
+  const verifiedItems = valid.map(({ input: row }) => ({
     key: row.key,
     city: row.city,
     countryCode: row.countryCode,
@@ -84,13 +85,13 @@ export async function getRelocationPreview(
         idMatch ? eq(schema.relocationLocations.id, Number(idMatch[1])) : undefined,
       ))
     const valid = rows.flatMap(row => calculationInput(row) ?? [])
-    const matches = idMatch ? valid : valid.filter(row => toLocationKey(row.city) === locationKey)
+    const matches = idMatch ? valid : valid.filter(row => toLocationKey(row.input.city) === locationKey)
     // Legacy city-only links remain valid only when they identify one destination.
     if (matches.length > 1) return undefined
     const row = matches[0]
 
     if (row) {
-      return calculateVerifiedRelocationPreview(row, annualGross)
+      return calculateVerifiedRelocationPreview(row.input, annualGross, row.context)
     }
   }
 

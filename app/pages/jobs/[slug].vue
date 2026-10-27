@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {
-  RelocationLocationOption,
+  RelocationLocationsResponse,
   VacancyListItem,
 } from '#shared/types/vacancies'
 import {
@@ -24,11 +24,9 @@ useSeoMeta({
     `${vacancy.value?.title} at ${vacancy.value?.company.name} · TalentBay`,
   description: () => vacancy.value?.summary,
 })
-const { data: locations } = await useFetch<{
-  items: RelocationLocationOption[]
-}>('/api/v1/relocation/locations')
+const { data: locations } = await useFetch<RelocationLocationsResponse>('/api/v1/relocation/locations', { key: 'relocation-locations' })
 const relocationLocation = computed(() =>
-  locations.value?.items.find(
+  locations.value?.destinations.find(
     (item) =>
       item.countryCode === vacancy.value?.location.countryCode &&
       item.city.toLocaleLowerCase('en') ===
@@ -223,12 +221,13 @@ const { ready, goBack } = useCandidateBack()
       v-model:open="relocationOpen"
       title="Relocation estimate"
       :description="`${vacancy.title} · ${vacancy.company.name}`"
+      :ui="{ header: 'shrink-0 items-start', wrapper: 'min-w-0 pe-10', title: 'break-words', description: 'break-words', body: 'min-h-0' }"
     >
       <template #body>
         <RelocationPreview
           v-if="relocationLocation"
+          embedded
           :context-key="vacancy.slug"
-          :context-label="`${vacancy.title} · ${vacancy.company.name}`"
           :initial-location="relocationLocation.key"
           :initial-annual-gross="relocationSalary"
         />

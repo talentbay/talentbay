@@ -5,7 +5,7 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 
 ## Code Progress - 2026-10-27
 
-#38–#47 have both CI jobs SUCCESS; integration is3587cf8, main/production unchanged.
+#38–#48 have both CI jobs SUCCESS; integration is25e7571, main/production unchanged.
 Managed Apply now has a versioned acknowledgment, immutable profile/vacancy snapshot,
 operator assignment/contact/manual-handoff records and owner-only public event history.
 First-time profile completion returns to the same Apply. These facts supersede the older
@@ -17,8 +17,11 @@ The first Lever connector/durable source runner is offline-fixture/real-SQL test
 approved-source registry is empty and no live fetch/cron is activated. Public vacancy
 pagination and C03 admin queues are complete in code, with their own CI. C04 provenance
 and D01/D02 math/contract also passed their own CI. D03 local package importer/snapshot
-guard passes local code checks, not shared execution/real dataset acceptance. Remaining
-D05/relocation/UX/operations/security/basic bot work, independent R and real provider/data/
+guard passes own CI, not shared execution/real dataset acceptance. D05 outcome/source/
+assumption UX passes local159unit/78SQL, full19public/23DB and final focused2public/3DB,
+types/lint/Node/smoke. Figma read works, draft writes are read-only; no new freeze exists.
+Owner confirms no approved real source pages yet; CEO clarification remains necessary.
+Remaining UX/operations/security/basic bot work, independent R and real provider/data/
 native/hosting/legal/owner H gates remain. No complete/accepted/deployed MVP claim.
 Exact slice commands/revisions/results: docs14. Provider facts below remain dated26.10;
 they were not silently refreshed by writing this section.

@@ -40,11 +40,14 @@ export function calculateRelocationPreview(
       disposable: Math.round(disposable),
     },
     oneTimeMove: location.oneTimeMove,
+    details: null,
     dataStatus: 'DEMO',
     disclaimer: 'Illustrative preview only. Tax and cost data has not yet passed TalentBay legal and data review.',
     provenance: {
       effectiveFrom: null,
       reviewedAt: null,
+      validUntil: null,
+      assumptions: null,
       sources: [],
     },
   }
@@ -66,6 +69,7 @@ export type VerifiedRelocationInput = {
 export function calculateVerifiedRelocationPreview(
   location: VerifiedRelocationInput,
   annualGross: number,
+  context: Pick<RelocationPreviewResponse['provenance'], 'assumptions' | 'validUntil'> = { assumptions: null, validUntil: null },
 ): RelocationPreviewResponse {
   const validated = parseReviewedRelocation(location)
   if (!validated) throw new RangeError('Unsupported relocation data')
@@ -94,11 +98,14 @@ export function calculateVerifiedRelocationPreview(
       disposable: Math.round(disposable),
     },
     oneTimeMove: sumValues(location.oneTimeCosts),
+    details: { monthlyCosts: location.monthlyCosts, oneTimeCosts: location.oneTimeCosts, annualTax },
     dataStatus: 'VERIFIED',
     disclaimer: 'Estimate based on reviewed source data. Actual tax and relocation costs depend on personal circumstances.',
     provenance: {
       effectiveFrom: location.effectiveFrom.toISOString(),
       reviewedAt: location.reviewedAt?.toISOString() ?? null,
+      validUntil: context.validUntil,
+      assumptions: context.assumptions,
       sources: location.sources,
     },
   }

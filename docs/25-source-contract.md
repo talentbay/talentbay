@@ -4,6 +4,11 @@ Checked: 2026-10-27. TB-C01/C06 engineering work, not source-rights approval or 
 First adapter: **Lever Postings JSON API**. Existing CSV remains a correction/fallback path.
 No crawler fleet, CAPTCHA bypass, browser automation, AI extraction or candidate submission.
 
+Owner reply on2026-10-27: no already-agreed company career pages/boards are available;
+this must be clarified with the CEO. This is a confirmed missing source approval, not
+permission to choose and republish arbitrary live listings. Registry stays empty and
+real ingestion/scheduling remains off; synthetic connector/service/UI work can continue.
+
 ## Source Register
 
 | Source | Verified technical evidence | Decision / missing gate |

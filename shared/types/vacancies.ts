@@ -1,3 +1,5 @@
+import type { MonthlyLivingCosts, OneTimeRelocationCosts, RelocationAssumptions } from './relocation-data'
+
 export type VacancyWorkplace = 'ONSITE' | 'HYBRID' | 'REMOTE'
 export type VacancyEmployment = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP'
 export type VacancyDataStatus = 'DEMO' | 'VERIFIED'
@@ -9,6 +11,13 @@ export type RelocationLocationOption = {
   currency: string
   dataStatus: VacancyDataStatus
 }
+
+export type RelocationDestinationOption = Omit<RelocationLocationOption, 'dataStatus'> & {
+  calculationKey: string | null
+  availability: 'REVIEWED' | 'DEMO' | 'UNAVAILABLE'
+  pilot: boolean
+}
+export type RelocationLocationsResponse = { items: RelocationLocationOption[]; total: number; destinations: RelocationDestinationOption[] }
 
 export type VacancySalary = {
   min: number
@@ -81,11 +90,14 @@ export type RelocationPreviewResponse = {
     disposable: number
   }
   oneTimeMove: number
+  details: { monthlyCosts: MonthlyLivingCosts; oneTimeCosts: OneTimeRelocationCosts; annualTax: number } | null
   dataStatus: VacancyDataStatus
   disclaimer: string
   provenance: {
     effectiveFrom: string | null
     reviewedAt: string | null
+    validUntil: string | null
+    assumptions: RelocationAssumptions | null
     sources: Array<{
       label: string
       url: string

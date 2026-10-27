@@ -1,5 +1,30 @@
 # Candidate Browser Verification
 
+## Relocation Outcome and Sources - 2026-10-27
+
+D05 keeps the vacancy side tool/narrow dialog, shared state and Nuxt UI controls. Flat
+monthly/moving/source sections replace the nested result card; the dialog owns its header
+and context rather than repeating a second framed card/title. Missing pilot data is
+explicit, without requests or invented prices. Server details expose reviewed source/access/
+effective/review/validity and declared assumptions; private review identity stays private.
+Demo lacks invented subcategories. Initial moving cash includes deposit, not monthly rent.
+
+Currency change clears income; same-currency scenario keeps it. Editing hides mismatched
+answers immediately, debounced requests use installed Nuxt cancellation/deduplication,
+errors retain inputs with retry, and reviewed->demo downgrade clears prior values. Per-context
+financial drafts stay in memory, not route/localStorage; owner changes reset them. Zero and
+signed shortfall remain explicit. Public and real-SQL/API/browser tests cover these paths.
+
+Inspected320/1440 screenshots exposed a real long-context header/close overlap and flex
+shrink issue. Fixed reserved close space/shrink-0 header/min-h-0 scroll body; geometry
+assertions now check description within header and left of close. Six widths cover complete
+disclosures, long source/assumption strings and horizontal bounds; scrolled bottom is
+reachable. Screenshots disable the opening animation rather than accepting a translucent
+mid-transition frame. The source fixture is explicitly fictional, not actual London data.
+Writable Figma gate and failed draft attempt are recorded in docs27: no canvas change,
+no new approved freeze. This is engineering verification, not independent R/native/owner
+acceptance or real data approval.
+
 ## Relocation input honesty - 2026-10-27
 
 D02 preserves the existing component but removes the invented standalone110000 salary;

@@ -17,8 +17,16 @@ the missing cities or replace11 with a smaller list silently.
 an explicit UTC day. No record means MISSING, never zero rent/tax/move cost. The shipped
 example has one fictional DRAFT London record and10 missing cities. Existing runtime
 still has four labelled illustrative demo cities, including historical Amsterdam (not
-an approved addition to the11-city pilot). D03 now has local bounded imports; D05 UI coverage is next. The
+an approved addition to the11-city pilot). D03 has local bounded imports; D05 exposes
+all11 destinations with REVIEWED/DEMO/UNAVAILABLE availability and no invented prices. The
 new schema/example do not themselves populate any DB or expand public real-data coverage.
+
+D05 adds compatible `destinations` to the locations response (`items`/`total` are retained).
+Scenario keys are canonical and stable; `calculationKey` points to the current reviewed
+row ID or demo, or is null. Public calculation details now expose the actual cost groups,
+annual modeled deduction, assumptions and review validity, never the private reviewer/
+approval reference/import actor. The client displays server calculations, not a second
+tax implementation. See [candidate workflow](27-relocation-candidate-workflow.md).
 
 ## Fixed Package
 
