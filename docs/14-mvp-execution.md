@@ -2,8 +2,26 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/product-walkthrough`; local verified parent `a172ad8` / #58.
+Current work branch: `codex/ci-feedback-loop`; verified review target `6278108` / #59.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
+
+## Resumed Feedback / Independent Review - 2026-10-27
+
+Owner explicitly resumed work and authorized a separate read-only reviewer. R01 is running
+against frozen `6278108e3576c3ecca7ebbc2c6885e86c41e183c`, not the mutable CI branch;
+no independent verdict is claimed yet. Exact #59 CI40527239793 is now confirmed SUCCESS
+for both jobs. Its SQL job took13m58, with11m31 spent on Chromium's system package step;
+logs show slow Ubuntu mirror downloads. Build took3m7. These are observations, not an SLA.
+
+Separate CI-only slice: conservative complete-PR documentation classification with stable
+required check names/failure propagation, headless-shell-only download and actual browser
+startup before conditional official Linux dependency installation. Protected pushes and
+unknown/code/config changes still run every suite. No browser cache/new action/dependency,
+changed DB guard or weakened assertion. Workflow in docs03: one slice/checkpoint/concise
+vault update; full tests once per finished applicable change, not every note.
+Local40 tooling, lint zero warnings and actual installed Chromium startup/close PASS;
+actual27dec55..6278108 documentation diff classified correctly. Runtime/SQL/schema unchanged;
+their suites are retained in the new exact-head CI, not relabelled local reruns here.
 
 ## Autonomous Run Started - 2026-10-27
 

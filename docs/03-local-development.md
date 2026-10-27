@@ -85,6 +85,35 @@ pnpm db:studio
 
 ## Quality Checks
 
+### Feedback Loop
+
+Use one coherent code/test/documentation slice per PR. During implementation, run the
+affected unit/API/browser regressions first; run the complete applicable matrix on the
+finished slice. Do not repeatedly rerun unchanged domain suites just to copy their results
+into another note. Serialize Nuxt type generation and builds. CI remains the exact-head
+integration check, not independent review or deployment approval.
+
+CI always starts the scope check. Only a complete PR diff containing `README.md` and/or
+`docs/**/*.md` may skip the existing `build` and `PostgreSQL integration` jobs. Their names
+remain unchanged; missing revisions/diffs, non-Markdown files, code/configuration and all
+protected-branch pushes run full checks. Classifier failure explicitly fails the dependent
+required checks instead of letting them disappear. No workflow-level path filtering.
+See [GitHub required checks](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
+
+Headless Chromium installation uses `--only-shell`, matching the existing default test
+channel. A real startup probe avoids blanket system-package installation on ready runners;
+missing Linux libraries trigger official `playwright install-deps chromium` and a second
+startup. Other errors, installer errors and retry failures fail CI. Full browser suites
+still run; no retries/assertions/target guards are weakened. Browser caching is deliberately
+not introduced: the observed slow step was Ubuntu package downloads, not browser download.
+See [Playwright headless shell](https://playwright.dev/docs/browsers#chromium-headless-shell)
+and [CI guidance](https://playwright.dev/docs/ci#caching-browsers).
+
+Keep detailed commands/findings in the execution log and review report. Obsidian keeps a
+short current state, decisions and links, not a copied task board or every passing command.
+Update it after a completed slice/blocker, not after every tool call. Global vault rules
+and structure are outside this project workflow change.
+
 ```bash
 pnpm lint
 pnpm typecheck
