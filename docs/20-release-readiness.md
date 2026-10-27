@@ -6,10 +6,12 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 ## Code Progress - 2026-10-27
 
 #38–#51 have both CI jobs SUCCESS; integration is fecfb57, main/production unchanged.
-F01/F02 now pass local176unit/88SQL/25tooling/types/lint/Node/smoke/full28DB. Metric
-dictionary/drilldowns/oldest work and F03 operator runbook are in docs30/31. Public18/19
-found intermittent relocation input loss; unchanged focused10/10 is not a fix, and the
-next E02/E03 hydration follow-up remains a local acceptance blocker. F04/remaining E/G,
+F01/F02 `74df2d3` / #52 both CI SUCCESS40508773000, with local176unit/88SQL/25tooling/
+types/lint/Node/smoke/full28DB. Metric dictionary/drilldowns/oldest work and F03 operator
+runbook are in docs30/31. Public18/19 found intermittent relocation input loss; separate
+E02/E03 held-JS regression first failed, then mounted input/destination guard passed
+focused15/15 repeats and final full20public/28DB/types/lint/Node/smoke. Integration has not
+yet advanced beyond fecfb57 pending that fix's CI. F04/remaining E/G,
 independent R and all real data/provider/support/privacy/production gates remain open.
 Managed Apply now has a versioned acknowledgment, immutable profile/vacancy snapshot,
 operator assignment/contact/manual-handoff records and owner-only public event history.

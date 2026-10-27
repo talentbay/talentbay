@@ -2,10 +2,29 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/operator-overview`; verified parent `fecfb57` / #51.
+Current work branch: `codex/relocation-hydration`; verified parent `74df2d3` / #52.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Relocation pre-hydration input safety (focused E02/E03 follow-up)
+
+#52 both CI jobs SUCCESS (`40508773000`). Integration remains fecfb57 until this follow-up
+is checked as well; no main/production promotion. The earlier public failure is confirmed
+as a real exposed hazard, not dismissed after warm reruns: with client JS held, SSR salary
+input was enabled before Vue handlers. New deterministic regression failed on that actual
+compiled output. Existing Jobs search already uses mounted interactivity; the same small
+pattern now disables relocation income/destination until mounting. No disabled SSR control
+accepts a value that hydration can discard. Ordinary hydrated UI/calculation is unchanged.
+
+Node build/types/lint zero warnings/HTTP smoke PASS, focused SSR+original outcome15/15
+repeated tests PASS, final full20 public and28 DB/browser PASS concurrently. Unit176/SQL88/
+tooling25 from parent remain unchanged (no domain/schema/dependency changes in this fix).
+Test holds actual JS responses and releases them, then asserts first input/result; no
+sleep, timeout extension or weakened original assertion. Implementation reference:
+[Playwright hydration guidance](https://playwright.dev/docs/navigations#hydration),27Oct.
+No provider/main/shared data/outreach/design-freeze/R/owner acceptance claim. Next AUTO F04
+bounded telemetry/incident/recovery, then remaining E/G/K1; real content/policy/H gates remain.
 
 ### Operational work overview (F01/F02 and F03 runbook)
 

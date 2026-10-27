@@ -10,6 +10,8 @@ const props = withDefaults(defineProps<{
   embedded?: boolean
 }>(), { initialLocation: 'london', initialAnnualGross: null, contextKey: 'jobs', contextLabel: '', embedded: false })
 const titleID = useId()
+const interactive = ref(false)
+onMounted(() => { interactive.value = true })
 const { data: locations, error: locationsError, refresh: refreshLocations } = await useFetch<RelocationLocationsResponse>(
   '/api/v1/relocation/locations', { key: 'relocation-locations' },
 )
@@ -40,10 +42,10 @@ const retainedPercent = computed(() => currentResult.value && currentResult.valu
     <UAlert v-if="locationsError" class="mt-4" color="error" title="Destinations unavailable" :actions="[{ label: 'Retry', icon: 'i-lucide-refresh-cw', onClick: () => refreshLocations() }]" />
     <div class="mt-5 grid gap-4">
       <UFormField label="Destination">
-        <USelect v-model="location" :items="locationItems" value-key="value" class="w-full" />
+        <USelect v-model="location" :disabled="!interactive" :items="locationItems" value-key="value" class="w-full" />
       </UFormField>
       <UFormField v-if="supported" label="Annual gross salary" :hint="selected?.currency">
-        <UInput v-model.number="annualGross" type="number" min="0" max="2000000" step="0.01" inputmode="decimal" class="w-full" />
+        <UInput v-model.number="annualGross" :disabled="!interactive" type="number" min="0" max="2000000" step="0.01" inputmode="decimal" class="w-full" />
       </UFormField>
     </div>
     <p v-if="notice" class="mt-3 text-xs text-muted" role="status">{{ notice }}</p>

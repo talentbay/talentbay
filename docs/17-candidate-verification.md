@@ -1,5 +1,14 @@
 # Candidate Browser Verification
 
+## SSR Interactivity - 2026-10-27
+
+The public outcome failure was investigated rather than accepted after warm reruns.
+An actual held-JavaScript regression first failed: salary input was enabled in SSR without
+Vue handlers. Destination and amount now reuse mounted interactivity, as Jobs search does.
+After release, the first60000 input is retained and produces the real demo estimate.
+Focused SSR/outcome15/15 repeats and final full20 public/28 DB browser PASS, no new waits/
+timeouts or weakened assertions. Native/provider/human acceptance is still separate.
+
 ## Operator Overview - 2026-10-27
 
 Current work/oldest5 and bounded activity use existing Nuxt UI/Lucide/flat admin bands,
