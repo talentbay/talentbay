@@ -126,6 +126,15 @@ class="mt-1 block text-primary underline">{{ data.vacancy.sourceUrl }}</a>
 </dd>
 </div>
     </dl>
+    <VacanciesProvenanceDates
+      :dates="[
+      { label: 'Published on TalentBay', value: data.vacancy.talentbayPublishedAt },
+      { label: 'Source publication', value: data.vacancy.sourcePublishedAt },
+      { label: 'Source fetched', value: data.vacancy.sourceFetchedAt },
+      { label: 'Last imported', value: data.vacancy.lastImportedAt },
+      { label: 'Content checked', value: data.vacancy.reviewedAt },
+    ]" />
+    <p class="text-sm text-muted">Recorded reviewer: {{ data.reviewer?.name || 'Not recorded' }}</p>
     <section v-if="data.vacancy.summary">
 <h3 class="font-semibold">
 Summary
@@ -162,8 +171,7 @@ label="I checked the content, source and permission to publish."
 :disabled="busy || stale" />
       <div class="mt-4 flex flex-wrap gap-3">
         <UButton
-v-if="data.vacancy.status !== 'PUBLISHED'"
-label="Verify & publish"
+:label="data.vacancy.status === 'PUBLISHED' ? 'Recheck listing' : 'Verify & publish'"
 icon="i-lucide-circle-check"
 :disabled="!checked || stale || data.company.status === 'ARCHIVED'"
 :loading="busy"

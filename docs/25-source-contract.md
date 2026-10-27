@@ -106,3 +106,49 @@ with injected offline fetch and real SQL separately. No production test-source b
 Before the first real pilot, record the exact company/site/region, rights reference,
 content owner, allowed fields/volume and target isolated preview. Do not collect candidate
 data or call Lever's application POST endpoint: managed TalentBay intake is separate.
+
+## Dates and Maintenance (TB-C04)
+
+The current vacancy has separate nullable facts, not a generic freshness flag:
+
+| Field | Meaning / writer |
+| --- | --- |
+| `sourcePublishedAt` | Source-supplied publication instant, if actually available; input content, never inferred from fetch/import |
+| `sourceFetchedAt` | Latest successful complete source snapshot used by an import; supplied by the trusted runner, not a CSV date or client command |
+| `lastImportedAt` | Latest committed processing of this source record, including an unchanged re-import; not a human review |
+| `talentbayPublishedAt` / public `publishedAt` | Current publication on TalentBay after a draft/archive -> published action; recheck alone preserves it |
+| `reviewedAt`, `reviewedByUserID` | Last recorded current-admin publish/recheck or first flag of current content; reviewer identity is admin-only |
+
+Archive preserves known current-content review facts, but clears current publication.
+Unreviewed resets review facts. Content/source-publication or company-metadata correction
+clears review/publication; sibling company records are withdrawn together, archives stay
+archived, IDs/applications survive. The operator corrects via fixed CSV, reloads the review,
+checks content/source/permission and republishes. No universal editor is required.
+
+Unchanged imports advance observation timestamps only; they preserve `updatedAt`, review,
+publication, content-preview revision and held review revision. An older snapshot cannot
+move `sourceFetchedAt` backwards. A failed/partial fetch does not update vacancy observations
+or archive jobs. A successful fetch/HTTP200 does not establish current availability or legal
+permission. No automatic N-day expiry or "fresh" badge exists without an approved policy.
+
+For maintenance, select the listing in the existing queue, compare source and content,
+then use checked **Recheck listing**, **Flag** (withdraw) or **Archive**. Recheck records the
+current reviewer/time without advertising a new publication. This is latest-state metadata,
+not a full historical moderation ledger or independent verification certificate. The source
+register's content owner owns the refresh/rights decision; the logged-in operator records
+the actual review. A specific real owner still belongs to each source's approval gate.
+
+Migration0005 adds nullable millisecond-precision timestamps/reviewer FK with no backfill.
+Old `published_at` remains a compatibility ordering key: historically it mixed source and
+TalentBay dates, so it is not used as evidence for either new fact. Legacy/public dates
+remain null / **Not recorded** or **Publication date unavailable**, not Jan1970 or Today.
+Explicit recheck can add a real review but cannot reconstruct an unknown old publication.
+The DTO never includes reviewer identity. Public date display uses UTC; a future/invalid
+publication cannot get a relative age. Current catalogue ordering retains the legacy key,
+so unknown-date legacy rows can still have their prior ordering position.
+
+Run0005 only after the target/backup/rollback approval gate, before deploying code that
+selects the new columns. Old code can run with the additive columns; rollback means return
+to the previous app build and retain the schema/data, not drop columns or erase reviews.
+Never put migrations into a Vercel build hook. Local legacy-fixture and full migration/
+SQL/browser evidence belongs in docs14, not a shared-database migration claim.

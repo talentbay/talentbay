@@ -49,7 +49,8 @@ Browser-only APIs must remain inside client lifecycle code.
 - Imported vacancies are idempotent by `(sourceName, sourceExternalID)`.
 - New imports enter `DRAFT` and `UNREVIEWED`; the publish action requires `VERIFIED`.
   Changed re-imports return to draft/unreviewed (archives stay archived); unchanged
-  content returns `UNCHANGED` and preserves review, publication and timestamps.
+  content returns `UNCHANGED` and preserves review/publication/content timestamps while
+  advancing only recorded import/source observations (see docs25).
   Changes to shared company details invalidate all of its vacancy reviews atomically.
   Public list/detail/count require published, verified content and an active company.
   Applications use the same visibility conditions, reject labelled demo content and lock
@@ -81,9 +82,12 @@ results anchor, because Nuxt4.6.2 intentionally keeps position for same-path que
 navigation. Native router history restores the exact page/scroll after detail; tested with
 111 real SQL fixtures and SSR first page. Filter/search changes omit the old cursor.
 An invalid cursor retains a usable Newest restart link. Demo data uses the same cursor
-contract, not a separate unbounded fallback. Source published date/fetch/human verification
-remain distinct; the existing legacy epoch display sentinel is a C04 follow-up, not proof
-of publication on that date.
+contract, not a separate unbounded fallback. C04 separates source publication, fetch,
+import, current TalentBay publication and current-content human review (docs25). Public
+`publishedAt` is now nullable, from `talentbay_published_at`, never the ambiguous old
+ordering column. Missing legacy facts stay unknown; no epoch sentinel or fabricated
+freshness. New additive migration0005 has no backfill. Public DTO includes provenance
+dates but no reviewer identity; current-admin API records the actual actor, not a body ID.
 
 Existing indexes include public status/date, company/location and GIN description/title
 search. Real EXPLAIN on a 111-record fixture verifies a bounded 51-row query; it is not a

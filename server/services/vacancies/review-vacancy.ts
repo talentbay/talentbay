@@ -6,11 +6,11 @@ import { vacancyRevision } from './admin-vacancy'
 export const vacancyReviewSchema = z.object({
   reviewStatus: z.enum(['UNREVIEWED', 'VERIFIED', 'FLAGGED']),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
-})
+}).strict()
 
 export type VacancyReview = z.infer<typeof vacancyReviewSchema>
 
-export async function reviewVacancy(id: number, review: VacancyReview, expectedRevision?: string) {
+export async function reviewVacancy(id: number, review: VacancyReview, expectedRevision?: string, actorUserID?: number) {
   if (review.status === 'PUBLISHED' && review.reviewStatus !== 'VERIFIED') {
     throw createError({
       statusCode: 422,
@@ -20,6 +20,10 @@ export async function reviewVacancy(id: number, review: VacancyReview, expectedR
 
   const db = useDatabase()
   return await db.transaction(async (tx) => {
+    if (actorUserID !== undefined) {
+      const [actor] = await tx.select({ role: schema.users.role }).from(schema.users).where(eq(schema.users.id, actorUserID)).for('share')
+      if (actor?.role !== 'ADMIN') throw createError({ statusCode: 403, statusMessage: 'Current reviewer access required' })
+    }
     const [existing] = await tx
       .select({
         id: schema.vacancies.id,
@@ -55,12 +59,20 @@ export async function reviewVacancy(id: number, review: VacancyReview, expectedR
         .where(eq(schema.organisations.id, existing.organisationID))
     }
 
+    const now = new Date()
+    const publishing = review.status === 'PUBLISHED'
+    const newPublication = publishing && current.status !== 'PUBLISHED'
+    const decided = publishing || (review.reviewStatus === 'FLAGGED' && current.reviewStatus !== 'FLAGGED')
+    const reset = review.reviewStatus === 'UNREVIEWED'
     const [updated] = await tx
       .update(schema.vacancies)
       .set({
         ...review,
-        publishedAt: review.status === 'PUBLISHED' ? current.publishedAt ?? new Date() : null,
-        updatedAt: new Date(),
+        publishedAt: publishing ? newPublication ? now : current.publishedAt : null,
+        talentbayPublishedAt: publishing ? newPublication ? now : current.talentbayPublishedAt : null,
+        reviewedAt: reset ? null : decided ? actorUserID === undefined ? null : now : current.reviewedAt,
+        reviewedByUserID: reset ? null : decided ? actorUserID ?? null : current.reviewedByUserID,
+        updatedAt: now,
       })
       .where(eq(schema.vacancies.id, id))
       .returning({

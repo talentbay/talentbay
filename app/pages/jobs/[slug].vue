@@ -182,6 +182,17 @@ const { ready, goBack } = useCandidateBack()
             </a>
             <span v-else>{{ vacancy.source.name }}</span>
           </p>
+          <VacanciesProvenanceDates
+            v-if="vacancy.provenance"
+            class="mt-4"
+            :dates="[
+              { label: 'Published on TalentBay', value: vacancy.publishedAt },
+              { label: 'Source publication', value: vacancy.provenance.sourcePublishedAt },
+              { label: 'Source fetched', value: vacancy.provenance.sourceFetchedAt },
+              { label: 'Last imported', value: vacancy.provenance.lastImportedAt },
+              { label: 'Content checked', value: vacancy.provenance.reviewedAt },
+            ]"
+          />
         </section>
         <p
           v-if="!relocationLocation"

@@ -54,12 +54,15 @@ export function searchVacancies(input: VacancySearch): VacancySearchResponse {
         const salary = (right.salary?.max ?? 0) - (left.salary?.max ?? 0)
         if (salary) return salary
       }
-      return Date.parse(right.publishedAt) - Date.parse(left.publishedAt) || right.id - left.id
+      const a = left.publishedAt ? Date.parse(left.publishedAt) : -Infinity
+      const b = right.publishedAt ? Date.parse(right.publishedAt) : -Infinity
+      return a === b ? right.id - left.id : b - a
     })
   const remaining = cursor ? items.filter(item => {
     if (query.sort === 'salary-desc' && item.salary!.max !== cursor.salary) return item.salary!.max < cursor.salary!
-    const date = Date.parse(item.publishedAt) - (cursor.date ? Date.parse(cursor.date) : 0)
-    return date < 0 || (date === 0 && item.id < cursor.id)
+    const date = item.publishedAt ? Date.parse(item.publishedAt) : -Infinity
+    const boundary = cursor.date ? Date.parse(cursor.date) : -Infinity
+    return date < boundary || (date === boundary && item.id < cursor.id)
   }) : items
   const page = remaining.slice(0, query.limit)
   const last = page.at(-1)

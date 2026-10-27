@@ -115,6 +115,13 @@ For Neon:
 
 Do not run `db:push` against shared Preview or Production databases.
 
+Migration0005 is additive/nullable (vacancy provenance, no historical backfill). Apply it
+only after the exact target, backup/restore and owner approval checks above, before the
+new app selects its columns. The previous app remains schema-compatible for rollback;
+retain the columns/data rather than run destructive down-SQL. Old `published_at` is not
+evidence for either a source or TalentBay publication date. See docs25 for date semantics
+and maintenance; no shared target has been migrated by the local C04 tests.
+
 ## OAuth Callbacks
 
 Callbacks:

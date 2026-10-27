@@ -69,6 +69,10 @@ describe('bounded source runner with durable batch checkpoints', () => {
     expect(await importSourceBatch(source, { runID, offset: next.offset, revision: next.preview.revision! }, admin)).toMatchObject({ state: 'IMPORTED', nextOffset: 51, report: { created: 51 } })
     const [row] = await sql`select items from source_imports where source_key=${key}`
     expect(row!.items).toBeNull()
+    const progress = await getSourceProgress(source, admin)
+    const observations = await sql`select source_fetched_at,last_imported_at,reviewed_at from vacancies where source_name=${key}`
+    expect(observations).toHaveLength(51)
+    expect(observations.every(value => value.source_fetched_at.toISOString() === progress!.report.fetchedAt && value.last_imported_at instanceof Date && value.reviewed_at === null)).toBe(true)
     expect(await sql`select id from vacancies where source_name=${key} and status!='DRAFT'`).toHaveLength(0)
     // Replaying the completed fetch never calls the source again.
     expect((await fetchSourceRun(source, runID, admin, base)).state).toBe('IMPORTED')
@@ -107,11 +111,13 @@ describe('bounded source runner with durable batch checkpoints', () => {
 
   it('never imports a partial page set, skips invalid records, or archives on fetch failure', async () => {
     const count = await sql`select count(*)::int as total from vacancies where source_name=${key}`
+    const observations = await sql`select id,source_fetched_at,last_imported_at,reviewed_at,talentbay_published_at from vacancies where source_name=${key} order by id`
     const pageFailure = vi.fn<typeof fetch>().mockResolvedValueOnce(json(Array.from({ length: 50 }, () => raw()))).mockRejectedValueOnce(new Error('private-provider-error'))
     expect(await fetchSourceRun(source, randomUUID(), admin, pageFailure)).toMatchObject({ state: 'FAILED', report: { failure: 'NETWORK', recordCount: 0 } })
     const bad = await fetchSourceRun(source, randomUUID(), admin, transportFor([raw(), { id: 'bad' }]))
     expect(bad).toMatchObject({ state: 'FAILED', report: { failure: 'INVALID_RECORDS', recordCount: 2 } })
     expect(await sql`select count(*)::int as total from vacancies where source_name=${key}`).toEqual(count)
+    expect(await sql`select id,source_fetched_at,last_imported_at,reviewed_at,talentbay_published_at from vacancies where source_name=${key} order by id`).toEqual(observations)
     expect(JSON.stringify(bad)).not.toContain('private-provider-error')
     expect((await sql`select items from source_imports where source_key=${key}`)[0]!.items).toBeNull()
   })

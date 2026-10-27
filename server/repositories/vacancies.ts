@@ -152,7 +152,11 @@ const vacancySelection = {
   skills: schema.vacancies.skills,
   relocationOffered: schema.vacancies.relocationOffered,
   visaSponsorship: schema.vacancies.visaSponsorship,
-  publishedAt: schema.vacancies.publishedAt,
+  talentbayPublishedAt: schema.vacancies.talentbayPublishedAt,
+  sourcePublishedAt: schema.vacancies.sourcePublishedAt,
+  sourceFetchedAt: schema.vacancies.sourceFetchedAt,
+  lastImportedAt: schema.vacancies.lastImportedAt,
+  reviewedAt: schema.vacancies.reviewedAt,
   sourceName: schema.vacancies.sourceName,
   sourceUrl: schema.vacancies.sourceUrl,
   reviewStatus: schema.vacancies.reviewStatus,
@@ -178,7 +182,11 @@ type VacancyRow = Pick<
   | 'skills'
   | 'relocationOffered'
   | 'visaSponsorship'
-  | 'publishedAt'
+  | 'talentbayPublishedAt'
+  | 'sourcePublishedAt'
+  | 'sourceFetchedAt'
+  | 'lastImportedAt'
+  | 'reviewedAt'
   | 'sourceName'
   | 'sourceUrl'
   | 'reviewStatus'
@@ -224,7 +232,13 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
     skills: row.skills,
     relocationOffered: row.relocationOffered,
     visaSponsorship: row.visaSponsorship,
-    publishedAt: row.publishedAt?.toISOString() ?? new Date(0).toISOString(),
+    publishedAt: row.talentbayPublishedAt?.toISOString() ?? null,
+    provenance: {
+      sourcePublishedAt: row.sourcePublishedAt?.toISOString() ?? null,
+      sourceFetchedAt: row.sourceFetchedAt?.toISOString() ?? null,
+      lastImportedAt: row.lastImportedAt?.toISOString() ?? null,
+      reviewedAt: row.reviewedAt?.toISOString() ?? null,
+    },
     source: {
       name: row.sourceName ?? 'TalentBay',
       url: row.sourceUrl,

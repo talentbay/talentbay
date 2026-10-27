@@ -3,7 +3,7 @@ import { and, asc, eq, inArray, or, sql } from 'drizzle-orm'
 import { schema, useDatabase } from '#server/db'
 import type { Database } from '#server/db'
 import type { ImportIssue, VacancyImportPreview } from '#shared/types/vacancy-import'
-import { importedVacancyContent, sameImportedContent } from './import-content'
+import { importedVacancyContent, reviewedVacancyState, sameImportedContent } from './import-content'
 import { vacancyImportRequestSchema } from './import-schema'
 import type { VacancyImportItem } from './import-schema'
 
@@ -50,7 +50,7 @@ export async function prepareVacancyImport(items: VacancyImportItem[], db: Impor
   summary.withdrawnPublished = impact?.published ?? 0
   return {
     valid: issues.length === 0, rowCount: items.length, issues, rows, summary,
-    revision: issues.length ? null : createHash('sha256').update(JSON.stringify({ items, companies, existing, impact })).digest('hex'),
+    revision: issues.length ? null : createHash('sha256').update(JSON.stringify({ items, companies, existing: existing.map(reviewedVacancyState), impact })).digest('hex'),
   }
 }
 

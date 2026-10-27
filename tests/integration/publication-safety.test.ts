@@ -101,7 +101,8 @@ describe('import publication invariants', () => {
     const [again] = await importVacancies([input])
     expect(again).toMatchObject({ id: first.id, operation: 'UNCHANGED' })
     const [after] = await sql`select * from vacancies where id = ${first.id}`
-    expect(after).toEqual(before)
+    expect(after!.last_imported_at.getTime()).toBeGreaterThanOrEqual(before!.last_imported_at.getTime())
+    expect({ ...after, last_imported_at: null }).toEqual({ ...before, last_imported_at: null })
   })
 
   it('preserves archive status on changed re-import', async () => {

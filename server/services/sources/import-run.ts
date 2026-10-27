@@ -37,7 +37,7 @@ export async function importSourceBatch(source: ApprovedSource, checkpoint: z.in
     requireReady(row, new Date())
     if (row.nextOffset !== command.offset || row.previewRevision !== command.revision) throw createError({ statusCode: 409, statusMessage: 'Source checkpoint changed. Preview the next batch again.' })
     const items = row.items!.slice(row.nextOffset, row.nextOffset + 50)
-    const results = await importVacanciesInTransaction(tx, items, { expectedRevision: command.revision, actorUserID })
+    const results = await importVacanciesInTransaction(tx, items, { expectedRevision: command.revision, actorUserID, sourceFetchedAt: row.report.fetchedAt ? new Date(row.report.fetchedAt) : undefined })
     const nextOffset = row.nextOffset + results.length
     const complete = nextOffset >= row.items!.length
     const report = { ...row.report }

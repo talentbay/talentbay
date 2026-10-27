@@ -15,7 +15,7 @@ export type VacancyImportResult = {
   operation: 'CREATED' | 'UPDATED' | 'UNCHANGED'
 }
 export type ImportTransaction = Parameters<Parameters<Database['transaction']>[0]>[0]
-type ImportOptions = { expectedRevision?: string, actorUserID?: number }
+type ImportOptions = { expectedRevision?: string, actorUserID?: number, sourceFetchedAt?: Date }
 
 export async function importVacancies(
   items: VacancyImportItem[],
@@ -27,6 +27,7 @@ export async function importVacancies(
 /** Allows the source checkpoint and this bounded batch to commit or roll back together. */
 export async function importVacanciesInTransaction(tx: ImportTransaction, items: VacancyImportItem[], options: ImportOptions = {}): Promise<VacancyImportResult[]> {
   items = vacancyImportRequestSchema.parse({ items }).items
+  if (options.sourceFetchedAt && !Number.isFinite(options.sourceFetchedAt.getTime())) throw createError({ statusCode: 400, statusMessage: 'Invalid source observation date' })
   // Bounded batches share a lock; preview confirmation and writes are one transaction.
   await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended('talentbay:vacancy-import', 0))`)
   if (options.expectedRevision) {
@@ -70,6 +71,7 @@ export async function importVacanciesInTransaction(tx: ImportTransaction, items:
       await tx.update(schema.vacancies).set({
         status: sql`case when ${schema.vacancies.status} = 'ARCHIVED' then 'ARCHIVED'::vacancy_status else 'DRAFT'::vacancy_status end`,
         reviewStatus: 'UNREVIEWED',
+        reviewedAt: null, reviewedByUserID: null, talentbayPublishedAt: null,
         updatedAt: new Date(),
       }).where(eq(schema.vacancies.organisationID, organisation.id))
     }
@@ -96,7 +98,8 @@ export async function importVacanciesInTransaction(tx: ImportTransaction, items:
         ...vacancyValues,
         createdByUserID: options.actorUserID,
         reviewStatus: 'UNREVIEWED',
-        publishedAt: item.vacancy.sourcePublishedAt ? new Date(item.vacancy.sourcePublishedAt) : null,
+        publishedAt: null,
+        lastImportedAt: new Date(), sourceFetchedAt: options.sourceFetchedAt ?? null,
       })
       .onConflictDoUpdate({
         target: [
@@ -108,6 +111,9 @@ export async function importVacanciesInTransaction(tx: ImportTransaction, items:
           status: sql`case when ${schema.vacancies.status} = 'ARCHIVED' then 'ARCHIVED'::vacancy_status else 'DRAFT'::vacancy_status end`,
           reviewStatus: 'UNREVIEWED',
           publishedAt: null,
+          talentbayPublishedAt: null, reviewedAt: null, reviewedByUserID: null,
+          lastImportedAt: new Date(),
+          ...(options.sourceFetchedAt ? { sourceFetchedAt: sql`greatest(${schema.vacancies.sourceFetchedAt}, ${options.sourceFetchedAt.toISOString()}::timestamptz)` } : {}),
           updatedAt: new Date(),
         },
         setWhere: contentChanged,
@@ -122,6 +128,13 @@ export async function importVacanciesInTransaction(tx: ImportTransaction, items:
         statusCode: 500,
         statusMessage: 'Failed to import vacancy',
       })
+    }
+    if (!vacancy) {
+      await tx.update(schema.vacancies).set({
+        lastImportedAt: new Date(),
+        ...(options.sourceFetchedAt ? { sourceFetchedAt: sql`greatest(${schema.vacancies.sourceFetchedAt}, ${options.sourceFetchedAt.toISOString()}::timestamptz)` } : {}),
+        updatedAt: sql`${schema.vacancies.updatedAt}`,
+      }).where(eq(schema.vacancies.id, existing!.id))
     }
 
     results.push({

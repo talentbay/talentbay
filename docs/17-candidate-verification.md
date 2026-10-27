@@ -1,5 +1,18 @@
 # Candidate Browser Verification
 
+## Provenance / truthful age - 2026-10-27
+
+C04 adds an unframed definition list using existing tokens at the source/footer and review
+modal. Public lists show no relative age when publication is unknown; dates render UTC.
+Source publication, fetch, import, TalentBay publication and content check have separate
+labels. Admin alone sees the recorded reviewer, and published listings offer an explicit
+checked Recheck action. No freshness/availability certificate, automatic expiry policy,
+new admin redesign or invented Figma freeze. The real CSV->review->publish->detail browser
+path checks dates/privacy, recheck preserves publication, legacy no-date state and320/390/
+1440 widths. Scrolled mobile final-date bounding box is above the fixed Apply bar; a
+full-page PNG's fixed bar alone is not a geometry test. Screens inspected320/1440 and
+scrolled320. Dataset remains fictional and real/native/source acceptance stays separate.
+
 ## Focused admin queue continuation - 2026-10-27
 
 C03 adds bounded pages/search/counts and URL-owned selected review to existing user and

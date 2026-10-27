@@ -2,10 +2,39 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/admin-queue-pagination`; verified parent `995b36d` / #44.
+Current work branch: `codex/vacancy-provenance`; verified parent `949c682` / #45.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Vacancy source/publication/review facts (C04)
+
+#45 both CI jobs SUCCESS (`40484620328`); only integration FF to949c682. C04 adds nullable
+provenance columns via0005, with no legacy inference/backfill. A synthetic pre-migration
+published record/application survived locally (vacancy3855/application1181, old2025-07-01
+ordering date/note retained, all six new fields null); removed this exact fixture after
+verification so it cannot contaminate queue-count tests. No shared DB was migrated.
+
+Source publication, trusted snapshot fetch, committed import, current TalentBay publication
+and current-admin content check are distinct. Unchanged imports advance observations only,
+without invalidating held content/review revisions. Changed content/company siblings clear
+review/publication, archives stay archived, application IDs survive. Failed fetches cannot
+refresh dates. Recheck stamps human review without a new publication; source/permission
+truth is still human-owned, not established by HTTP200. Public DTO has dates, not reviewer
+identity. Unknown legacy dates are null, not1970/Today. Exact policy/rollback is in docs25.
+
+PASS:142 unit/73 disposable-PG SQL/typecheck/lint (zero warnings), Node build/HTTP smoke,
+full20 DB browser + final focused4 (recheck and mobile bottom geometry), public16. The first
+SQL run found the intentionally retained migration application in a global count; cleaned
+only that fixture, not the test assertion. Unit UTC test exposed a locale12h default;
+set explicit h23. Screens320/390/1440 and scrolled bottom320 inspected. The fixed Apply bar
+does not conceal the final dates after scrolling (asserted geometry, not just full-page PNG).
+New-schema local review restarted3132/3133 on its own fictional DB, retaining the old cluster.
+No live source/provider call, actual candidate sharing, independent R or main/deploy claim.
+
+Next AUTO: D01/D02 relocation contract/math/validation, then D03/D05 and remaining E/F/G/I,
+plus B04/B09 correction/reopen. D04/D06/H need real approved data/providers/operations; R
+remains independent after K1. GitHub Projects scope still unavailable; this queue is fallback.
 
 ### Complete bounded admin registries (C03)
 

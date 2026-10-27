@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { VacancyListItem } from '#shared/types/vacancies'
 import { formatVacancySalary } from '~/utils/vacancy-salary'
+import { vacancyPublicationAge } from '~/utils/vacancy-dates'
 
 const props = defineProps<{
   vacancy: VacancyListItem
@@ -38,14 +39,7 @@ const location = computed(() => {
   return parts.filter(Boolean).join(' · ')
 })
 
-const published = computed(() => {
-  const days = Math.max(
-    0,
-    Math.floor((Date.now() - Date.parse(props.vacancy.publishedAt)) / 86_400_000),
-  )
-
-  return days === 0 ? 'Today' : `${days}d ago`
-})
+const published = computed(() => vacancyPublicationAge(props.vacancy.publishedAt))
 </script>
 
 <template>
@@ -83,7 +77,7 @@ const published = computed(() => {
 
     <div class="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
       <p class="text-sm font-semibold text-highlighted lg:text-base">{{ salary }}</p>
-      <p class="shrink-0 text-xs text-muted">Posted {{ published }}</p>
+      <p class="shrink-0 text-xs text-muted">{{ published ? `Published ${published}` : 'Publication date unavailable' }}</p>
     </div>
 
     <p class="mt-3 line-clamp-2 text-sm leading-5 text-default">

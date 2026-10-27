@@ -36,6 +36,13 @@
       "when": 1793091471480,
       "tag": "0004_sudden_toxin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793095548318,
+      "tag": "0005_rapid_mentallo",
+      "breakpoints": true
     }
   ]
 }

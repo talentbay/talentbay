@@ -39,7 +39,13 @@ export type VacancyListItem = {
   skills: string[]
   relocationOffered: boolean
   visaSponsorship: boolean
-  publishedAt: string
+  publishedAt: string | null
+  provenance?: {
+    sourcePublishedAt: string | null
+    sourceFetchedAt: string | null
+    lastImportedAt: string | null
+    reviewedAt: string | null
+  }
   source: {
     name: string
     url: string | null

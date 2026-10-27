@@ -47,7 +47,7 @@ describe('public vacancy keyset pages', () => {
     expect(items.map(item => item.id)).toEqual(expected.map(row => row.id))
     expect(items).toHaveLength(111)
     expect(new Set(items.map(item => item.id)).size).toBe(111)
-    expect(items.slice(-2).every(item => item.publishedAt === '1970-01-01T00:00:00.000Z')).toBe(true)
+    expect(items.slice(-2).every(item => item.publishedAt === null)).toBe(true)
   })
   it('binds cursors to filters and bounds; country/workplace/visibility apply on every page', async () => {
     const first = await listVacancies(base)

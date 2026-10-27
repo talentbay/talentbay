@@ -22,6 +22,7 @@ function csv(title = 'Operator Test Engineer', country = 'GB') {
     employment_type: 'FULL_TIME', workplace_type: 'REMOTE', country_code: country, city: 'London',
     salary_min: '50000', salary_max: '70000', salary_currency: 'GBP', salary_period: 'YEAR', skills: 'TypeScript|SQL',
     relocation_offered: 'true', visa_sponsorship: 'false',
+    source_published_at: '2024-02-01T10:00:00Z',
   }
   return `${vacancyCsvColumns.join(',')}\n${vacancyCsvColumns.map(column => `"${(values[column] ?? '').replaceAll('"', '""')}"`).join(',')}\n`
 }
@@ -91,6 +92,41 @@ test('CSV validation → atomic draft import → complete review → public reco
   await expect(dialog).not.toBeVisible()
   await page.goto(`/jobs/${slug}`)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Operator Test Engineer')
+  const record = await (await context.request.get(`/api/v1/vacancies/${slug}`)).json()
+  expect(record.provenance).toMatchObject({ sourcePublishedAt: '2024-02-01T10:00:00.000Z', sourceFetchedAt: null })
+  expect(Date.parse(record.publishedAt)).toBeGreaterThan(Date.parse(record.provenance.sourcePublishedAt))
+  expect(record.provenance.reviewedAt).toBe(record.publishedAt)
+  expect(JSON.stringify(record)).not.toMatch(/reviewedBy|reviewer|Operator Fixture/)
+  await expect(page.getByText('Source publication', { exact: true }).locator('..').locator('time')).toHaveAttribute('datetime', '2024-02-01T10:00:00.000Z')
+  await expect(page.getByText('Source fetched', { exact: true }).locator('..').getByText('Not recorded')).toBeVisible()
+  for (const width of [320, 390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    if (width < 1024) {
+      const lastDate = page.getByText('Content checked', { exact: true }).locator('..')
+      await lastDate.scrollIntoViewIfNeeded()
+      const dateBox = await lastDate.boundingBox()
+      const barBox = await page.locator('.candidate-bottom-nav').last().boundingBox()
+      expect(dateBox!.y + dateBox!.height).toBeLessThanOrEqual(barBox!.y)
+      await page.screenshot({ path: testInfo.outputPath(`provenance-bottom-${width}.png`), animations: 'disabled' })
+    }
+    await page.screenshot({ path: testInfo.outputPath(`provenance-${width}.png`), fullPage: true })
+  }
+  await page.goto(`/ktulhu/v1/vacancies?review=${draft!.id}`)
+  await expect(dialog.getByText('Recorded reviewer: Operator Fixture', { exact: true })).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Recheck listing', exact: true })).toBeDisabled()
+  await dialog.getByRole('checkbox').check()
+  await dialog.getByRole('button', { name: 'Recheck listing', exact: true }).click()
+  await expect(dialog).not.toBeVisible()
+  const rechecked = await (await context.request.get(`/api/v1/vacancies/${slug}`)).json()
+  expect(rechecked.publishedAt).toBe(record.publishedAt)
+  expect(Date.parse(rechecked.provenance.reviewedAt)).toBeGreaterThanOrEqual(Date.parse(record.provenance.reviewedAt))
+  // An ambiguous legacy publication remains unknown, even if the old ordering date exists.
+  await sql`update vacancies set talentbay_published_at=null where id=${draft!.id}`
+  await page.goto('/jobs?q=Operator%20Test%20Engineer')
+  await expect(page.getByText('Publication date unavailable', { exact: true })).toBeVisible()
+  await expect(page.getByText(/1970/)).toHaveCount(0)
+  await sql`update vacancies set talentbay_published_at=${record.publishedAt} where id=${draft!.id}`
 
   const next = csv('Re-imported Operator Engineer')
   const plan = await (await context.request.post('/api/v1/admin/vacancies/file', { headers, data: { mode: 'preview', csv: next } })).json()
@@ -129,6 +165,7 @@ test('operator endpoints enforce authorization, same origin, content types and l
   expect((await context.request.post(endpoint, { headers: { ...headers, 'content-type': 'application/json' }, data: '{' })).status()).toBe(400)
   expect((await context.request.post(endpoint, { headers, data: { mode: 'preview', csv: 'x'.repeat(4 * 1024 * 1024) } })).status()).toBe(413)
   expect((await context.request.get(endpoint.replace('/file', ''))).headers()['cache-control']).toBe('no-store')
+  expect((await context.request.patch('/api/v1/admin/vacancies/1', { headers, data: { status: 'PUBLISHED', reviewStatus: 'VERIFIED', revision: 'a'.repeat(64), reviewedByUserID: 1 } })).status()).toBe(400)
 })
 
 test('source endpoints are default-off and enforce current role, strict bounded input and same origin', async ({ context, page }) => {
