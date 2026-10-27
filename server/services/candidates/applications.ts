@@ -2,6 +2,8 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
+import { captureApplicationSnapshot } from './application-snapshot'
+import { applicationDisclosureVersion } from '#shared/types/application-handling'
 import type {
   CandidateApplicationItem,
   CandidateApplicationsResponse,
@@ -9,17 +11,27 @@ import type {
 
 export const applicationInputSchema = z.object({
   coverLetter: z.string().trim().max(5_000).nullable().optional(),
-})
+  disclosureVersion: z.literal(applicationDisclosureVersion),
+  shareAcknowledged: z.literal(true),
+}).strict()
+
+export type ApplicationInput = z.infer<typeof applicationInputSchema>
 
 export async function createApplication(
   userID: number,
   vacancyID: number,
-  coverLetter?: string | null,
+  input: ApplicationInput,
 ) {
+  const body = applicationInputSchema.parse(input)
   const db = useDatabase()
   return await db.transaction(async (tx) => {
     const [vacancy] = await tx
-      .select({ id: schema.vacancies.id })
+      .select({
+        id: schema.vacancies.id, slug: schema.vacancies.slug, title: schema.vacancies.title,
+        sourceUrl: schema.vacancies.sourceUrl, sourceExternalID: schema.vacancies.sourceExternalID,
+        city: schema.vacancies.city, countryCode: schema.vacancies.countryCode,
+        organisationID: schema.organisations.id, companyName: schema.organisations.name,
+      })
       .from(schema.vacancies)
       .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
       .where(and(
@@ -37,12 +49,28 @@ export async function createApplication(
       })
     }
 
+    // Read profile and account in the same transaction as the immutable receipt.
+    const [user] = await tx.select().from(schema.users).where(eq(schema.users.id, userID)).for('share')
+    if (!user) throw createError({ statusCode: 404, statusMessage: 'User not found' })
+    const [profile] = await tx.select().from(schema.candidateProfiles).where(eq(schema.candidateProfiles.userID, userID)).for('share')
+    const snapshot = captureApplicationSnapshot({
+      user: { id: user.id, name: user.name, email: user.email, avatarUrl: null },
+      profile: profile ? {
+        headline: profile.headline, about: profile.about, city: profile.city, countryCode: profile.countryCode,
+        phone: profile.phone, telegram: profile.telegram, githubUrl: profile.githubUrl, linkedinUrl: profile.linkedinUrl,
+      } : null,
+    }, { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID },
+    { organisationID: vacancy.organisationID, name: vacancy.companyName }, new Date())
+
     const [application] = await tx
       .insert(schema.applications)
       .values({
         userID,
         vacancyID,
-        coverLetter: coverLetter || null,
+        coverLetter: body.coverLetter || null,
+        submissionSnapshot: snapshot,
+        handlingRevision: 1,
+        createdAt: new Date(snapshot.submittedAt),
       })
       .onConflictDoNothing()
       .returning({
@@ -57,6 +85,10 @@ export async function createApplication(
         statusMessage: 'You have already applied to this vacancy',
       })
     }
+
+    await tx.insert(schema.applicationHandlingEvents).values({
+      applicationID: application.id, revision: 1, kind: 'RECEIVED', stage: 'RECEIVED', actorUserID: userID, createdAt: new Date(snapshot.submittedAt),
+    })
 
     return {
       ...application,
@@ -120,8 +152,12 @@ export async function withdrawApplication(userID: number, id: number) {
     if (!row) throw createError({ statusCode: 404, statusMessage: 'Application not found' })
     if (row.status === 'WITHDRAWN') return { id: row.id, status: row.status }
     if (row.status === 'REJECTED') throw createError({ statusCode: 409, statusMessage: 'This application is already closed' })
-    const [updated] = await tx.update(schema.applications).set({ status: 'WITHDRAWN' }).where(eq(schema.applications.id, id))
+    const revision = row.handlingRevision + 1
+    const [updated] = await tx.update(schema.applications).set({ status: 'WITHDRAWN', handlingStage: 'CLOSED', handlingRevision: revision }).where(eq(schema.applications.id, id))
       .returning({ id: schema.applications.id, status: schema.applications.status })
+    await tx.insert(schema.applicationHandlingEvents).values({
+      applicationID: id, revision, kind: 'WITHDRAWN', stage: 'CLOSED', actorUserID: userID,
+    })
     return updated!
   })
 }

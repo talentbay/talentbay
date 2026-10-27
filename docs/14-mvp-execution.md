@@ -7,6 +7,23 @@ Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/
 
 ## Autonomous Run Started - 2026-10-27
 
+### Foundation complete; snapshot intake in progress
+
+Foundation `85fceef` / [PR #38](https://github.com/talentbay/talentbay/pull/38): both CI jobs
+SUCCESS, run `40468000146`. Advanced only `codex/mvp-integration` by fast-forward; main and
+production unchanged. Vercel adapter build/assertion PASS: Node22, 63 routes, one function.
+A02 is now verified on the actual topic-PR workflow; no independent-review claim.
+
+TB-B01 contract and application part of E01 are in docs22. TB-B02/B03 branch
+`codex/managed-application-snapshots`: additive migration0003, server snapshot/contact and
+versioned acknowledgment, receipt/withdraw events, admin submitted-vs-legacy profile.
+Before migration, inserted a synthetic old-schema application in disposablePG56381;
+after migration ID/user/vacancy/status/note survived, snapshot remained NULL, history empty.
+Local 116 unit/41 SQL, typecheck/lint, Node build, HTTP smoke and 10 DB browser tests PASS.
+Focused preflight 320/390/1440 screenshots and geometry assertions PASS after fixing a
+title/Close overlap found at 320px. These tests use fake profiles/providers;
+no real contact, delivery, shared migration or public release. B04 commands remain next.
+
 Direct owner instruction: execute the agreed plan autonomously. Current executor continues
 without a model switch or a separate background automation. Production/paid/shared DB and
 real external contact gates remain unchanged. Scope: 11 cities, profile (CV later), basic

@@ -23,8 +23,9 @@ const details = computed(() => {
       <p class="mt-1 text-sm text-muted">{{ data.vacancy.title }} · {{ data.vacancy.companyName }}</p>
       <UBadge class="mt-3" :label="applicationStatuses[data.status].label" :color="applicationStatuses[data.status].color" />
     </div>
-    <section aria-label="Current candidate profile">
-      <h3 class="font-semibold">Current profile</h3>
+    <UAlert v-if="!data.submissionSnapshot" title="Legacy application" description="Only the current profile is available. Submission-time details and permission to share were not recorded. Do not forward this record." color="warning" variant="soft" />
+    <section :aria-label="data.submissionSnapshot ? 'Submitted candidate profile' : 'Current candidate profile'">
+      <h3 class="font-semibold">{{ data.submissionSnapshot ? 'Profile at submission' : 'Current profile' }}</h3>
       <dl class="mt-3 grid gap-4 text-sm sm:grid-cols-2">
         <div v-for="[label, value] in details" :key="label || ''"><dt class="text-muted">{{ label }}</dt><dd>{{ value || 'Not provided' }}</dd></div>
       </dl>

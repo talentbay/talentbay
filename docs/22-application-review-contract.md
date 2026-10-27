@@ -1,6 +1,6 @@
 # Application Handling Boundary
 
-Updated: 2026-10-26. The owner supplied the missing product answer: TalentBay receives
+Updated: 2026-10-27. The owner supplied the missing product answer: TalentBay receives
 applications, contacts the company and proposes the candidate. The company is also a
 potential client for further cooperation. This supersedes the earlier open routing choice.
 
@@ -44,7 +44,7 @@ conversation. Old targets and long-term ideas are not silently promoted into new
 **Consequence:** retain the common in-product profile/application journey and build the
 minimal operator workflow around it. Internal registration alone does not prove delivery.
 
-## Safe Bounded Code Slice
+## Earlier Bounded Code Slice (2026-10-26)
 
 The current branch adds an administrator read-only application queue and owner-scoped
 candidate withdrawal. The current follow-up clarifies receipt/preflight/detail copy for
@@ -72,7 +72,63 @@ An earlier uncommitted experiment mapping administrator review to VIEWED was rem
 it conflicted with the existing employer-status contract. Tests now protect the absence
 of that mutation and preserve the distinction. No such change was merged or deployed.
 
-## Next Operator Slice (Not Yet Implemented)
+## Handling Contract v1 (TB-B01, Application Part of TB-E01)
+
+Engineering contract under the owner's implementation mandate; notice copy still needs
+the G05 policy/real-data gate before public use. It is not a new approved Figma freeze.
+Use current Nuxt UI/Lucide controls and existing responsive shell, not a full admin redesign.
+
+Minimum new package: a saved profile, name and at least one usable email, phone or Telegram
+username. A professional link alone cannot be used to contact the candidate. No CV file
+or invented provider email is required. Server captures profile/contact and the specific
+vacancy/company/source from PostgreSQL, never from client-supplied identity/recipient fields.
+The immutable snapshot records notice version `talentbay-managed-v1` and submission time.
+Acknowledgment explicitly asks TalentBay to contact that company and share this application
+for that role. It does not claim legal consent approval, delivery, reading or guaranteed work.
+
+| Action | Actor / preconditions | Handling result | Candidate-visible fact / negative case |
+| --- | --- | --- | --- |
+| Submit | Candidate; public verified non-demo role, profile/contact, current notice + acknowledgment | RECEIVED + snapshot + receipt event atomically | Received by TalentBay; invalid/missing contact/version rejected, double submit cannot duplicate |
+| Assign | Current ADMIN; expected revision, target is current ADMIN | Assignee changes, stage unchanged | Private operation; stale read or revoked target rejected |
+| Start | Assigned current ADMIN; active record | IN_PROGRESS | TalentBay working on application, not employer VIEWED |
+| Record contact | Assigned current ADMIN; IN_PROGRESS or CONTACTED; channel/time/private reference | CONTACTED | Team recorded company contact, not candidate data delivery |
+| Preview/copy package | Assigned current ADMIN; valid snapshot/notice, active unchanged public vacancy/company | No write | No delivery event; legacy/withdrawn/changed-recipient blocked |
+| Record actual sharing | Assigned current ADMIN; CONTACTED, eligible package, explicit manual confirmation/channel/time/reference | SHARED | Operator recorded a handoff; not verified delivery/read. Replay yields original event |
+| Follow up | Assigned current ADMIN; CONTACTED/SHARED/FOLLOW_UP | FOLLOW_UP | Team following up; free-form notes/references remain private |
+| Close | Assigned current ADMIN; active stage, bounded outcome reason | CLOSED | Reason from allowlist, not employer rejection or hire |
+| Withdraw | Owning candidate; existing record; row lock | WITHDRAWN employer field, CLOSED handling + event | Stops further in-app sharing; cannot recall previous external handoff; retry no duplicate |
+
+Every operator command has actor/time, UUID idempotency key, expected revision and a
+bounded strict body. Same key with a different command is a conflict, not a silent update.
+Reads never mutate status. Row locks serialize handling, withdrawal and handoff; vacancy/
+company checks serialize with archive/re-import. Operator writes must recheck current role.
+Employer stages remain separate: no internal action writes VIEWED/INTERVIEW/OFFER/REJECTED.
+
+Candidate events expose only allowlisted kinds, times and close reasons. Never expose
+operator identity, notes, recipient contact, references, command digests or internal errors.
+Legacy snapshot stays NULL; do not fabricate history or forward the current profile as an
+old submission. Retention/redaction is a separate approved procedure, not infinite PII storage.
+
+### Focused Flow / State Matrix
+
+Guest detail -> sign-in -> profile/contact -> same role's Apply -> named company + contact/
+profile preview -> optional note -> unchecked explicit acknowledgment -> Submit -> receipt.
+Candidate may cancel; input is retained in memory on retry and cleared on account switch.
+No contact -> profile action; profile read failure -> Retry; stale role -> unavailable;
+duplicate -> existing application. Narrow modal scrolls, footer controls stay reachable;
+wide layout uses the same controls and state owner. No separate Telegram journey.
+
+Operator queue -> read detail -> legacy warning OR submitted snapshot -> take/assign ->
+start -> contact -> prepare package (read only) -> explicitly record completed manual share
+-> follow up/close. Conflict retains draft and offers reload; no silent resend on refresh.
+Candidate Applications -> detail -> actual recorded progress -> withdraw confirmation/cancel/
+retry. Recorded handoff is explained separately after withdrawal. Focused prototypes and
+narrow/wide screenshots are implementation evidence, not owner acceptance.
+
+Remaining E01 relocation sketch/data contract is independent of this application contract
+and remains open; application implementation uses the focused state matrix above.
+
+## Subsequent Operator Work
 
 1. Separate TalentBay handling from employer hiring stages. Record actual company contact
    and candidate-information handoff with operator, time and a bounded reference; opening

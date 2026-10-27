@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { CandidateApplicationsResponse } from '#shared/types/candidates'
+import type { CandidateApplicationsResponse, CandidateProfileResponse } from '#shared/types/candidates'
+import { applicationDisclosureVersion } from '#shared/types/application-handling'
+import { applicationContacts, canSubmitApplication } from '#shared/utils/application-contact'
+import { safeHttpUrl } from '~/utils/safe-http-url'
 import type { VacancyListItem } from '#shared/types/vacancies'
 
 const props = defineProps<{ vacancy: VacancyListItem }>()
@@ -12,6 +15,10 @@ const draft = ref('')
 const submitting = ref(false)
 const error = ref('')
 const outcome = ref<'submitted' | 'already' | null>(null)
+const acknowledged = ref(false)
+const { data: profile, status: profileStatus, error: profileError, refresh: refreshProfile } = await useAccountResource<CandidateProfileResponse>('candidate-profile', '/api/v1/profile')
+const contacts = computed(() => applicationContacts(profile.value))
+const profileReady = computed(() => canSubmitApplication(profile.value))
 const {
   data: applications,
   status,
@@ -34,6 +41,7 @@ watch(
     draft.value = ''
     error.value = ''
     outcome.value = null
+    acknowledged.value = false
     open.value = false
   },
 )
@@ -52,6 +60,7 @@ async function submit() {
     !loggedIn.value ||
     applied.value ||
     props.vacancy.source.status === 'DEMO'
+    || !acknowledged.value || !profileReady.value
   )
     return
   submitting.value = true
@@ -60,7 +69,7 @@ async function submit() {
   try {
     await $fetch(`/api/v1/vacancies/${props.vacancy.id}/applications`, {
       method: 'POST',
-      body: { coverLetter: draft.value || null },
+      body: { coverLetter: draft.value || null, disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true },
     })
     if (user.value?.id !== owner) return
     outcome.value = 'submitted'
@@ -74,9 +83,12 @@ async function submit() {
       outcome.value = 'already'
       open.value = false
       await refresh()
-    } else
-      error.value =
-        'Your application could not be submitted. Your cover note is still here. Try again.'
+    } else {
+      error.value = (cause as { statusCode?: number }).statusCode === 422
+        ? 'Add a valid email, phone number or Telegram username to your profile, then try again. Your cover note is still here.'
+        : 'Your application could not be submitted. Your cover note is still here. Try again.'
+      await refreshProfile()
+    }
   } finally {
     submitting.value = false
   }
@@ -137,6 +149,7 @@ async function submit() {
       :title="`Apply for ${vacancy.title}`"
       :description="vacancy.company.name"
       :dismissible="!submitting"
+      :ui="{ wrapper: 'min-w-0 pe-10', title: 'break-words', content: '[overflow-wrap:anywhere]' }"
     >
       <template #body>
         <AuthSignInPanel v-if="!loggedIn" />
@@ -150,6 +163,24 @@ async function submit() {
             Your current profile and cover note go to the TalentBay team, not
             directly to the employer. We contact the company to propose your candidacy.
           </p>
+          <USkeleton v-if="profileStatus === 'pending'" class="h-24 w-full" />
+          <UAlert v-else-if="profileError" title="Profile unavailable" color="error" :actions="[{ label: 'Retry', onClick: () => refreshProfile() }]" />
+          <div v-else-if="profileReady" class="space-y-2 border-y border-default py-4 text-sm" aria-label="Application profile preview">
+            <p class="font-semibold text-highlighted">{{ profile?.user.name }}</p>
+            <p v-if="profile?.profile?.headline">{{ profile.profile.headline }}</p>
+            <p v-for="(contact, kind) in contacts" :key="kind" :class="{ hidden: !contact }" class="break-words">{{ contact }}</p>
+            <p class="text-muted">Your profile, professional links and cover note will be saved with this application for {{ vacancy.company.name }}.</p>
+            <details>
+              <summary class="cursor-pointer text-primary">Included profile details</summary>
+              <div class="mt-2 space-y-2 whitespace-pre-wrap break-words">
+                <p>{{ [profile?.profile?.city, profile?.profile?.countryCode].filter(Boolean).join(', ') || 'Location not provided' }}</p>
+                <p>{{ profile?.profile?.about || 'No introduction added' }}</p>
+                <a v-if="safeHttpUrl(profile?.profile?.githubUrl)" :href="safeHttpUrl(profile?.profile?.githubUrl)" target="_blank" rel="noopener noreferrer" class="block underline">{{ profile?.profile?.githubUrl }}</a>
+                <a v-if="safeHttpUrl(profile?.profile?.linkedinUrl)" :href="safeHttpUrl(profile?.profile?.linkedinUrl)" target="_blank" rel="noopener noreferrer" class="block underline">{{ profile?.profile?.linkedinUrl }}</a>
+              </div>
+            </details>
+          </div>
+          <UAlert v-else title="Add a contact to your profile" description="Save your profile with an email, phone number or Telegram username so our team can reach you." color="warning" variant="soft" />
           <NuxtLink
             to="/profile"
             class="text-sm text-primary underline"
@@ -167,6 +198,8 @@ async function submit() {
               class="w-full"
             />
           </UFormField>
+          <UCheckbox v-model="acknowledged" :label="`I ask TalentBay to contact ${vacancy.company.name } and share this application with them for this role.`" :disabled="!profileReady" />
+          <p class="text-xs text-muted">You can withdraw in Applications. Withdrawal stops further handling here; it cannot recall information already shared outside TalentBay. No employer response or placement is guaranteed.</p>
           <UAlert
             v-if="error"
             color="error"
@@ -193,7 +226,7 @@ async function submit() {
             label="Submit application"
             icon="i-lucide-send"
             :loading="submitting"
-            :disabled="submitting || applied"
+            :disabled="submitting || applied || !acknowledged || !profileReady || profileStatus === 'pending' || Boolean(profileError)"
           />
         </div>
       </template>

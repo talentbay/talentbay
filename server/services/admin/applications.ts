@@ -30,6 +30,7 @@ export async function getAdminApplication(id: number): Promise<AdminApplicationD
   const [row] = await useDatabase().select({
     id: schema.applications.id, status: schema.applications.status, coverLetter: schema.applications.coverLetter,
     createdAt: schema.applications.createdAt, userID: schema.applications.userID,
+    submissionSnapshot: schema.applications.submissionSnapshot,
     vacancy: { slug: schema.vacancies.slug, title: schema.vacancies.title, companyName: schema.organisations.name, city: schema.vacancies.city, countryCode: schema.vacancies.countryCode },
   }).from(schema.applications)
     .innerJoin(schema.vacancies, eq(schema.applications.vacancyID, schema.vacancies.id))
@@ -37,6 +38,17 @@ export async function getAdminApplication(id: number): Promise<AdminApplicationD
     .where(eq(schema.applications.id, id)).limit(1)
   if (!row) throw createError({ statusCode: 404, statusMessage: 'Application not found' })
   const { userID, ...application } = row
-  return { ...application, createdAt: row.createdAt.toISOString(), candidate: await getCandidateProfile(userID) }
+  const snapshot = row.submissionSnapshot
+  return {
+    ...application,
+    createdAt: row.createdAt.toISOString(),
+    candidate: snapshot ? {
+      user: { id: userID, name: snapshot.candidate.name, email: snapshot.candidate.email, avatarUrl: null },
+      profile: snapshot.candidate.profile,
+    } : await getCandidateProfile(userID),
+    vacancy: snapshot ? {
+      ...row.vacancy, slug: snapshot.vacancy.slug, title: snapshot.vacancy.title, city: snapshot.vacancy.city, countryCode: snapshot.vacancy.countryCode, companyName: snapshot.recipient.name,
+    } : row.vacancy,
+  }
 }
 

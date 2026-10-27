@@ -1,5 +1,17 @@
 # Candidate Browser Verification
 
+## Managed Apply implementation deviation - 2026-10-27
+
+The focused Apply modal now previews the submitted name/contact/profile, names the
+company, and requires an initially unchecked versioned acknowledgment. A saved profile
+and usable contact are required; professional links alone are not a contact. Missing
+profile/read errors have profile/retry exits. The server stores a submission-time snapshot;
+later profile edits do not change that package. No CV upload or legal-approval claim.
+Operator detail distinguishes submitted profile from legacy current-only records. These
+changes implement the docs22 state matrix under the owner design mandate; they are not a
+new Figma freeze, a full admin redesign, or evidence of real employer delivery. Relocation
+E01 and complete operator workflow are still separate tasks. Exact checks in execution log.
+
 ## Owner review and focused UI corrections - 2026-10-26
 
 The owner could only inspect the no-DB guest preview: sign-in was unavailable and all

@@ -40,7 +40,17 @@ test('application APIs enforce current admin role, ownership, origin and bounded
   expect((await context.request.get('/api/v1/admin/applications')).status()).toBe(403)
   expect((await context.request.post('/api/v1/applications/1/withdraw', { headers: { origin }, data: {} })).status()).toBe(401)
   const candidate = await login(context, subject, 'Review Test Candidate')
-  const response = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { coverLetter: 'Review browser cover note.' } })
+  const applyUrl = `/api/v1/vacancies/${vacancyID}/applications`
+  const acknowledgment = { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true }
+  expect((await context.request.post(applyUrl, { headers: { origin }, data: acknowledgment })).status()).toBe(422)
+  expect((await context.request.post(applyUrl, { headers: { origin }, data: {} })).status()).toBe(400)
+  expect((await context.request.post(applyUrl, { headers: { origin }, data: { ...acknowledgment, userID: candidate.id } })).status()).toBe(400)
+  expect((await context.request.post(applyUrl, { headers: { origin }, data: { ...acknowledgment, shareAcknowledged: false } })).status()).toBe(400)
+  expect((await context.request.post(applyUrl, { headers: { origin }, data: { coverLetter: 'x'.repeat(24_001) } })).status()).toBe(413)
+  expect((await context.request.post(applyUrl, { headers: { origin: 'https://attacker.invalid' }, data: acknowledgment })).status()).toBe(403)
+  expect(await sql`select id from applications where user_id=${candidate.id}`).toHaveLength(0)
+  await context.request.put('/api/v1/profile', { headers: { origin }, data: { telegram: '@review_fixture' } })
+  const response = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { coverLetter: 'Review browser cover note.', disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
   expect(response.status()).toBe(200)
   applicationID = (await response.json()).id
   expect((await context.request.get(`/api/v1/admin/applications/${applicationID}`)).status()).toBe(403)

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { closeDatabase } from '#server/db'
+import { applicationDisclosureVersion } from '#shared/types/application-handling'
 import { getVacancyBySlug, listVacancies, resolveVacancies } from '#server/repositories/vacancies'
 import { createApplication } from '#server/services/candidates/applications'
 import { importVacancies, type VacancyImportItem } from '#server/services/vacancies/import-vacancies'
@@ -15,6 +16,7 @@ const suffix = randomUUID()
 const sourceName = `Publication regression ${suffix}`
 const sql = postgres(process.env.DATABASE_MIGRATION_URL || process.env.DATABASE_URL!, { max: 1, prepare: false })
 const query = { q: '', sort: 'newest' as const, limit: 50 }
+const applicationInput = { disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true as const }
 
 function item(id: string): VacancyImportItem {
   return {
@@ -72,7 +74,8 @@ describe('import publication invariants', () => {
     const input = item('changed')
     const first = await published(input)
     const [user] = await sql`insert into users (name, email) values ('Candidate', ${`publication-${suffix}@talentbay.invalid`}) returning id`
-    const application = await createApplication(user!.id, first.id, 'Keep this application.')
+    await sql`insert into candidate_profiles (user_id, headline) values (${user!.id}, 'Publication fixture')`
+    const application = await createApplication(user!.id, first.id, { ...applicationInput, coverLetter: 'Keep this application.' })
     const before = await listVacancies(query)
 
     const [updated] = await importVacancies([{ ...input, vacancy: { ...input.vacancy, title: 'Unreviewed replacement' } }])
@@ -84,7 +87,7 @@ describe('import publication invariants', () => {
     expect(after.items.some(v => v.id === first.id)).toBe(false)
     expect(after.total).toBe(before.total - 1)
     expect(await sql`select id from applications where id = ${application.id}`).toHaveLength(1)
-    await expect(createApplication(user!.id, first.id)).rejects.toMatchObject({ statusCode: 404 })
+    await expect(createApplication(user!.id, first.id, applicationInput)).rejects.toMatchObject({ statusCode: 404 })
 
     await reviewVacancy(first.id, { reviewStatus: 'VERIFIED', status: 'PUBLISHED' })
     expect(await getVacancyBySlug(input.vacancy.slug)).toMatchObject({ id: first.id, title: 'Unreviewed replacement' })
@@ -126,7 +129,7 @@ describe('import publication invariants', () => {
     const input = item('inactive')
     const first = await published(input)
     await sql`update organisations set status = 'ARCHIVED' where slug = ${input.company.slug}`
-    await expect(createApplication(1, first.id)).rejects.toMatchObject({ statusCode: 404 })
+    await expect(createApplication(1, first.id, applicationInput)).rejects.toMatchObject({ statusCode: 404 })
     expect(await getVacancyBySlug(input.vacancy.slug)).toBeUndefined()
   })
 
@@ -160,7 +163,7 @@ describe('import publication invariants', () => {
     await sql`update vacancies set source_name = 'TalentBay preview dataset' where id = ${first.id}`
     try {
       expect(await getVacancyBySlug(input.vacancy.slug)).toMatchObject({ source: { status: 'DEMO' } })
-      await expect(createApplication(1, first.id)).rejects.toMatchObject({ statusCode: 404 })
+      await expect(createApplication(1, first.id, applicationInput)).rejects.toMatchObject({ statusCode: 404 })
     }
     finally {
       await sql`update vacancies set source_name = ${sourceName} where id = ${first.id}`

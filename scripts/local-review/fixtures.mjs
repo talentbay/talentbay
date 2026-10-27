@@ -57,6 +57,6 @@ export async function seedReview({ sql, request, signIn, personas }) {
     body: { headline: 'Senior software engineer', about: 'Fictional candidate exploring international engineering roles. Interested in product teams, accessible interfaces and reliable services.', countryCode: 'PT', city: 'Porto', telegram: '@local_review_fixture', githubUrl: 'https://example.invalid/portfolio', linkedinUrl: null, phone: null },
   })
   for (const item of imported.items.slice(1, 3)) {
-    await request(`/api/v1/vacancies/${item.id}/applications`, { method: 'POST', cookies: candidate.cookies, body: { coverLetter: 'A fictional application for the local product review.' } })
+    await request(`/api/v1/vacancies/${item.id}/applications`, { method: 'POST', cookies: candidate.cookies, body: { coverLetter: 'A fictional application for the local product review.', disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
   }
 }
