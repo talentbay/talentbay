@@ -7,6 +7,22 @@ Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/
 
 ## Autonomous Run Started - 2026-10-27
 
+### First-time Apply / profile continuity
+
+Branch `codex/application-profile-preflight`, base `1717a26`. #40 both CI jobs SUCCESS
+(`40473015779`); only integration advances. Reused the existing ProfileEditor inline:
+closing/saving it returns to the same vacancy's Apply, keeping the cover note in memory
+and requiring fresh acknowledgment after profile edits. No new wizard, global draft
+storage, CV upload or Telegram-only route. Successful OAuth completion resumes Apply;
+real callback/provider acceptance is still K2. Actual expired-session POST401 refreshes
+the session, clears the private draft and shows sign-in on the original role.
+
+Typecheck/lint/Node build and two focused DB-browser paths PASS: first-time no-contact ->
+profile PUT fails/retry -> return with note -> Apply, and real session deletion ->401 ->
+same-role sign-in with cleared private note. Full 14 DB-browser regression and HTTP smoke
+PASS. Server/schema unchanged; previous SQL51 evidence belongs to
+the handling baseline, not a new migration in this slice.
+
 ### Managed handling / progress slice
 
 Branch `codex/application-handling`, product commit `42520a2` / [#40](https://github.com/talentbay/talentbay/pull/40),

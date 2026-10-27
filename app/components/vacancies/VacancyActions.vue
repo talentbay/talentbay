@@ -6,7 +6,7 @@ import { safeHttpUrl } from '~/utils/safe-http-url'
 import type { VacancyListItem } from '#shared/types/vacancies'
 
 const props = defineProps<{ vacancy: VacancyListItem }>()
-const { loggedIn, user } = useUserSession()
+const { loggedIn, user, fetch: refreshSession } = useUserSession()
 const { initialized, isSaved, toggleSaved } = useSavedVacancies()
 const { haptic } = useProductHost()
 const toast = useToast()
@@ -16,6 +16,9 @@ const submitting = ref(false)
 const error = ref('')
 const outcome = ref<'submitted' | 'already' | null>(null)
 const acknowledged = ref(false)
+const editingProfile = ref(false)
+const sessionExpired = ref(false)
+let profileEditOwner: number | undefined
 const { data: profile, status: profileStatus, error: profileError, refresh: refreshProfile } = await useAccountResource<CandidateProfileResponse>('candidate-profile', '/api/v1/profile')
 const contacts = computed(() => applicationContacts(profile.value))
 const profileReady = computed(() => canSubmitApplication(profile.value))
@@ -40,9 +43,34 @@ watch(
     error.value = ''
     outcome.value = null
     acknowledged.value = false
+    editingProfile.value = false
+    profileEditOwner = undefined
+    sessionExpired.value = false
     open.value = false
   },
 )
+function editProfile() {
+  if (!loggedIn.value || submitting.value) return
+  profileEditOwner = user.value?.id
+  acknowledged.value = false
+  open.value = false
+  editingProfile.value = true
+}
+watch(editingProfile, async (value, previous) => {
+  if (value || !previous) return
+  const owner = profileEditOwner
+  await nextTick()
+  if (owner && user.value?.id === owner) open.value = true
+})
+async function profileSaved(value: CandidateProfileResponse) {
+  if (value.user.id !== user.value?.id) return
+  profile.value = value
+  await refreshProfile()
+}
+async function signedIn() {
+  await nextTick()
+  if (loggedIn.value) open.value = true
+}
 function save() {
   if (!toggleSaved(props.vacancy.slug))
     toast.add({
@@ -77,6 +105,15 @@ async function submit() {
     await refresh()
   } catch (cause) {
     if (user.value?.id !== owner) return
+    if ((cause as { statusCode?: number }).statusCode === 401) {
+      await refreshSession()
+      await nextTick()
+      if (!loggedIn.value) {
+        sessionExpired.value = true
+        open.value = true
+      } else error.value = 'Your session could not be confirmed. Try submitting again.'
+      return
+    }
     if ((cause as { statusCode?: number }).statusCode === 409) {
       outcome.value = 'already'
       open.value = false
@@ -150,7 +187,12 @@ async function submit() {
       :ui="{ wrapper: 'min-w-0 pe-10', title: 'break-words', content: '[overflow-wrap:anywhere]' }"
     >
       <template #body>
-        <AuthSignInPanel v-if="!loggedIn" />
+        <AuthSignInPanel
+          v-if="!loggedIn"
+          :title="sessionExpired ? 'Sign in again to apply' : undefined"
+          :description="sessionExpired ? 'Your session ended. For privacy, the previous cover note was cleared. You are still on the same vacancy.' : undefined"
+          @completed="signedIn"
+        />
         <form
           v-else
           id="vacancy-application"
@@ -179,12 +221,7 @@ async function submit() {
             </details>
           </div>
           <UAlert v-else title="Add a contact to your profile" description="Save your profile with an email, phone number or Telegram username so our team can reach you." color="warning" variant="soft" />
-          <NuxtLink
-            to="/profile"
-            class="text-sm text-primary underline"
-          >
-            Review your profile
-          </NuxtLink>
+          <UButton label="Review your profile" icon="i-lucide-user-pen" color="neutral" variant="outline" :disabled="submitting || profileStatus === 'pending'" @click="editProfile" />
           <UFormField
             label="Cover note"
             hint="Optional"
@@ -229,5 +266,12 @@ async function submit() {
         </div>
       </template>
     </UModal>
+    <CandidatesProfileEditor
+      v-if="loggedIn"
+      :key="user?.id"
+      v-model:open="editingProfile"
+      :profile="profile?.profile || null"
+      @saved="profileSaved"
+    />
   </div>
 </template>

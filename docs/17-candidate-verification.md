@@ -1,5 +1,14 @@
 # Candidate Browser Verification
 
+## First-time application continuity - 2026-10-27
+
+Apply reuses ProfileEditor on the same vacancy, with no navigation away or new multi-step
+wizard. Saving/cancelling returns to Apply; its cover note stays in component memory only.
+Editing the package resets acknowledgment; switching identity clears the draft/editor.
+An expired server session is refreshed and sign-in is offered on the same role, with an
+explicit privacy-driven draft reset. Focused real-API/DB browser tests cover save failure/
+retry and expiry; actual provider-popup acceptance remains a hosted/native gate.
+
 ## Managed handling / progress deviation - 2026-10-27
 
 Existing operator inbox/detail now have stage/mine filters, current-admin assignment,
