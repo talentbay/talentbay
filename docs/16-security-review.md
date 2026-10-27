@@ -3,6 +3,18 @@
 Updated: 2026-10-27. Scope: repository dependency graph and admin authorization; this is not
 a penetration-test certification or evidence of a production deployment.
 
+## History Recovery Boundary - 2026-10-27
+
+Recovery commands reuse locked revision/current-role/idempotency. Corrections append a
+fixed-reason record; originals are not overwritten. Reopening cannot change application
+status, restore a withdrawal/rejection/candidate-requested permission or bypass earlier
+handoff guards. An operator's correction is not renewed candidate consent. Candidate
+projection uses a scoped/bounded history query without raw note/reference/actor data;
+older pages are correctly flagged. Local negative/concurrency/HTTP/UI checks pass (docs14).
+0008 is additive/local-only; older readers do not understand corrections. Rollback needs
+maintenance/compatible readers before reopening affected history, not erased events.
+Real privacy/retention policy, shared migration, native acceptance and independent R remain.
+
 ## Basic Bot Boundary - 2026-10-27
 
 I01 reuses H3/Zod/Drizzle, adds no SDK/dependency. Webhook remains default-off until full

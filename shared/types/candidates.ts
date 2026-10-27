@@ -1,4 +1,4 @@
-import type { HandlingState, HandlingCloseReason, HandlingEventKind, HandlingStage } from './application-handling'
+import type { HandlingState, HandlingCloseReason, HandlingCorrectionReason, HandlingEventKind, HandlingStage } from './application-handling'
 
 export type CandidateProfileData = {
   headline: string | null
@@ -55,5 +55,8 @@ export type CandidateApplicationProgress = {
     createdAt: string
     occurredAt: string | null
     closeReason: HandlingCloseReason | null
+    corrected?: boolean
+    correctedRevision?: number | null
+    correctionReason?: HandlingCorrectionReason | null
   }[]
 }

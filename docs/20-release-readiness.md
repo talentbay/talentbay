@@ -5,13 +5,16 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 
 ## Code Progress - 2026-10-27
 
-#38–#49 have both CI jobs SUCCESS; integration is9e53485, main/production unchanged.
+#38–#50 have both CI jobs SUCCESS; integration is2a3d199, main/production unchanged.
 Managed Apply now has a versioned acknowledgment, immutable profile/vacancy snapshot,
 operator assignment/contact/manual-handoff records and owner-only public event history.
 First-time profile completion returns to the same Apply. These facts supersede the older
 read-only-only application boundary below; they are not actual employer delivery/read
 receipts, a complete timestamped hiring funnel or approved real data sharing. Event
-correction/reopen acceptance still needs B04/B09 follow-up.
+correction/reopen follow-up now passes local173unit/85SQL/26DB/19public/types/lint/Node/
+smoke and25tooling. Append-only originals remain; candidate-requested closure is not new
+consent and ever-recorded handoff cannot be silently resent. Native/owner/R acceptance
+and real operational policy remain separate; detailed evidence/rollback is in docs29/docs14.
 
 The first Lever connector/durable source runner is offline-fixture/real-SQL tested; the
 approved-source registry is empty and no live fetch/cron is activated. Public vacancy
@@ -24,7 +27,7 @@ Owner confirms no approved real source pages yet; CEO clarification remains nece
 Basic I01 entry webhook now passes local172unit/80SQL/25tooling/types/lint/Node/smoke,
 full19public/25DB and Vercel Node22 output guard. It is default-off; no real Telegram bot,
 menu/webhook change or actual delivery is verified. docs28 defines semantics/setup/rollback.
-Remaining UX/operations/security and B04/B09 follow-up, independent R and real provider/data/
+Remaining UX/operations/security, independent R and real provider/data/
 native/hosting/legal/owner H gates remain. No complete/accepted/deployed MVP claim.
 Exact slice commands/revisions/results: docs14. Provider facts below remain dated26.10;
 they were not silently refreshed by writing this section.

@@ -5,6 +5,7 @@ import { closeDatabase } from '#server/db'
 import { createApplication, withdrawApplication, listCandidateApplications, candidateApplicationForVacancy } from '#server/services/candidates/applications'
 import { candidateApplicationProgress } from '#server/services/candidates/application-progress'
 import { handleApplication, prepareApplicationPackage } from '#server/services/admin/application-handling'
+import { getAdminApplication } from '#server/services/admin/applications'
 import type { ApplicationCommand } from '#shared/schemas/application-command'
 import { applicationDisclosureVersion } from '#shared/types/application-handling'
 
@@ -185,5 +186,92 @@ describe('serialized manual application handling', () => {
     await expect(handleApplication(operatorID, row.id, { ...base(row.revision + 1), action: 'START' })).rejects.toMatchObject({ statusCode: 409 })
     // Closing TalentBay handling does not revoke the candidate's right to withdraw.
     expect((await withdrawApplication(row.userID, row.id)).status).toBe('WITHDRAWN')
+  })
+
+  it('appends correction without overwriting the original or granting another handoff', async () => {
+    const row = await contacted()
+    const shared = await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'SHARE', ...contact(), confirmCompleted: true })
+    const [original] = await sql`select * from application_handling_events where id=${shared.eventID}`
+    const [snapshot] = await sql`select user_id,vacancy_id,status,submission_snapshot from applications where id=${row.id}`
+    const command: ApplicationCommand = { ...base(row.revision), action: 'CORRECT', targetRevision: shared.revision, reason: 'RECORDED_IN_ERROR', privateNote: 'Private correction explanation, never public' }
+    const corrected = await handleApplication(otherID, row.id, command)
+    expect(await handleApplication(otherID, row.id, command)).toMatchObject({ replayed: true, eventID: corrected.eventID })
+    expect((await sql`select * from application_handling_events where id=${shared.eventID}`)[0]).toEqual(original)
+    expect((await sql`select user_id,vacancy_id,status,submission_snapshot from applications where id=${row.id}`)[0]).toEqual(snapshot)
+    const progress = await candidateApplicationProgress(row.userID, row.id)
+    expect(progress).toMatchObject({ stage: 'IN_PROGRESS', handoffRecorded: true })
+    expect(progress.events[0]).toMatchObject({ kind: 'CORRECTED', correctedRevision: shared.revision, correctionReason: 'RECORDED_IN_ERROR' })
+    expect(progress.events.find(event => event.revision === shared.revision)).toMatchObject({ kind: 'SHARED', corrected: true })
+    expect(JSON.stringify(progress)).not.toMatch(/privateNote|actorUserID|assignedUserID|channel|reference|Private correction|Internal only/)
+    await expect(handleApplication(otherID, row.id, { ...command, ...base(corrected.revision) })).rejects.toMatchObject({ statusCode: 409 })
+    await handleApplication(operatorID, row.id, { ...base(corrected.revision), action: 'CONTACT', ...contact() })
+    await expect(prepareApplicationPackage(operatorID, row.id)).rejects.toMatchObject({ statusCode: 409 })
+    expect(await sql`select id from application_handling_events where application_id=${row.id} and kind='SHARED'`).toHaveLength(1)
+  })
+
+  it('reopens only TalentBay closure, takes current ownership and preserves status/snapshot/withdrawal', async () => {
+    const row = await contacted()
+    const closed = await handleApplication(operatorID, row.id, { ...base(row.revision), action: 'CLOSE', reason: 'NO_RESPONSE' })
+    const [snapshot] = await sql`select submission_snapshot,status from applications where id=${row.id}`
+    const command: ApplicationCommand = { ...base(closed.revision), action: 'REOPEN', privateNote: 'Private reason to resume review' }
+    const opened = await handleApplication(otherID, row.id, command)
+    expect(await handleApplication(otherID, row.id, command)).toMatchObject({ eventID: opened.eventID, replayed: true })
+    expect((await sql`select handling_stage,assigned_user_id from applications where id=${row.id}`)[0]).toEqual({ handling_stage: 'IN_PROGRESS', assigned_user_id: otherID })
+    expect((await sql`select submission_snapshot,status from applications where id=${row.id}`)[0]).toEqual(snapshot)
+    await expect(handleApplication(operatorID, row.id, { ...base(opened.revision), action: 'CONTACT', ...contact() })).rejects.toMatchObject({ statusCode: 409 })
+    await withdrawApplication(row.userID, row.id)
+    const [withdrawn] = await sql`select handling_revision from applications where id=${row.id}`
+    await expect(handleApplication(otherID, row.id, { ...base(withdrawn!.handling_revision), action: 'REOPEN', privateNote: 'Cannot restore revoked permission' })).rejects.toMatchObject({ statusCode: 409 })
+    await handleApplication(operatorID, row.id, { ...base(withdrawn!.handling_revision), action: 'CORRECT', targetRevision: closed.revision, reason: 'DETAILS_INACCURATE', privateNote: 'Correct historical reason only' })
+    expect((await sql`select status,handling_stage from applications where id=${row.id}`)[0]).toEqual({ status: 'WITHDRAWN', handling_stage: 'CLOSED' })
+    await expect(prepareApplicationPackage(otherID, row.id)).rejects.toMatchObject({ statusCode: 409 })
+    expect((await candidateApplicationProgress(row.userID, row.id)).events.some(event => event.kind === 'REOPENED')).toBe(true)
+  })
+
+  it('marks corrected older pages by application scope, not only the currently loaded page', async () => {
+    const row = await contacted()
+    const other = await contacted()
+    for (let n = 0; n < 30; n++) await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'FOLLOW_UP' })
+    await handleApplication(otherID, row.id, { ...base(row.revision), action: 'CORRECT', targetRevision: 4, reason: 'DETAILS_INACCURATE', privateNote: 'Private correction of old contact' })
+    const first = await candidateApplicationProgress(row.userID, row.id)
+    expect(first.events[0]).toMatchObject({ kind: 'CORRECTED', correctedRevision: 4 })
+    expect(first.events.some(event => event.revision === 4)).toBe(false)
+    const second = await candidateApplicationProgress(row.userID, row.id, first.nextCursor!)
+    expect(second.events.find(event => event.revision === 4)).toMatchObject({ corrected: true })
+    expect((await candidateApplicationProgress(other.userID, other.id)).events.find(event => event.revision === 4)).toMatchObject({ corrected: false })
+  })
+
+  it('rejects forbidden targets/rejection/revoked actors and serializes correction or reopening against withdrawal', async () => {
+    const row = await contacted()
+    for (const targetRevision of [1, 2, 3, 999]) await expect(handleApplication(operatorID, row.id, { ...base(row.revision), action: 'CORRECT', targetRevision, reason: 'RECORDED_IN_ERROR', privateNote: 'Invalid target must not mutate history' })).rejects.toMatchObject({ statusCode: 409 })
+    await sql`update users set role='USER' where id=${otherID}`
+    try { await expect(handleApplication(otherID, row.id, { ...base(row.revision), action: 'CORRECT', targetRevision: 4, reason: 'RECORDED_IN_ERROR', privateNote: 'Revoked actor cannot correct' })).rejects.toMatchObject({ statusCode: 403 }) }
+    finally { await sql`update users set role='ADMIN' where id=${otherID}` }
+    const results = await Promise.allSettled([operatorID, otherID].map(actor => handleApplication(actor, row.id, { ...base(row.revision), action: 'CORRECT', targetRevision: 4, reason: 'DETAILS_INACCURATE', privateNote: 'Concurrent correction fixture' })))
+    expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1)
+    expect(await sql`select id from application_handling_events where application_id=${row.id} and kind='CORRECTED'`).toHaveLength(1)
+    const closed = await handleApplication(operatorID, row.id, { ...base(row.revision + 1), action: 'CLOSE', reason: 'NO_RESPONSE' })
+    const race = await Promise.allSettled([withdrawApplication(row.userID, row.id), handleApplication(otherID, row.id, { ...base(closed.revision), action: 'REOPEN', privateNote: 'Concurrent reopening fixture' })])
+    expect(race[0]!.status).toBe('fulfilled')
+    expect((await sql`select status,handling_stage from applications where id=${row.id}`)[0]).toEqual({ status: 'WITHDRAWN', handling_stage: 'CLOSED' })
+    const rejected = await contacted()
+    const end = await handleApplication(operatorID, rejected.id, { ...base(rejected.revision), action: 'CLOSE', reason: 'COMPLETED' })
+    await sql`update applications set status='REJECTED' where id=${rejected.id}`
+    await expect(handleApplication(otherID, rejected.id, { ...base(end.revision), action: 'REOPEN', privateNote: 'Cannot undo employer rejection' })).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('never treats a correction as renewed permission after candidate-requested closure, even outside latest50 history', async () => {
+    const row = await contacted()
+    for (let n = 0; n < 52; n++) await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'FOLLOW_UP' })
+    const closed = await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'CLOSE', reason: 'CANDIDATE_REQUEST' })
+    await handleApplication(otherID, row.id, { ...base(row.revision++), action: 'CORRECT', targetRevision: closed.revision, reason: 'RECORDED_IN_ERROR', privateNote: 'An operator claim is not renewed candidate permission' })
+    for (let targetRevision = 5; targetRevision <= 56; targetRevision++) await handleApplication(otherID, row.id, { ...base(row.revision++), action: 'CORRECT', targetRevision, reason: 'DETAILS_INACCURATE', privateNote: 'Fictional old-note correction' })
+    const detail = await getAdminApplication(row.id)
+    expect(detail.events.some(event => event.kind === 'CLOSED')).toBe(false)
+    expect(detail.canReopenHandling).toBe(false)
+    await expect(handleApplication(otherID, row.id, { ...base(row.revision), action: 'REOPEN', privateNote: 'No new permission was provided' })).rejects.toMatchObject({ statusCode: 409 })
+    // Direct stage drift cannot bypass the separate package consent boundary either.
+    await sql`update applications set handling_stage='CONTACTED' where id=${row.id}`
+    await expect(prepareApplicationPackage(operatorID, row.id)).rejects.toMatchObject({ statusCode: 409 })
   })
 })

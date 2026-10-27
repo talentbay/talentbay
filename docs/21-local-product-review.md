@@ -64,6 +64,16 @@ Switch to Candidate -> Applications -> detail: only recorded public facts are vi
 never private operator notes/references. Confirm/cancel/retry withdrawal; it survives reload
 and blocks another package/handoff. Legacy has no invented snapshot/permission/history.
 
+History recovery: on Staff Fullstack Engineer, open "Correct or reopen handling", mark
+the existing closure revision4 inaccurate with a fictional private reason. Handling stays
+closed. Explicitly choose "Reopen and take application" to resume review and take ownership.
+Switch to Candidate and inspect both recorded events. On Product Engineer, a correction of
+the simulated handoff revision5 must retain the original record and cannot permit another
+handoff/package. Withdrawal/rejection/candidate-request closure cannot be reactivated by
+these controls. All actions are local fixtures, not actual contact or renewed permission.
+Restarting the isolated review creates the initial examples again; retained old clusters
+are not production backups. Exact policy/rollback limits are in docs29.
+
 All companies, people and jobs are fictional, even when a record has passed the local
 publication workflow. Employer status remains NEW for the handling examples; operator
 work is separate from employer viewing/interview/offer. One explicit legacy fixture has

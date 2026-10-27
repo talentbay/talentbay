@@ -18,4 +18,5 @@ export type AdminApplicationDetail = CandidateApplicationItem & {
   events: AdminHandlingEvent[]
   eventsTruncated: boolean
   handoffRecorded: boolean
+  canReopenHandling: boolean
 }

@@ -16,4 +16,10 @@ describe('bounded operator command contract', () => {
       expect(applicationCommandSchema.safeParse(input).success).toBe(false)
     }
   })
+  it('requires explicit targets and private reasons for correction/reopening without status or consent writes', () => {
+    const correction = { ...base, action: 'CORRECT', targetRevision: 4, reason: 'RECORDED_IN_ERROR', privateNote: 'Wrong event was entered' }
+    expect(applicationCommandSchema.safeParse(correction).success).toBe(true)
+    expect(applicationCommandSchema.safeParse({ ...base, action: 'REOPEN', privateNote: 'Company returned our contact' }).success).toBe(true)
+    for (const input of [{ ...correction, targetRevision: 0 }, { ...correction, reason: 'DELETE_HISTORY' }, { ...correction, privateNote: '    ' }, { ...correction, status: 'NEW' }, { ...base, action: 'REOPEN' }, { ...base, action: 'REOPEN', privateNote: 'A reason', shareAcknowledged: true }]) expect(applicationCommandSchema.safeParse(input).success).toBe(false)
+  })
 })

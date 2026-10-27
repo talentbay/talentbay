@@ -57,6 +57,13 @@
       "when": 1793102028813,
       "tag": "0007_telegram-entry-receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793103279704,
+      "tag": "0008_application-history-recovery",
+      "breakpoints": true
     }
   ]
 }

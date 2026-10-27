@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { schema, useDatabase } from '#server/db'
 import { applicationCommandSchema } from '#shared/schemas/application-command'
 import type { ApplicationCommand } from '#shared/schemas/application-command'
-import { requireCurrentOperator, requireShareableSnapshot } from './application-package'
+import { hasCandidateRequestedClosure, requireCurrentOperator, requireShareableSnapshot } from './application-package'
 import type { ApplicationPackage, HandlingEventData, HandlingEventKind, HandlingStage } from '#shared/types/application-handling'
 
 function conflict(message: string): never {
@@ -29,6 +29,8 @@ export async function handleApplication(actorID: number, id: number, input: Appl
   const command = applicationCommandSchema.parse(input)
   const digest = createHash('sha256').update(JSON.stringify(command)).digest('hex')
   return await useDatabase().transaction(async (tx) => {
+    await tx.execute(sql`set local lock_timeout='5s'`)
+    await tx.execute(sql`set local statement_timeout='15s'`)
     const [application] = await tx.select().from(schema.applications).where(eq(schema.applications.id, id)).for('update')
     if (!application) throw createError({ statusCode: 404, statusMessage: 'Application not found' })
     await requireCurrentOperator(tx, actorID)
@@ -39,13 +41,14 @@ export async function handleApplication(actorID: number, id: number, input: Appl
       return { id, revision: previous.revision, eventID: previous.id, replayed: true }
     }
     if (application.handlingRevision !== command.expectedRevision) conflict('Application changed; reload before recording this action')
-    if (application.status === 'WITHDRAWN' || application.status === 'REJECTED' || application.handlingStage === 'CLOSED') conflict('This application is closed')
+    const terminalStatus = application.status === 'WITHDRAWN' || application.status === 'REJECTED'
+    if (command.action !== 'CORRECT' && command.action !== 'REOPEN' && (terminalStatus || application.handlingStage === 'CLOSED')) conflict('This application is closed')
 
     let stage: HandlingStage = application.handlingStage
     let kind: HandlingEventKind
     let assignedUserID = application.assignedUserID
     const data: HandlingEventData = {}
-    if (command.action !== 'ASSIGN' && assignedUserID !== actorID) conflict('Only the assigned operator can record this action')
+    if (!['ASSIGN', 'CORRECT', 'REOPEN'].includes(command.action) && assignedUserID !== actorID) conflict('Only the assigned operator can record this action')
 
     switch (command.action) {
       case 'ASSIGN':
@@ -84,6 +87,28 @@ export async function handleApplication(actorID: number, id: number, input: Appl
         data.closeReason = command.reason
         stage = 'CLOSED'
         kind = 'CLOSED'
+        break
+      case 'CORRECT': {
+        const [target] = await tx.select({ kind: schema.applicationHandlingEvents.kind }).from(schema.applicationHandlingEvents)
+          .where(and(eq(schema.applicationHandlingEvents.applicationID, id), eq(schema.applicationHandlingEvents.revision, command.targetRevision))).limit(1)
+        if (!target || !['CONTACTED', 'SHARED', 'FOLLOW_UP', 'CLOSED'].includes(target.kind)) conflict('Select a correctable operator entry from this application')
+        const [corrected] = await tx.select({ id: schema.applicationHandlingEvents.id }).from(schema.applicationHandlingEvents)
+          .where(and(eq(schema.applicationHandlingEvents.applicationID, id), eq(schema.applicationHandlingEvents.kind, 'CORRECTED'), sql`${schema.applicationHandlingEvents.data}->>'correctedRevision' = ${String(command.targetRevision)}`)).limit(1)
+        if (corrected) conflict('A correction already exists for this entry')
+        data.correctedRevision = command.targetRevision
+        data.correctionReason = command.reason
+        if (terminalStatus) stage = 'CLOSED'
+        else if (stage !== 'CLOSED') stage = 'IN_PROGRESS'
+        kind = 'CORRECTED'
+        break
+      }
+      case 'REOPEN':
+        if (terminalStatus || stage !== 'CLOSED') conflict('Only closed TalentBay handling without withdrawal or rejection can be reopened')
+        if (await hasCandidateRequestedClosure(tx, id)) conflict('Candidate-requested closure needs renewed permission; reopening is not available')
+        assignedUserID = actorID
+        data.assignedUserID = actorID
+        stage = 'IN_PROGRESS'
+        kind = 'REOPENED'
         break
     }
     if (command.action === 'CONTACT' || command.action === 'SHARE') {

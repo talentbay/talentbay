@@ -4,6 +4,7 @@ import { schema, useDatabase } from '#server/db'
 import { getCandidateProfile } from '#server/services/candidates/profile'
 import type { AdminApplicationDetail, AdminApplicationsResponse } from '#shared/types/application-review'
 import { handlingStages } from '#shared/types/application-handling'
+import { hasCandidateRequestedClosure } from './application-package'
 
 export const applicationQueueQuery = z.object({
   status: z.enum(schema.applicationStatusEnum.enumValues).optional(),
@@ -63,6 +64,7 @@ export async function getAdminApplication(id: number): Promise<AdminApplicationD
     events: events.slice(0, 50).map(event => ({ ...event, createdAt: event.createdAt.toISOString() })),
     eventsTruncated: events.length > 50,
     handoffRecorded: Boolean(handoff),
+    canReopenHandling: row.handling.stage === 'CLOSED' && !['WITHDRAWN', 'REJECTED'].includes(row.status) && !await hasCandidateRequestedClosure(useDatabase(), id),
     candidate: snapshot ? {
       user: { id: userID, name: snapshot.candidate.name, email: snapshot.candidate.email, avatarUrl: null },
       profile: snapshot.candidate.profile,

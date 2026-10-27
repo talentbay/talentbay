@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CandidateApplicationProgress } from '#shared/types/candidates'
-import { handlingLabels, handlingEventLabels, handlingCloseLabels, handlingTime } from '~/utils/application-handling'
+import { handlingLabels, handlingEventLabels, handlingCloseLabels, handlingCorrectionLabels, handlingTime } from '~/utils/application-handling'
 
 const props = defineProps<{ id: number }>()
 const { user } = useUserSession()
@@ -32,9 +32,11 @@ async function older() {
       <ol class="space-y-4">
         <li v-for="event in events" :key="event.revision" class="text-sm">
           <p class="font-medium">{{ handlingEventLabels[event.kind] }}</p>
+          <p v-if="event.corrected" class="mt-1 text-xs font-medium text-muted">A later correction marks this entry as inaccurate.</p>
           <time :datetime="event.createdAt" class="text-xs text-muted">Recorded {{ handlingTime(event.createdAt) }}</time>
-          <p v-if="event.occurredAt && ['SHARED', 'CONTACTED'].includes(event.kind)" class="text-xs text-muted">Action time: {{ handlingTime(event.occurredAt) }}</p>
-          <p v-if="event.closeReason" class="mt-1 text-xs text-muted">{{ handlingCloseLabels[event.closeReason] }}</p>
+          <p v-if="!event.corrected && event.occurredAt && ['SHARED', 'CONTACTED'].includes(event.kind)" class="text-xs text-muted">Action time: {{ handlingTime(event.occurredAt) }}</p>
+          <p v-if="!event.corrected && event.closeReason" class="mt-1 text-xs text-muted">{{ handlingCloseLabels[event.closeReason] }}</p>
+          <p v-if="event.correctedRevision && event.correctionReason" class="mt-1 text-xs text-muted">Update {{ event.correctedRevision }}: {{ handlingCorrectionLabels[event.correctionReason] }}. Corrections do not confirm recall of information shared outside TalentBay.</p>
         </li>
       </ol>
       <p v-if="!events.length" class="text-sm text-muted">No handling events recorded yet.</p>

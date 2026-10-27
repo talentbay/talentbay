@@ -133,3 +133,85 @@ test('new handling/progress endpoints enforce role, ownership, strict body and s
   await sql`update users set role='USER' where id=${other.id}`
   expect((await context.request.post(endpoint, { headers: { origin }, data: base })).status()).toBe(403)
 })
+
+test('closed handling → reopen with lost-response retry → append correction → candidate history without private note', async ({ browser }, testInfo) => {
+  const candidate = await browser.newContext({ baseURL: origin })
+  const operator = await browser.newContext({ baseURL: origin })
+  try {
+    await login(candidate, subject + 3, 'Recovery Browser Candidate')
+    await candidate.request.put('/api/v1/profile', { headers: { origin }, data: { telegram: '@recovery_fixture' } })
+    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
+    expect(receipt.status()).toBe(200)
+    const id = (await receipt.json()).id
+    const admin = await login(operator, subject + 4, 'Recovery Browser Operator')
+    await sql`update users set role='ADMIN' where id=${admin.id}`
+    await login(operator, subject + 4, 'Recovery Browser Operator')
+    let revision = 1
+    const command = async (input: object) => {
+      const response = await operator.request.post(`/api/v1/admin/applications/${id}/handling`, { headers: { origin }, data: { ...input, expectedRevision: revision, commandKey: randomUUID() } })
+      expect(response.status()).toBe(200)
+      revision = (await response.json()).revision
+    }
+    await command({ action: 'ASSIGN', assigneeID: admin.id })
+    await command({ action: 'START' })
+    await command({ action: 'CONTACT', channel: 'EMAIL', occurredAt: new Date().toISOString(), reference: 'Private original contact reference' })
+    const [original] = await sql`select * from application_handling_events where application_id=${id} and revision=4`
+    await command({ action: 'CLOSE', reason: 'NO_RESPONSE' })
+    const page = await operator.newPage()
+    await page.goto('/ktulhu/v1/applications')
+    await page.getByRole('button', { name: 'Review Recovery Browser Candidate for Handling Browser Engineer', exact: true }).click()
+    const dialog = page.getByRole('dialog')
+    await dialog.getByText('Correct or reopen handling', { exact: true }).press('Enter')
+    const recovery = dialog.getByRole('form', { name: 'Application recovery' })
+    await recovery.getByRole('combobox', { name: 'Recovery action' }).click()
+    await page.getByRole('option', { name: 'Reopen and take application', exact: true }).click()
+    await recovery.getByRole('textbox', { name: 'Private recovery note' }).fill('PRIVATE_RECOVERY_REASON_NOT_PUBLIC')
+    let dropped = false
+    await page.route('**/api/v1/admin/applications/*/handling', async (route) => {
+      if (!dropped && route.request().postDataJSON().action === 'REOPEN') {
+        dropped = true
+        expect((await route.fetch()).status()).toBe(200)
+        return route.fulfill({ status: 503, body: '{}' })
+      }
+      return route.continue()
+    })
+    await recovery.getByRole('button', { name: 'Reopen and take application', exact: true }).click()
+    await expect(recovery.getByText('Recovery not confirmed', { exact: true })).toBeVisible()
+    await expect(recovery.getByRole('textbox', { name: 'Private recovery note' })).toHaveValue('PRIVATE_RECOVERY_REASON_NOT_PUBLIC')
+    await recovery.getByRole('button', { name: 'Reopen and take application', exact: true }).click()
+    await expect(dialog.getByText('TalentBay is reviewing', { exact: true })).toBeVisible()
+    expect(await sql`select id from application_handling_events where application_id=${id} and kind='REOPENED'`).toHaveLength(1)
+    await recovery.getByRole('spinbutton', { name: 'Entry revision' }).fill('4')
+    await recovery.getByRole('textbox', { name: 'Private recovery note' }).fill('PRIVATE_CORRECTION_NOTE_NOT_PUBLIC')
+    await recovery.getByRole('button', { name: 'Record correction', exact: true }).click()
+    await expect(dialog.getByText('Correction recorded by TalentBay', { exact: true })).toBeVisible()
+    expect((await sql`select * from application_handling_events where application_id=${id} and revision=4`)[0]).toEqual(original)
+    for (const width of [320, 390, 1440]) {
+      await page.setViewportSize({ width, height: 900 })
+      expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+      await page.screenshot({ path: testInfo.outputPath(`operator-history-recovery-${width}.png`), fullPage: true, animations: 'disabled' })
+    }
+    const view = await candidate.newPage()
+    await view.setViewportSize({ width: 390, height: 844 })
+    await view.goto('/applications')
+    await view.getByRole('button', { name: 'View application for Handling Browser Engineer', exact: true }).click()
+    const application = view.getByRole('dialog')
+    await expect(application.getByText('Correction recorded by TalentBay', { exact: true })).toBeVisible()
+    await expect(application.getByText('A later correction marks this entry as inaccurate.', { exact: true })).toBeVisible()
+    await expect(application.getByText('TalentBay resumed reviewing', { exact: true })).toBeVisible()
+    const progress = await candidate.request.get(`/api/v1/applications/${id}/progress`)
+    expect(await progress.text()).not.toMatch(/PRIVATE_|Private original|actorUserID|assignedUserID|channel|reference|privateNote/)
+    await view.screenshot({ path: testInfo.outputPath('candidate-history-correction-390.png'), fullPage: true, animations: 'disabled' })
+    await application.getByRole('button', { name: 'Withdraw application', exact: true }).click()
+    await application.getByRole('button', { name: 'Confirm withdrawal', exact: true }).click()
+    const [withdrawn] = await sql`select handling_revision from applications where id=${id}`
+    expect((await operator.request.post(`/api/v1/admin/applications/${id}/handling`, { headers: { origin }, data: { action: 'REOPEN', expectedRevision: withdrawn!.handling_revision, commandKey: randomUUID(), privateNote: 'Cannot restore withdrawn consent' } })).status()).toBe(409)
+    await sql`update users set role='USER' where id=${admin.id}`
+    await recovery.getByRole('spinbutton', { name: 'Entry revision' }).fill('4')
+    await recovery.getByRole('textbox', { name: 'Private recovery note' }).fill('Revoked access cannot write a correction')
+    await recovery.getByRole('button', { name: 'Record correction', exact: true }).click()
+    await expect(recovery.getByText('Your operator access changed.', { exact: true })).toBeVisible()
+    await expect(recovery.getByRole('button', { name: 'Record correction', exact: true })).toBeDisabled()
+  }
+  finally { await candidate.close(); await operator.close() }
+})

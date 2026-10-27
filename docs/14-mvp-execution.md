@@ -2,10 +2,49 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/telegram-entry-bot`; verified parent `9e53485` / #49.
+Current work branch: `codex/application-history-recovery`; verified parent `2a3d199` / #50.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Append-only Application History Recovery (B04/B09 follow-up local code)
+
+#50 both CI jobs SUCCESS (`40501413307`); only integration FF to2a3d199. Focused recovery
+adds CORRECTED/REOPENED enum values0008, no old row/history/snapshot backfill or deletion.
+Current ADMIN may append a fixed-reason correction to a contact/handoff/follow-up/closure
+entry of this application, with a required private reason, current revision, command UUID
+and actual actor. Original event data/actor/time stay byte-for-byte unchanged in SQL tests.
+Active handling returns to human review; closed/withdrawn/rejected records do not reopen
+by correction. Another explicit command reopens eligible closure and assigns the actor,
+without changing employer status or immutable submission.
+
+Withdrawn/rejected and any ever-recorded CANDIDATE_REQUEST closure cannot be reopened or
+shared without a separate renewed-permission policy. A correction alone is not that proof;
+server eligibility checks all history, even outside latest50. Ever-recorded SHARED still
+blocks another package/handoff and warns about possible external copies. No recall/send/
+new consent is fabricated. Candidate history selects only fixed public fields and marks
+corrected older-page events via a scoped EXISTS, never operator note/reference/actor.
+
+Recovery reuses existing Nuxt UI/Lucide/current modal, not an admin redesign. Private
+draft survives network failure and retry reuses UUID; account/application changes clear
+drafts and late responses cannot mutate a new context.15s client timeout and5s lock/15s
+statement limits are explicit. Role-revoked UI disables commands. Close/reopen resets the
+next action to current-stage work, not an accidental default re-close. Local review was
+restarted on a new fictional cluster including0008; old cluster retained, testPG56381 separate.
+
+PASS173 unit/85 SQL/25 tooling, typecheck/lint zero warnings, Node build/HTTP smoke,
+full19 public +26 DB browser/HTTP tests. Focused recovery path3 also passed before the
+final role-revocation/contrast refinements, which are included in the full26 pass. Tests
+cover immutable original/snapshot/status, replay/concurrency/withdrawal, forbidden targets,
+revoked actor, candidate-request closure outside latest50, lost committed response/retry,
+candidate-safe journal and320/390/1440 screenshots. SQL EXISTS initially inferred unknown;
+the actual boolean SQL expression now has its explicit result type, not an any cast.
+Screens inspected320/390/1440; low-contrast warning text changed to existing muted token.
+
+No dependency/provider/main/deploy/shared migration or real candidate contact. Rollback
+must not expose pre-correction readers after real correction events (docs29), delete enum
+values or erase audit history. No owner/native/independent-R acceptance claim. Next AUTO:
+operational metrics/dashboard/runbook (F01-F04), then remaining E/G and K1 acceptance work.
 
 ### Basic Telegram Entry Bot (I01 local code)
 

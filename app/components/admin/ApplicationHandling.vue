@@ -2,7 +2,7 @@
 import type { AdminApplicationDetail } from '#shared/types/application-review'
 import type { ApplicationPackage } from '#shared/types/application-handling'
 import type { ApplicationCommand } from '#shared/schemas/application-command'
-import { handlingLabels, handlingCloseLabels, handlingEventLabels, handlingTime } from '~/utils/application-handling'
+import { handlingLabels, handlingCloseLabels, handlingCorrectionLabels, handlingEventLabels, handlingTime } from '~/utils/application-handling'
 
 const props = defineProps<{ application: AdminApplicationDetail }>()
 const emit = defineEmits<{ changed: [] }>()
@@ -34,6 +34,9 @@ watch(() => props.application.handling.revision, () => {
   retry = null
   if (!actions.value.some(option => option.value === action.value)) action.value = actions.value[0]!.value
 }, { immediate: true })
+watch(() => props.application.handling.stage, (stage, previous) => {
+  if (previous === 'CLOSED' && stage !== 'CLOSED') action.value = actions.value[0]?.value || 'START'
+})
 const localNow = () => {
   const date = new Date()
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, -1)
@@ -133,6 +136,7 @@ async function copy() {
     </template>
     <UAlert v-if="error" title="Action not confirmed" :description="error" color="error" :actions="[{ label: 'Reload record', onClick: () => emit('changed') }]" />
     <p v-if="application.handoffRecorded" class="text-sm text-muted">A manual handoff was recorded. This is not proof of employer delivery, reading or a hiring decision.</p>
+    <AdminApplicationRecovery :application="application" @changed="emit('changed')" />
     <section aria-label="Operator journal" class="space-y-3 border-t border-default pt-4">
       <h4 class="text-sm font-semibold">Operator journal</h4>
       <p v-if="!application.events.length" class="text-sm text-muted">No handling history was recorded for this legacy application.</p>
@@ -142,6 +146,7 @@ async function copy() {
           <time :datetime="event.createdAt" class="text-xs text-muted">{{ handlingTime(event.createdAt) }} · operator/user #{{ event.actorUserID || 'removed' }} · revision {{ event.revision }}</time>
           <p v-if="event.data.reference" class="mt-1 whitespace-pre-wrap break-words">{{ event.data.channel }} · {{ event.data.reference }}</p>
           <p v-if="event.data.closeReason">{{ handlingCloseLabels[event.data.closeReason] }}</p>
+          <p v-if="event.data.correctedRevision && event.data.correctionReason">Revision {{ event.data.correctedRevision }}: {{ handlingCorrectionLabels[event.data.correctionReason] }}</p>
           <p v-if="event.privateNote" class="mt-1 whitespace-pre-wrap break-words text-muted">{{ event.privateNote }}</p>
         </li>
       </ol>

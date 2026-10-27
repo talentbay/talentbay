@@ -1,5 +1,22 @@
 # Candidate Browser Verification
 
+## Correction and Reopening - 2026-10-27
+
+Existing operator detail has one flat recovery disclosure/form using current Nuxt UI and
+Lucide; no new admin workspace. Entry revision/fixed reason and private note produce a
+new correction, not an overwritten audit row. Reopen explicitly takes ownership and resumes
+TalentBay review, never withdrawn/rejected/candidate-requested consent. Candidate progress
+marks an inaccurate original and shows later fixed correction/reopen facts; action time/
+closure reason on the corrected entry are no longer shown unqualified. Private notes,
+actors/channels/references do not enter that DTO.
+
+Real HTTP/SQL browser path exercises closure->lost-response/retry->one reopen->correction->
+candidate view->withdrawal and revoked-admin UI.320/390/1440 screenshots inspected, note
+retention and original row immutability asserted. Low-contrast warning text was replaced
+with the existing dark muted token. Existing local review personas can reproduce the flow
+(docs21); this is the allowed local E01 prototype fallback while Figma is read-only, not
+a new freeze/owner acceptance, actual outreach or independent security review.
+
 ## Relocation Outcome and Sources - 2026-10-27
 
 D05 keeps the vacancy side tool/narrow dialog, shared state and Nuxt UI controls. Flat

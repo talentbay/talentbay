@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { handlingCloseReasons } from '../types/application-handling'
+import { handlingCloseReasons, handlingCorrectionReasons } from '../types/application-handling'
 
 const base = z.object({
   expectedRevision: z.number().int().nonnegative().max(2147483646),
@@ -18,5 +18,7 @@ export const applicationCommandSchema = z.discriminatedUnion('action', [
   base.extend({ action: z.literal('SHARE'), ...contact, confirmCompleted: z.literal(true) }).strict(),
   base.extend({ action: z.literal('FOLLOW_UP') }).strict(),
   base.extend({ action: z.literal('CLOSE'), reason: z.enum(handlingCloseReasons) }).strict(),
+  base.extend({ action: z.literal('CORRECT'), targetRevision: z.number().int().positive().max(2147483646), reason: z.enum(handlingCorrectionReasons), privateNote: z.string().trim().min(5).max(2000) }).strict(),
+  base.extend({ action: z.literal('REOPEN'), privateNote: z.string().trim().min(5).max(2000) }).strict(),
 ])
 export type ApplicationCommand = z.infer<typeof applicationCommandSchema>

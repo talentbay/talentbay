@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import type { Database } from '#server/db'
 import { schema } from '#server/db'
 import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
@@ -6,6 +6,12 @@ import { applicationDisclosureVersion } from '#shared/types/application-handling
 
 export type ApplicationTransaction = Parameters<Parameters<Database['transaction']>[0]>[0]
 export type ApplicationRow = typeof schema.applications.$inferSelect
+
+export async function hasCandidateRequestedClosure(db: Pick<Database, 'select'>, id: number): Promise<boolean> {
+  const [closure] = await db.select({ id: schema.applicationHandlingEvents.id }).from(schema.applicationHandlingEvents)
+    .where(and(eq(schema.applicationHandlingEvents.applicationID, id), eq(schema.applicationHandlingEvents.kind, 'CLOSED'), sql`${schema.applicationHandlingEvents.data}->>'closeReason' = 'CANDIDATE_REQUEST'`)).limit(1)
+  return Boolean(closure)
+}
 
 export async function requireCurrentOperator(tx: ApplicationTransaction, id: number) {
   const [operator] = await tx.select({ role: schema.users.role }).from(schema.users).where(eq(schema.users.id, id)).for('share')
@@ -20,6 +26,7 @@ export async function requireShareableSnapshot(tx: ApplicationTransaction, appli
   if (application.status === 'WITHDRAWN' || application.status === 'REJECTED' || application.handlingStage === 'CLOSED') {
     throw createError({ statusCode: 409, statusMessage: 'This application is closed' })
   }
+  if (await hasCandidateRequestedClosure(tx, application.id)) throw createError({ statusCode: 409, statusMessage: 'Candidate-requested closure needs renewed permission; do not share this package' })
   const [current] = await tx.select({
     id: schema.vacancies.id, organisationID: schema.organisations.id,
     title: schema.vacancies.title, companyName: schema.organisations.name,
