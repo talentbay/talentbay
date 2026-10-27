@@ -3,6 +3,36 @@
 Updated: 2026-10-27. This is an engineering checklist, not production acceptance.
 The active scope is one responsive Nuxt web/mobile/Telegram product, not token/payments.
 
+## Provider Update - 2026-10-27
+
+Neon MCP is now connected; the project organisation is verified Free. Owner authorized
+preview-only schema/history reading and, separately, creation/migration of a new empty DB.
+The existing preview neondb has only0000/0001. Do not connect current code to that legacy
+schema or silently upgrade it. New `talentbay_mvp_preview` in the same preview branch
+`br-jolly-glade-ash2y5iy` is initialized through0009:10 matching migration hashes/timestamps,
+11 empty application tables,132 columns and declared indexes/constraints verified. It was
+created from template0; no legacy/candidate data was copied/read and no fixtures were seeded.
+Legacy schema/history are unchanged. Exact operations, transport parity/rollback probes and
+cleanup are in docs14. Compute `ep-rapid-sound-asrzobxf` is idle, no pending operation.
+No connection secret was requested/exported, no runtime role or admin was provisioned and
+no app was connected. Empty initialized DB is not a tested deployed product or recovery plan
+for real data. Before future migration of an existing DB, retain the backup/restore gate below.
+
+Vercel project read succeeds when teamId is omitted; the earlier explicit-team404 is not
+proof of a missing project. Exact project/scope below still match, Git link is absent and
+git-deployment-context confirms Hobby. Public domain still returned404 DEPLOYMENT_NOT_FOUND
+on27Oct. Owner selected no paid plans and prefers Hobby before inviting users. Vercel's
+definition is commercial financial purpose, not simply whether revenue has started; the
+owner was informed. Do not treat zero revenue as verified eligibility, enable paid plans,
+change platforms/domain or claim hosted acceptance automatically.
+[Official commercial-use rule, checked27Oct](https://vercel.com/docs/limits/fair-use-guidelines#commercial-usage).
+
+Production/integration SQL were not used. During the initial preview wake, branch metadata
+for preview and its production parent changed from archived to ready. The parent compute
+was independently checked idle; no parent start/config/SQL request was made. Branch state
+and compute state are different; do not claim the original archival metadata was restored.
+This dated update supersedes the26Oct provider-access/archival inventory, not its history.
+
 ## Code Progress - 2026-10-27
 
 Latest verified delivery: #38–#57 both CI SUCCESS, integration9d0ee72; main/production unchanged.

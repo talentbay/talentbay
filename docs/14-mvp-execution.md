@@ -5,6 +5,42 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Current work branch: `codex/application-context-consent`; R01 target `6278108` / #59.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
+## Isolated Neon Preview Database - 2026-10-27
+
+Owner separately authorized preview-only read/wake/suspend, then creation of an empty
+`talentbay_mvp_preview` database and committed migrations0000..0009 using the Free quota.
+Exact target: project `royal-field-51154253`, branch `br-jolly-glade-ash2y5iy`, compute
+`ep-rapid-sound-asrzobxf`. No production/integration SQL, copied candidate rows, seed,
+role changes, exported credentials, application connection or deployment.
+
+Read-only legacy inspection proved PG18.6,8 application tables and only0000/0001; both
+hashes match committed SQL. A new database was created from template0, not from neondb.
+The MCP transport rejects multiple SQL commands in a prepared statement. Before applying
+DDL, two fresh local PG18 clusters proved a single-statement DO/EXECUTE transport equal
+to the installed official Drizzle migrator: rows/sequences/indexes, columns/defaults/
+constraints/enums and migration history match. Wrong database, partial-DDL rollback and
+nonempty-target rejection PASS. Both local clusters stopped; no reusable custom migrator
+or migration-file edits were introduced.
+
+The installed Drizzle migrator generated the SQL and journal entries. Its93 statements
+were applied atomically behind exact-database and empty-target guards to the new DB only.
+Actual Neon read-only verification:10 journal hashes/timestamps match,11 public application
+tables/132 columns with types/nullability/precision, all22 declared indexes,16 foreign keys
+and3 checks present; all11 application tables empty. Legacy neondb catalog and its two
+journal entries compared unchanged without reading candidate rows. Preview compute is
+again idle with no pending operation. Production compute metadata is also idle; its branch
+metadata became ready during the earlier preview wake, not a production SQL/start request.
+
+Runtime remains independently reviewedb869a10; this is provider preparation, not new code
+or HTTPS/native acceptance. New DB is not yet connected to an app. No real data, admin
+bootstrap, source approval, OAuth/bot setting, provider secret, DNS, plan or billing change.
+Owner selected no paid plans and prefers Hobby until users are invited. Zero revenue does
+not establish Hobby eligibility under Vercel's commercial-purpose rule; hosting remains
+an explicit gate, not permission to silently upgrade or migrate platforms (docs20).
+Next: eligible protected HTTPS target and approved environment/credential operations,
+then actual browser/provider/native/operator acceptance. Existing neondb remains untouched;
+rollback for this isolated preparation is to leave the new DB disconnected and compute idle.
+
 ## Resumed Feedback / Independent Review - 2026-10-27
 
 CI-only7a3a2ef / draft #60 exact CI40572511707: scope/build/PostgreSQL all SUCCESS.
