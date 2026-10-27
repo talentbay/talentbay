@@ -1,11 +1,14 @@
 # TalentBay Product & Architecture Plan
 
-Last updated: 2026-10-26
+Last updated: 2026-10-27
 Decision: ship the MVP on Nuxt/Node + Vercel + Neon.
 
 Detailed remaining work: [delivery proposal](23-mvp-delivery-plan.md) and
 [task contracts](24-mvp-backlog.md), prepared 2026-10-26 for scope/model selection.
-They do not authorize a production rollout or start autonomous implementation yet.
+The owner explicitly started autonomous implementation on 2026-10-27. This does not
+authorize production rollout, shared migrations, paid plans or real candidate outreach.
+Current completed slices/checks and the next task are in the execution log; task contracts
+are not completion marks, and independent review still follows K1.
 
 ## Active decision
 

@@ -43,13 +43,65 @@ Public access/API availability alone is not a blanket copyright/contract/privacy
   It does not import or publish. Any issues require review before a runner is allowed to
   commit a batch; raw responses are not error messages/logs.
 
-## Next Runner Gate (TB-C07)
+## Runner (TB-C07)
 
-Build source -> bounded fetch -> normalization -> existing dry-run/revision -> bounded
-idempotent draft import -> human review/publish. Prevent overlapping runs and keep a
-sanitized outcome/checkpoint. Test interruption/retry, changed/unchanged re-import and
-application retention. Do not archive a catalogue because a provider failed or a page
-was missing. At this slice no schedule, shared schema/data write or live API was activated.
+`/ktulhu/v1/sources` uses current-admin, no-store APIs at `/api/v1/admin/sources`.
+The server-owned registry is **empty by default**. Adding an exact Lever site requires a
+reviewed config and dated approval reference/content owner, not an arbitrary UI fetch URL.
+`FETCH`, `PREVIEW`, `IMPORT` are strict same-origin commands (4 KiB). The command selects
+an approved key; it never supplies company metadata, credentials or source content.
+
+Additive migration0004 creates one latest `source_imports` checkpoint per source. Fetch
+claims a 90-second lease in a short transaction; at most five 10-second requests happen
+outside all SQL locks. A late worker cannot overwrite a replacement run. Malformed or
+partial page sets/normalization issues fail the **whole snapshot**, without partial import
+or archiving absent jobs. 429 backoff is enforced across new run IDs. A complete empty
+feed does not mean the catalogue should be archived.
+
+The normalized snapshot is limited to 200 records / 2 MiB encoded JSON, READY for 30 minutes.
+This is an eligibility deadline, **not automatic storage erasure**: payload clears on complete
+import, replacement or the next authorized expired-progress read. Only the latest report
+is retained; this is not an import-history product. Raw provider responses are not stored.
+
+Each preview covers the next <=50 records and current company-wide publication impact.
+Confirmation verifies the exact revision and current role inside a transaction. The batch
+and advancing offset/counters commit together, using the existing importer/publication
+rules. Replayed last confirmation returns the checkpoint instead of writing/counting twice.
+Another process/pool can resume the next batch. A stale preview requires preview again,
+not a source refetch. Completed snapshot payload is removed. Record IDs/application links
+survive; changed content is draft/unreviewed, unchanged published content stays published.
+
+Operator sequence: select source -> Fetch -> Preview next batch -> Confirm -> repeat
+preview/confirm until IMPORTED -> existing vacancy review queue. After a failed/lost
+response, reload progress before repeating. IMPORTED means source records processed,
+not publicly published or checked by a human. FETCHING/READY blocks a competing new run
+until completion/expiry. An abandoned/expired run can be replaced; new fetches use stable
+source IDs, and no previous completed batch needs deletion to retry.
+
+### Runtime / Schedule Preparation
+
+Checked official [function duration](https://vercel.com/docs/functions/configuring-functions/duration)
+and [Cron limits](https://vercel.com/docs/cron-jobs/usage-and-pricing) on 2026-10-27.
+Fluid Node default/Hobby maximum is documented as 300s; Hobby Cron is at most daily with
+hour-level timing, not a precise hourly poller. Actual target configuration/hosting eligibility
+still needs H acceptance. The fetch budget is <=50s, separate from small batch confirmations;
+SQL lock wait 5s / individual statement 15s bounds are not a claimed full-transaction SLA.
+
+Prepared launch policy: one selected board, at most one daily fetch (proposed `40 0 * * *`,
+UTC, not activated), no retry loop or auto-publication. Before activation, add an authenticated
+scheduler entry/secret directly at the provider, verify the exact target/runtime/approved
+source and costs, and exercise it in isolated preview. Cron must call the same durable
+runner, not a build hook or an in-memory timer. No cron endpoint/config, shared migration,
+live schedule, provider call or cloud credential has been activated in this slice.
+
+### Verification Boundary
+
+Real service + disposable PostgreSQL tests cover concurrent run/confirm, a new pool between
+batches, stale preview, lease takeover/late worker, page failure/invalid record/size/backoff,
+revoked role, unchanged/changed re-import and application retention. Browser tests exercise
+real empty-registry/authorization routes. The active-source UI walkthrough uses intercepted
+fictional responses, explicitly **not** a live end-to-end provider claim; the service is tested
+with injected offline fetch and real SQL separately. No production test-source bypass exists.
 
 Before the first real pilot, record the exact company/site/region, rights reference,
 content owner, allowed fields/volume and target isolated preview. Do not collect candidate

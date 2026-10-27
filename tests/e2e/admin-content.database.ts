@@ -109,7 +109,7 @@ test('CSV validation → atomic draft import → complete review → public reco
   expect(dashboard.vacancies.published).toBe(visible!.total)
   for (const width of [320, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 })
-    for (const path of ['/ktulhu/v1', '/ktulhu/v1/import', '/ktulhu/v1/vacancies']) {
+    for (const path of ['/ktulhu/v1', '/ktulhu/v1/import', '/ktulhu/v1/vacancies', '/ktulhu/v1/sources']) {
       await page.goto(path)
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
@@ -129,4 +129,66 @@ test('operator endpoints enforce authorization, same origin, content types and l
   expect((await context.request.post(endpoint, { headers: { ...headers, 'content-type': 'application/json' }, data: '{' })).status()).toBe(400)
   expect((await context.request.post(endpoint, { headers, data: { mode: 'preview', csv: 'x'.repeat(4 * 1024 * 1024) } })).status()).toBe(413)
   expect((await context.request.get(endpoint.replace('/file', ''))).headers()['cache-control']).toBe('no-store')
+})
+
+test('source endpoints are default-off and enforce current role, strict bounded input and same origin', async ({ context, page }) => {
+  const user = await signIn(context, subject + 2, false)
+  const endpoint = '/api/v1/admin/sources/run'
+  const body = { action: 'FETCH', sourceKey: 'Lever:global:fixture-not-approved', runID: randomUUID() }
+  expect((await context.request.get('/api/v1/admin/sources')).status()).toBe(403)
+  expect((await context.request.post(endpoint, { headers, data: body })).status()).toBe(403)
+  await signIn(context, subject + 2)
+  const sources = await context.request.get('/api/v1/admin/sources')
+  expect(sources.headers()['cache-control']).toBe('no-store')
+  expect(await sources.json()).toEqual({ items: [] })
+  expect((await context.request.post(endpoint, { headers, data: body })).status()).toBe(404)
+  expect((await context.request.get('/api/v1/admin/sources/progress?sourceKey=Lever:global:fixture-not-approved')).status()).toBe(404)
+  expect((await context.request.post(endpoint, { headers: { origin: 'https://attacker.invalid' }, data: body })).status()).toBe(403)
+  expect((await context.request.post(endpoint, { headers, data: { ...body, url: 'https://attacker.invalid' } })).status()).toBe(400)
+  expect((await context.request.post(endpoint, { headers, data: { ...body, extra: 'x'.repeat(4096) } })).status()).toBe(413)
+  await page.goto('/ktulhu/v1/sources')
+  await expect(page.getByText('No approved sources.', { exact: true })).toBeVisible()
+  await sql`update users set role='USER' where id=${user.id}`
+  expect((await context.request.get('/api/v1/admin/sources')).status()).toBe(403)
+})
+
+test('source operator UI previews a fixed fixture and recovers a lost committed response (mock transport only)', async ({ context, page }, testInfo) => {
+  await signIn(context, subject + 3)
+  const sourceKey = 'Lever:global:fictional-ui-fixture'
+  let progress: object | null = null
+  let imported = 0
+  await page.route('**/api/v1/admin/sources', route => route.fulfill({ json: { items: [{ key: sourceKey, company: 'Fictional UI Fixture', approval: {} }] } }))
+  await page.route('**/api/v1/admin/sources/progress?*', route => route.fulfill({ json: { progress } }))
+  await page.route('**/api/v1/admin/sources/run', async (route) => {
+    const command = route.request().postDataJSON()
+    if (command.action === 'FETCH') {
+      progress = { sourceKey, runID: command.runID, state: 'READY', nextOffset: 0, expiresAt: '2099-01-01T00:00:00Z', retryAfterAt: null, report: { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 1, created: 0, updated: 0, unchanged: 0, failure: null, issues: [] } }
+      return route.fulfill({ json: { progress } })
+    }
+    if (command.action === 'PREVIEW') return route.fulfill({ json: { progress, offset: 0, preview: { valid: true, rowCount: 1, issues: [], summary: { created: 1, updated: 0, unchanged: 0, withdrawnPublished: 0 }, revision: 'a'.repeat(64), rows: [{ row: 2, title: 'Fictional Source Engineer', company: 'Fictional UI Fixture', operation: 'CREATED' }] } } })
+    imported++
+    progress = { ...(progress as object), state: 'IMPORTED', nextOffset: 1, report: { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 1, created: 1, updated: 0, unchanged: 0, failure: null, issues: [] } }
+    await route.abort('failed')
+  })
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.setViewportSize({ width: 320, height: 900 })
+  await page.goto('/ktulhu/v1/sources')
+  await page.getByRole('combobox').click()
+  await page.getByRole('option', { name: 'Fictional UI Fixture' }).click()
+  await page.getByRole('button', { name: 'Fetch source', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'READY', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Preview next batch', exact: true }).click()
+  await expect(page.getByText('Fictional Source Engineer', { exact: false })).toBeVisible()
+  for (const width of [320, 390, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    await page.screenshot({ path: testInfo.outputPath(`source-preview-${width}.png`), fullPage: true })
+  }
+  await page.getByRole('button', { name: 'Confirm batch import', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'IMPORTED', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Confirm batch import', exact: true })).toHaveCount(0)
+  await expect(page.getByText('Operation not confirmed', { exact: true })).toHaveCount(0)
+  expect(imported).toBe(1)
+  expect(errors).toEqual([])
 })

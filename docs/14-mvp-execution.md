@@ -7,6 +7,29 @@ Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/
 
 ## Autonomous Run Started - 2026-10-27
 
+### Source runner / operator entry (C07) in verification
+
+Branch `codex/source-runner`, base `84d2fed` / [#42](https://github.com/talentbay/talentbay/pull/42).
+Both #42 CI jobs SUCCESS (`40476668204`); only integration FF to84d2fed. C06 synthetic
+adapter is complete, real source approval remains open. C07 adds default-empty approved
+registry, current-admin same-origin bounded commands and a small Sources operator screen.
+Additive migration0004 checkpoint is applied only on disposablePG56381. Fetch I/O holds
+no DB lock; snapshot/batch/checkpoint/preview/replay/backoff/publication behavior is in docs25.
+Existing importer now exposes its transaction body so batch + cursor commit atomically;
+CSV wrapper/security/publication behavior are retained, not replaced by a second importer.
+
+Current local PASS: 135 unit, 59 SQL, 24 tooling, types/lint, Node build/smoke, full16 DB
+browser tests. Real route tests cover empty registry/role/origin/strict bounds. Active-source
+UI test uses explicit fictional intercepted responses; real runner SQL tests inject fetch.
+Screens inspected320/1440; selector now gets a full narrow row. Final focused browser rerun
+PASS after that and the recovery UI fix: a confirmed saved checkpoint no longer shows a
+contradictory unconfirmed-operation alert. Final Node build/types/lint PASS; public16 PASS
+before that focused recovery fix. Vercel adapter/assert PASS on core runner (71 routes,
+Node22, one function); exact-head adapter/browser regression is also required by PR CI.
+No live source call, scheduled run, shared migration, main release or deploy. Schedule
+preparation is documented, not called activated automatic collection. C02/C03 pagination,
+remaining C04 metadata/maintenance acceptance, relocation/bot and B04/B09 follow-up remain.
+
 ### First source adapter (C01/C06) in verification
 
 Branch `codex/lever-source-adapter`, baseline `f4dfe62` / [#41](https://github.com/talentbay/talentbay/pull/41).

@@ -1,15 +1,15 @@
 # TalentBay Roadmap
 
-Last updated: 2026-10-26
+Last updated: 2026-10-27
 Active path: MVP first on Nuxt/Node + Vercel + Neon.
 
-## Detailed Continuation Proposal - 2026-10-26
+## Detailed Continuation Route - 2026-10-27
 
 The remaining implementation route is decomposed in [the delivery plan](23-mvp-delivery-plan.md)
 and [50 dependency-linked tasks](24-mvp-backlog.md). They distinguish verified code,
-independent review, hosted/native acceptance and beta. This is a proposal requested by
-the owner before selecting an autonomous executor, not an already launched implementation
-or a new calendar commitment. Existing M1-M8 IDs below remain historical phase references;
+independent review, hosted/native acceptance and beta. The owner started autonomous
+implementation on 2026-10-27; current verified progress is in the execution log, not an
+inferred completion of all tasks or a new calendar commitment. Existing M1-M8 IDs below remain historical phase references;
 new tasks use TB-A01 etc. Full admin, delivery notifications and platform migrations are
 not silently added to the first release.
 

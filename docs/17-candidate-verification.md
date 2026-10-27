@@ -1,5 +1,16 @@
 # Candidate Browser Verification
 
+## Focused source-operator entry - 2026-10-27
+
+C07 adds only the source selection/progress/next-batch preview/confirmation surface beside
+the existing CSV/review workflow, using current Nuxt UI/Lucide/tokens. No general admin
+redesign, source-authoring CMS or competing Figma freeze. Registry is empty until approved
+real sources exist. Focused engineering review inspected320/1440 screenshots; a compressed
+source selector was changed to a full row below sm. Browser checks cover320/390/1440,
+loading/empty/error/reload and lost-response recovery. The populated source UI uses
+fictional intercepted responses; real runner transactions use separate offline-fetch SQL
+tests. Neither test is evidence of a real live source or an owner-approved visual freeze.
+
 ## First-time application continuity - 2026-10-27
 
 Apply reuses ProfileEditor on the same vacancy, with no navigation away or new multi-step
