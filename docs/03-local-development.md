@@ -1,6 +1,20 @@
 # Local Development
 
-Last updated: 2026-07-29
+Last updated: 2026-10-27
+
+## Safe Review Environment
+
+For the full synthetic Candidate/operator journey without cloud credentials:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dev:review
+```
+
+PostgreSQL 18 must be installed locally. The launcher creates its own disposable loopback
+cluster, migrations, fictional content and account chooser at `http://127.0.0.1:3131`;
+the application is at port 3130. It does not use developer dotenv, Neon or a real bot.
+Do not mistake this for real OAuth/native Telegram acceptance. See `docs/21-local-product-review.md`.
 
 ## Requirements
 
@@ -78,10 +92,13 @@ pnpm test
 pnpm build
 ```
 
-All four checks currently pass without ESLint warnings.
+CI and automated browser/integration tests use disposable loopback PostgreSQL named
+`talentbay_ci`, with `CI=true`, `TALENTBAY_TEST_DATABASE=disposable` and both runtime and
+migration URLs pointing to it. Run `node scripts/assert-ci-database.mjs` before migrations.
+The actual commands are in `.github/workflows/ci.yml`; no cloud secrets are required.
 
-Database integration tests use the isolated Neon `integration` branch and a
-local, ignored `.env.integration`:
+The following `.env.integration` command is a **legacy manual, opt-in** path. Use it only
+after verifying an isolated target and approval; it is not the default automated test path:
 
 ```bash
 pnpm test:integration

@@ -1,9 +1,35 @@
 # MVP Execution Log
 
-Updated: 2026-10-26
+Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25
 Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/talentbay/pull/26
+
+## Autonomous Run Started - 2026-10-27
+
+Direct owner instruction: execute the agreed plan autonomously. Current executor continues
+without a model switch or a separate background automation. Production/paid/shared DB and
+real external contact gates remain unchanged. Scope: 11 cities, profile (CV later), basic
+SaaS bot, first source pipeline, managed applications, all checks per slice.
+
+A01: verified live refs #25-#37; all required heads are ancestors of `4e1be73`.
+Created `codex/mvp-integration` at that head, no main merge. Topic PRs target integration;
+#24 remains deferred. A02 adds the integration push/PR filter, not deployment rights.
+A04 corrects stale developer-test instructions and documents the environment passport.
+A03 registry audit found fresh findings; compatibility/security checks in progress.
+
+Foundation local checks: frozen install, typecheck, lint, 112 unit, 37 disposable-PG,
+24 tooling, 16 public browser and 10 database browser tests PASS; Node build and compiled
+HTTP smoke PASS. Tooling needed an authorized loopback rerun after sandbox EPERM, not a
+code change. Dependency audit: 8 -> 3 advisory entries; exposure/remaining exceptions in
+`docs/16-security-review.md`. No shared migration, main merge or deploy.
+
+Task state until the project board is synchronized: A01 verified; A02 code/local checks
+ready (remote topic CI pending); A03 narrow patches/local checks ready, residual tooling
+exceptions documented; A04 runbook corrections/local workflow browser regression ready.
+A05 org Projects read is inaccessible: current GitHub token lacks `read:project`. No
+account/scope changes attempted; this execution log is the explicit queue fallback.
+B01/E01 handling contract is next. No future tasks are marked done because the run started.
 
 ## Scope Answers and Basic Bot Decision - 2026-10-26
 

@@ -1,7 +1,39 @@
 # Security maintenance review
 
-Date: 2026-10-26. Scope: repository dependency graph and admin authorization; this is not
+Updated: 2026-10-27. Scope: repository dependency graph and admin authorization; this is not
 a penetration-test certification or evidence of a production deployment.
+
+## Foundation Follow-up - 2026-10-27
+
+Fresh full-tree registry audit on `4e1be73` found 8 advisory entries (3 high, 4 moderate,
+1 low; no critical). This is the working lockfile, not the default-branch alert count.
+Narrow fixes: Vitest/mocker 5.0.0 -> 5.0.5 within the existing major, js-yaml 4.3.2 and
+postcss-selector-parser 7.1.6 range-scoped overrides. Maintainer advisories confirm the
+patched ranges; no framework change, audit suppression or force/major upgrade.
+
+After frozen install, full-tree audit reports **3 entries: 1 high, 1 moderate, 1 low**.
+The two existing exceptions below remain. The third is esbuild 0.18.20 under
+drizzle-kit/@esbuild-kit (GHSA-67mh-4wv8-2f99): development-server CORS exposure.
+TalentBay does not run that esbuild server or expose Drizzle Studio; migrations use CLI.
+Keep migration tooling local/isolated, never expose Studio, and revisit the parent range
+before using its server features. No blind override across esbuild's incompatible minors.
+
+The rebuilt Node output contains no node-forge/fontless imports or package; esbuild
+matches in executable chunks are only build-path comments naming patched 0.28.2.
+This is local Node trace evidence, not proof about a future hosted build.
+
+Checks at this slice: frozen install, typecheck, lint, 112 unit tests, 37 disposable-PG
+tests and 24 tooling tests passed. The first tooling invocation was sandbox-denied on
+loopback listen; the authorized loopback rerun passed. Build passed; browser/HTTP checks
+are recorded in the execution log when finished. No shared database was touched.
+
+Primary patch references checked 2026-10-27:
+
+- https://github.com/vitest-dev/vitest/security/advisories/GHSA-qxg6-89mg-rqv8
+- https://github.com/nodeca/js-yaml/security/advisories/GHSA-2883-xcg3-v3hh
+- https://github.com/postcss/postcss-selector-parser/security/advisories/GHSA-rj75-hqrm-r3gf
+
+The following section preserves the previous maintenance slice and its dated counts.
 
 ## Dependency changes
 

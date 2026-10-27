@@ -1,6 +1,35 @@
 # Infrastructure and Process
 
-Last updated: 2026-07-24
+Last updated: 2026-10-27
+
+## Active Integration Route
+
+The autonomous run starts from `4e1be73` (approved scope docs plus cumulative product work).
+`codex/mvp-integration` preserves that complete line; topic branches/PRs target it. CI runs
+on its pushes and PRs as well as main. No main merge, production promotion or cloud change
+is implicit. #25-#37 are cumulative review records, not independent squash patches.
+
+| Layer | Included head | Existing PR |
+| --- | --- | --- |
+| Baseline / CI | ffbefd8 | #25 |
+| OAuth state | 9e6dbcd | #26 |
+| Publication safety | cb462cc | #27 |
+| Local identities / Telegram | 36f93b2 | #28 |
+| Security/current role | b4a49a5 | #29 |
+| Responsive Candidate | 5ab3164 | #30 |
+| CSV operations | b99776f | #31 |
+| Release checks / hydration | b5f1aea / c602b42 | #32 / #33 |
+| Local review / withdrawal | 71b9b8a / c256387 | #34 / #35 |
+| Managed receipt / agreed scope | af2c4ec / 4e1be73 | #36 / #37 |
+
+All these heads are ancestors of the integration baseline. Keep #24 Cloudflare deferred.
+Old PR disposition and main release require reviewed integration, not blind repeated squash.
+
+Environment passport: local review has fictional data/ephemeral credentials and its own PG;
+CI has runner-only PostgreSQL; preview/production require distinct targets and secrets.
+Runtime needs `DATABASE_URL`/session/provider configuration; migration URL belongs only to
+the approved migration process. Deployment/callback/backup/rollback gates: `docs/20-release-readiness.md`.
+Do not interpret July observations below as fresh provider checks.
 
 ## Current State
 

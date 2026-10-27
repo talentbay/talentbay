@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/mvp-integration]
   pull_request:
-    branches: [main]
+    branches: [main, codex/mvp-integration]
 
 permissions:
   contents: read
