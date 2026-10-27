@@ -1,5 +1,6 @@
 import {
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -8,43 +9,9 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
-
-export type MonthlyLivingCosts = {
-  rent: number
-  utilities: number
-  groceries: number
-  transport: number
-  healthcare: number
-  other: number
-}
-
-export type OneTimeRelocationCosts = {
-  flight: number
-  visa: number
-  deposit: number
-  temporaryHousing: number
-  other: number
-}
-
-export type TaxCalculationModel =
-  | {
-      type: 'effective_rate'
-      rateBps: number
-    }
-  | {
-      type: 'progressive'
-      personalAllowance: number
-      brackets: Array<{
-        upTo: number | null
-        rateBps: number
-      }>
-    }
-
-export type RelocationSource = {
-  label: string
-  url: string
-  accessedAt: string
-}
+import { users } from './users'
+import type { MonthlyLivingCosts, OneTimeRelocationCosts, RelocationSource, TaxCalculationModel, RelocationDatasetSnapshot } from '#shared/types/relocation-data'
+export type { MonthlyLivingCosts, OneTimeRelocationCosts, RelocationSource, TaxCalculationModel } from '#shared/types/relocation-data'
 
 export const relocationDataStatusEnum = pgEnum('relocation_data_status', [
   'DRAFT',
@@ -67,6 +34,9 @@ export const relocationLocations = pgTable(
     notes: text('notes'),
     effectiveFrom: timestamp('effective_from', { withTimezone: true }).notNull(),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    datasetSnapshot: jsonb('dataset_snapshot').$type<RelocationDatasetSnapshot>(),
+    importedAt: timestamp('imported_at', { withTimezone: true, precision: 3 }),
+    importedByUserID: integer('imported_by_user_id').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()

@@ -43,6 +43,13 @@
       "when": 1793095548318,
       "tag": "0005_rapid_mentallo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793098292759,
+      "tag": "0006_wealthy_pixie",
+      "breakpoints": true
     }
   ]
 }

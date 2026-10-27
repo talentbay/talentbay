@@ -11,6 +11,7 @@ import type {
   RelocationPreviewResponse,
 } from '#shared/types/vacancies'
 import { parseReviewedRelocation } from '#server/services/relocation/data-contract'
+import { reviewedDatasetSnapshot, sameDatasetValues } from '#server/services/relocation/dataset-values'
 
 const relocationFields = {
   id: schema.relocationLocations.id, city: schema.relocationLocations.city,
@@ -18,10 +19,13 @@ const relocationFields = {
   monthlyCosts: schema.relocationLocations.monthlyCosts, oneTimeCosts: schema.relocationLocations.oneTimeCosts,
   taxModel: schema.relocationLocations.taxModel, sources: schema.relocationLocations.sources,
   effectiveFrom: schema.relocationLocations.effectiveFrom, reviewedAt: schema.relocationLocations.reviewedAt,
+  status: schema.relocationLocations.status, datasetSnapshot: schema.relocationLocations.datasetSnapshot,
 }
 type RelocationRow = Pick<typeof schema.relocationLocations.$inferSelect, keyof typeof relocationFields>
 
 function calculationInput(row: RelocationRow) {
+  const dataset = reviewedDatasetSnapshot(row.datasetSnapshot, new Date().toISOString().slice(0, 10))
+  if (!dataset || !sameDatasetValues(row, dataset.values)) return undefined
   return parseReviewedRelocation({
     key: `location-${row.id}`, city: row.city, countryCode: row.countryCode, currency: row.currency,
     monthlyCosts: row.monthlyCosts, oneTimeCosts: row.oneTimeCosts, taxModel: row.taxModel,

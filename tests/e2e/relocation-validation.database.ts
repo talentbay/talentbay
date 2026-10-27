@@ -1,17 +1,24 @@
 import { randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
+import example from '../../docs/examples/relocation-synthetic.v1.json' with { type: 'json' }
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
-const city = `Relocation Contract ${randomUUID()}`
-test.afterAll(async () => { await sql`delete from relocation_locations where city=${city}`; await sql.end() })
+const marker = `Relocation Contract ${randomUUID()}`
+test.afterAll(async () => { await sql`delete from relocation_locations where notes=${marker}`; await sql.end() })
 
 test('compiled API never labels corrupt/future/unreviewed data VERIFIED and handles zero income', async ({ request }) => {
   const costs = { rent: 1000, utilities: 100, groceries: 200, transport: 50, healthcare: 50, other: 100 }
   const moving = { flight: 200, visa: 100, deposit: 1000, temporaryHousing: 300, other: 100 }
   const sources = [{ label: 'Fictional contract fixture only', url: 'https://example.invalid/test', accessedAt: '2026-01-01' }]
-  const [row] = await sql`insert into relocation_locations(country_code,city,currency,status,monthly_costs,one_time_costs,tax_model,sources,effective_from,reviewed_at)
-    values('GB',${city},'GBP','VERIFIED',${sql.json(costs)},${sql.json(moving)},${sql.json({ type: 'effective_rate', rateBps: 2000 })},${sql.json(sources)},'2026-01-01',now()) returning id`
+  const reviewedAt = new Date().toISOString()
+  const snapshot = { schemaVersion: 1, purpose: 'PILOT', record: {
+    ...structuredClone(example.records[0]!), status: 'VERIFIED', monthlyCosts: costs, oneTimeCosts: moving,
+    sources: sources.map(source => ({ ...source, covers: ['TAX', 'RENT', 'LIVING', 'MOVE'] })),
+    review: { at: reviewedAt, by: 'Fictional contract reviewer', reference: 'Fictional test review only', validUntil: '2099-12-31' },
+  } }
+  const [row] = await sql`insert into relocation_locations(country_code,city,currency,status,monthly_costs,one_time_costs,tax_model,sources,effective_from,reviewed_at,dataset_snapshot,notes)
+    values('GB','London','GBP','VERIFIED',${sql.json(costs)},${sql.json(moving)},${sql.json({ type: 'effective_rate', rateBps: 2000 })},${sql.json(sources)},'2026-01-01T00:00:00Z',${reviewedAt},${sql.json(snapshot)},${marker}) returning id`
   const key = `location-${row!.id}`
   const endpoint = `/api/v1/relocation/preview?location=${key}&annualGross=0`
   const good = await request.get(endpoint)

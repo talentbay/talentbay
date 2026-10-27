@@ -44,6 +44,7 @@ export const relocationDatasetSchema = z.object({
 })
 
 export type RelocationDataset = z.infer<typeof relocationDatasetSchema>
+export const relocationDatasetUnits = { amounts: 'MAJOR_CURRENCY_UNITS', income: 'YEAR', living: 'MONTH', move: 'ONCE', taxRates: 'BASIS_POINTS' } as const
 export function relocationDatasetCoverage(dataset: RelocationDataset, today: string) {
   today = z.iso.date().parse(today)
   return relocationPilotCities.map((city) => {

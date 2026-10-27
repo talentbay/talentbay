@@ -2,10 +2,45 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/relocation-data-contract`; verified parent `9e3f8f1` / #46.
+Current work branch: `codex/relocation-dataset-import`; verified parent `3587cf8` / #47.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Bounded relocation package ingestion (D03 local code)
+
+#47 both CI jobs SUCCESS (`40490577409`); only integration FF to3587cf8. The same schema
+now drives a privileged engineer CLI and transaction service, not a second importer or
+new HTTP/admin platform. Whole-file1MiB regular UTF-8 JSON bounds, no dotenv, default
+read-only preview, exact revision/current-admin role, bounded serialized atomic apply,
+stable IDs/notes, no delete-absent and unchanged replay without timestamp reset.
+
+Additive0006 snapshot/import time/actor is local-only. Legacy relocation50 kept its
+ID/status/note; all new fields null, no backfilled approval. Exact fixture removed after
+verification. Public reviewed data now also needs a valid current PILOT snapshot matching
+the calculation columns. Numeric drift, legacy/synthetic/expired/stale metadata cannot
+stay VERIFIED. Changed approved content requires a new review reference or later instant;
+equivalent timezone spelling/validity-only edits are not new review. Explicit limitations,
+rollback policy and cloud-target gate are in docs26. No shared/Neon execution was enabled.
+
+156 unit/78 SQL/24 tooling/typecheck (Nuxt plus standalone CLI)/lint/Node build PASS.
+Frozen/offline install/prepare PASS; TSX4.22.4 is an explicit dev dep already in the old
+lock graph, no downloaded package/runtime change. Audit still3 known tooling entries.
+Real CLI processes: validation-only no DB; preview no writes; apply created synthetic
+DRAFT59; old-revision retry returned same ID UNCHANGED; exact row/actor3389 removed.
+Actual PG trigger failure on city2 proves city1 rollback; first assertion needed the
+Drizzle wrapped PG cause, not its outer query error. No assertions removed.
+
+Full21 DB browser and17 public/HTTP smoke PASS before the final CLI-only future-instant
+guard; final Node build/CLI types/unit cover that guard. Browser fixture first needed
+Node22 JSON import attributes, then explicit UTC midnight (bare SQL date used local+03
+and correctly failed snapshot equality). Fixed fixture, not the guard; focused and full21
+reruns PASS. User review3132/3133 restarted on its own new fictional cluster after0006,
+not test DB56381. No real rates/quotes, candidate handoff, deploy or independent R claim.
+
+Next AUTO: D05 source/assumption/outcome UX, remaining E/F/G/I and B04/B09 correction/reopen.
+D04/D06/H need subject-matter/source/provider/owner acceptance; initial CLI refuses every
+cloud/shared URL until the exact verified target adapter can be bound at that gate.
 
 ### Relocation dataset/math boundary (D01/D02)
 

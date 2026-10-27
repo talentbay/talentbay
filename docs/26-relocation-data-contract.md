@@ -17,7 +17,7 @@ the missing cities or replace11 with a smaller list silently.
 an explicit UTC day. No record means MISSING, never zero rent/tax/move cost. The shipped
 example has one fictional DRAFT London record and10 missing cities. Existing runtime
 still has four labelled illustrative demo cities, including historical Amsterdam (not
-an approved addition to the11-city pilot). D03 imports and D05 UI coverage are next; the
+an approved addition to the11-city pilot). D03 now has local bounded imports; D05 UI coverage is next. The
 new schema/example do not themselves populate any DB or expand public real-data coverage.
 
 ## Fixed Package
@@ -79,9 +79,9 @@ review not in the future and no later-than-review source date. Invalid/unreviewe
 rows are excluded from destinations and explicit IDs return unsupported, never VERIFIED
 or a500 caused by malformed JSON. Legacy city links may use an explicitly labelled demo
 fallback; location-ID requests never silently resolve to another city. DRAFT/STALE are not
-public reviewed data. Current SQL validation alone does not add the full new package's
-assumptions/validUntil to legacy rows; persisting that metadata/review workflow belongs
-to D03 before a source-backed rollout. No blanket automatic stale policy is claimed.
+public reviewed data. D03 additionally requires a matching reviewed PILOT package snapshot
+with current explicit validUntil, not just legacy sources/review columns. Legacy rows are
+not backfilled or automatically approved. No blanket automatic stale policy is claimed.
 Currency must also be supported by Node22's Intl currency catalogue, not merely three
 letters; this is a runtime compatibility boundary, not an exchange-rate service.
 [ECMA-402 currency discovery](https://tc39.es/ecma402/#sec-intl.supportedvaluesof) checked27.10.
@@ -100,7 +100,76 @@ and gaps, then compare hand-worked boundary cases before a dated review/validUnt
 The founder historically reported a legal partner; current availability/qualifications/
 specific approval have not been independently verified. These remain D04/D06 gates.
 
-Next D03: bounded engineer-operated dry-run/apply, whole-file validation, source/assumption
-metadata, idempotency/revisions/atomicity and isolated-target safety; no general admin
-redesign. D05: source/date/assumption/unsupported/error outcome UX. No real dataset, shared
-migration, provider call, booking, tax filing or production change was performed here.
+## Local Engineer Import (D03)
+
+`pnpm db:relocation` reuses the same TypeScript schema/services, not a second JSON/SQL
+implementation. TSX4.22.4 is now an explicit dev-only dependency; it was already in the
+locked transitive graph. Added offline with no downloaded packages; frozen install and
+real CLI help/validation/preview/apply/replay are tested. This does not change the Node
+server runtime. [TSX custom config and separate typecheck](https://tsx.hirok.io/typescript)
+checked27.10: operations inherits generated Nuxt aliases/types, and `pnpm typecheck`
+also checks the CLI separately. No hardcoded pnpm-store paths or fake global types.
+
+```bash
+pnpm db:relocation --file docs/examples/relocation-synthetic.v1.json --validate-only
+# In an explicitly configured disposable local DB, with an existing synthetic ADMIN:
+pnpm db:relocation --file path/to/package.json --actor-id 42
+# Use the exact revision from the no-write preview:
+pnpm db:relocation --file path/to/package.json --actor-id 42 --apply --revision <revision>
+```
+
+`--validate-only` needs no DB or credentials. Database mode defaults to no-write preview.
+The initial executable **refuses every cloud/shared target** via the existing disposable
+guard: explicit CI/disposable markers, matching loopback runtime/migration URLs and exact
+talentbay_ci database/role. It does not load `.env`, promote an account or infer isolation
+from a branch name. The engineer's DB credentials are privileged; actor-id records the
+claimed existing local operator and verifies its current ADMIN role, not an OAuth login
+or proof of the identity of a person running a shell. There is no new public HTTP endpoint.
+
+Files are regular/non-symlink bounded1MiB UTF-8 JSON; options, records and all fields are
+strict. Errors expose bounded field paths/codes, not raw values, SQL, connection errors,
+credentials or file contents. Preview returns counts, IDs/operations and all11 coverage
+states, not private tax/reviewer payload. It validates the whole file before SQL, checks
+current operator and reads one repeatable-read read-only snapshot. Exact canonical city/
+country keys are used; conflicting case/outer-space legacy variants require deliberate
+reconciliation, not silent duplicate cities or deletions.
+
+Apply verifies the preview revision/current role in a transaction with a bounded lock/
+statement timeout and serialized import lock. Status/publication impact is visible in the
+preview. It keeps row IDs/private notes; there is no replace-all/delete-absent behavior.
+Any failed write rolls back the whole package. Changed approved content needs a new review
+reference or later review instant (not just an equivalent timezone spelling or validity
+extension); unknown inputs cannot keep the old review active. Replayed identical data
+returns UNCHANGED without resetting review/import/update timestamps, even after a lost
+committed response. Snapshot expiry is evaluated at read time using explicit validity,
+not a timer required to hide expired data.
+
+Additive0006 stores the full version/purpose/record snapshot, committed importedAt and
+operator FK (SET NULL on deletion). The public repository validates the stored package,
+current validity and equality with calculation columns. DRAFT/SYNTHETIC/STALE, absent
+legacy metadata or numeric drift cannot be advertised as VERIFIED. This detects drift
+from the snapshot, **not malicious superuser rewrites of both snapshot and columns**;
+DB access controls/backup/real subject-matter approval remain independent gates. Snapshot
+reviewer/reference/import actor are not exposed in the current public DTO. D05 adds only
+the appropriate public assumptions/source/validity outcome, not private operator identity.
+
+Local legacy migration test retained ID/status/notes and left all new fields NULL; no
+historical approval is reconstructed. A complete synthetic CLI preview/apply/replay used
+separate processes and kept the same ID; fixtures were removed afterward. SQL tests include
+revoked role, concurrent apply, stale preview, changed approval, invalid data, raw drift,
+expiry and an actual PG trigger failure on city2 proving city1 rollback.
+
+## Shared Preview Gate / Rollback
+
+The importer service is DB-agnostic, but cloud CLI execution is intentionally not enabled
+without a verified environment passport. Before D06, resolve the exact Neon project/branch/
+endpoint, prove non-production isolation/access/current schema, backup/restore and owner
+approval, then implement/test the narrowly bound target adapter against that observed
+provider metadata. Do not relax the loopback guard or point the script at a cloud URL to
+pretend this gate passed. No archive restore, shared migration or real dataset was done.
+
+Apply0006 only after that target/backup/migration approval, before selecting the new fields.
+Old app builds tolerate additive columns, but their data-reading policy can be less strict;
+any rollback must preserve protection/maintenance and reassess public visibility before
+reopening. Retain metadata/columns; do not delete them as a down-migration. D05 outcome UX,
+real D04/D06 evidence/reviewer/preview acceptance and independent R are still required.

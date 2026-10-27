@@ -60,6 +60,11 @@ Browser-only APIs must remain inside client lifecycle code.
   not just the status string; invalid rows are excluded. Demo remains labelled fallback.
   D01/D02 package,11-city coverage, math/input limits and remaining data gates: docs26.
   Preview API requires explicit location/annualGross; no hidden London/110000 default.
+  D03 adds the full package snapshot/import actor/time via nullable0006. Public reviewed
+  data also needs matching calculation columns and current package validity; legacy metadata
+  is not inferred. Privileged local-only engineer CLI has read-only preview, revisioned
+  atomic apply/no-op replay and a fail-closed cloud-target gate (docs26). No new HTTP route
+  or broad admin editor. The private snapshot/reviewer/import actor are not public DTO data.
 
 ### Public Vacancy Pages (TB-C02)
 

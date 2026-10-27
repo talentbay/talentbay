@@ -3,6 +3,17 @@
 Updated: 2026-10-27. Scope: repository dependency graph and admin authorization; this is not
 a penetration-test certification or evidence of a production deployment.
 
+## Dataset Tooling Follow-up - 2026-10-27
+
+D03 makes already locked TSX4.22.4 an explicit dev dependency for the TypeScript operator
+CLI; no runtime framework/major upgrade. Offline install added no downloaded packages,
+and frozen install/prepare passed. Fresh full-tree audit remains3 entries (1 high,
+1 moderate,1 low), the same known esbuild/node-forge exceptions below. No new advisory,
+no zero-vulnerability claim. The CLI refuses cloud/shared DB targets, reads no dotenv,
+validates bounded regular UTF-8 JSON and suppresses raw SQL/credential/input errors.
+It is a privileged local maintenance tool, not a new public auth endpoint or proof that
+the human tax reviewer approved a file. Exact tests/results remain in docs14/docs26.
+
 ## Foundation Follow-up - 2026-10-27
 
 Fresh full-tree registry audit on `4e1be73` found 8 advisory entries (3 high, 4 moderate,

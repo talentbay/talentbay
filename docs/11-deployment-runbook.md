@@ -122,6 +122,14 @@ retain the columns/data rather than run destructive down-SQL. Old `published_at`
 evidence for either a source or TalentBay publication date. See docs25 for date semantics
 and maintenance; no shared target has been migrated by the local C04 tests.
 
+Migration0006 adds nullable relocation package snapshot/import time/actor, also without
+backfill. New code excludes legacy VERIFIED rows lacking a matching reviewed package;
+do not fabricate metadata to recover visibility. The initial `db:relocation` CLI is only
+for guarded local disposable targets: cloud/shared execution stays blocked until the
+exact provider passport/approval/backup/restore step. See docs26. A rollback app may have
+less strict legacy data-reading policy, so retain protection/maintenance and review public
+visibility before reopening; preserve the additive metadata, do not drop it.
+
 ## OAuth Callbacks
 
 Callbacks:

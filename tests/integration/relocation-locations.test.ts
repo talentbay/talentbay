@@ -11,21 +11,18 @@ const oneTime = { flight: 200, visa: 0, deposit: 1000, temporaryHousing: 300, ot
 const sources = [{ label: 'Synthetic provenance only', url: 'https://example.invalid/relocation', accessedAt: '2026-01-01' }]
 afterAll(async () => { await closeDatabase(); await sql`delete from relocation_locations where city = ${city}`; await sql.end() })
 
-it('distinguishes same-named destinations, supports accents and rejects ambiguous legacy keys', async () => {
+it('does not promote legacy same-named/accented rows without a reviewed package', async () => {
   const ids: number[] = []
   for (const country of ['DE', 'GB']) {
     const [row] = await sql`insert into relocation_locations (country_code, city, currency, status, monthly_costs, one_time_costs, tax_model, sources, effective_from, reviewed_at) values (${country}, ${city}, ${country === 'DE' ? 'EUR' : 'GBP'}, 'VERIFIED', ${sql.json(costs)}, ${sql.json(oneTime)}, ${sql.json({ type: 'effective_rate', rateBps: 2000 })}, ${sql.json(sources)}, '2026-01-01', now()) returning id`
     ids.push(row!.id)
   }
   const destinations = (await listRelocationLocations()).filter(location => location.city === city)
-  expect(destinations.map(value => value.key).sort()).toEqual(ids.map(id => `location-${id}`).sort())
-  for (const destination of destinations) {
-    const result = await getRelocationPreview(destination.key, 60_000)
-    expect(result).toMatchObject({ location: { key: destination.key, city, countryCode: destination.countryCode, currency: destination.currency }, dataStatus: 'VERIFIED', monthly: { netAfterTax: 4000, disposable: 2500 } })
-  }
+  expect(destinations).toEqual([])
+  for (const id of ids) expect(await getRelocationPreview(`location-${id}`, 60_000)).toBeUndefined()
   expect(await getRelocationPreview(toLocationKey(city), 60_000)).toBeUndefined()
   await sql`update relocation_locations set status = 'DRAFT' where id = ${ids[1]!}`
-  expect(await getRelocationPreview(toLocationKey(city), 60_000)).toMatchObject({ location: { countryCode: 'DE' } })
+  expect(await getRelocationPreview(toLocationKey(city), 60_000)).toBeUndefined()
   expect(await getRelocationPreview(`location-${ids[1]}`, 60_000)).toBeUndefined()
   await sql`update relocation_locations set monthly_costs=${sql.json({ ...costs, rent: -1 })} where id=${ids[0]!}`
   expect((await listRelocationLocations()).some(location => location.key === `location-${ids[0]}`)).toBe(false)

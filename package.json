@@ -20,7 +20,8 @@
     "test:smoke": "node scripts/smoke-production.mjs",
     "test:e2e": "playwright test",
     "test:watch": "vitest",
-    "typecheck": "nuxt typecheck --build",
+    "typecheck": "nuxt typecheck --build && tsc --project tsconfig.operations.json",
+    "db:relocation": "tsx --tsconfig tsconfig.operations.json scripts/relocation-dataset.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:promote-admin": "node --env-file=.env scripts/promote-admin.mjs",
@@ -47,12 +48,13 @@
     "zod": "^4.6.6"
   },
   "devDependencies": {
-    "@types/html-to-text": "^9.0.4",
     "@nuxt/eslint": "^1.16.0",
     "@playwright/test": "^1.64.1",
+    "@types/html-to-text": "^9.0.4",
     "@types/node": "^25.6.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.8.0",
+    "tsx": "4.22.4",
     "typescript": "^6.0.3",
     "vitest": "^5.0.3",
     "vue-tsc": "^3.3.8"

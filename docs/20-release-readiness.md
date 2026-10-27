@@ -5,7 +5,7 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 
 ## Code Progress - 2026-10-27
 
-#38–#44 have both CI jobs SUCCESS; integration is995b36d, main/production unchanged.
+#38–#47 have both CI jobs SUCCESS; integration is3587cf8, main/production unchanged.
 Managed Apply now has a versioned acknowledgment, immutable profile/vacancy snapshot,
 operator assignment/contact/manual-handoff records and owner-only public event history.
 First-time profile completion returns to the same Apply. These facts supersede the older
@@ -15,9 +15,10 @@ correction/reopen acceptance still needs B04/B09 follow-up.
 
 The first Lever connector/durable source runner is offline-fixture/real-SQL tested; the
 approved-source registry is empty and no live fetch/cron is activated. Public vacancy
-pagination is complete in code. C03 admin pages pass local139unit/67SQL/full20 DB browser
-checks; their own PR CI/review are not implied by the earlier integration head. Remaining
-C04/relocation/UX/operations/security/basic bot work, independent R and real provider/data/
+pagination and C03 admin queues are complete in code, with their own CI. C04 provenance
+and D01/D02 math/contract also passed their own CI. D03 local package importer/snapshot
+guard passes local code checks, not shared execution/real dataset acceptance. Remaining
+D05/relocation/UX/operations/security/basic bot work, independent R and real provider/data/
 native/hosting/legal/owner H gates remain. No complete/accepted/deployed MVP claim.
 Exact slice commands/revisions/results: docs14. Provider facts below remain dated26.10;
 they were not silently refreshed by writing this section.
