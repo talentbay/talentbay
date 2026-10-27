@@ -7,6 +7,29 @@ Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/
 
 ## Autonomous Run Started - 2026-10-27
 
+### First source adapter (C01/C06) in verification
+
+Branch `codex/lever-source-adapter`, baseline `f4dfe62` / [#41](https://github.com/talentbay/talentbay/pull/41).
+#41 both CI jobs SUCCESS (`40474296486`); integration only fast-forwarded to that head.
+Selected Lever's documented JSON/pagination API for the first connector. C01 evidence,
+alternatives/rights register and normalizer/runner boundary are in docs25. The supplied
+ai-job-search URL redirects to ai-job-search-dev; at `eb0fcd71...`, `job_scraper` has only
+`.gitkeep` (verified via GitHub API), not a ready ingestion engine. No external code run.
+
+Server-only adapter uses fixed HTTPS provider roots, bounded pages/bytes/deadlines,
+strict schema and source IDs, explicit mapping/no inferred country/workplace/visa/pay units,
+safe real-library HTML-to-text conversion and sanitized report/error codes. No importer,
+public API route, live credential/source or schedule is activated. C07 runner is still next;
+real board/rights selection was asked asynchronously, not a reason to stop fixture work.
+
+html-to-text10.0.1 + types9.0.4 are compatible with locked Node22 and tested against the real
+parser. Frozen/offline install, typecheck/lint, 133 unit, 52 disposable-PG, 16 public browser,
+14 DB browser tests, Node build and compiled HTTP smoke PASS. The first offline install
+needed an authorized rerun for pnpm's external local-store symlink (sandbox EPERM), not a
+lockfile change. Fresh audit remains 3 known tooling entries, no new advisory. SQL source
+-> dry-run -> draft -> human review -> unchanged/changed re-import retained the application.
+No live source call, shared migration, main/production operation or independent review.
+
 ### First-time Apply / profile continuity
 
 Branch `codex/application-profile-preflight`, base `1717a26`. #40 both CI jobs SUCCESS
