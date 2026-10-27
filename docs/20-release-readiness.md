@@ -5,7 +5,12 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 
 ## Code Progress - 2026-10-27
 
-#38–#50 have both CI jobs SUCCESS; integration is2a3d199, main/production unchanged.
+#38–#51 have both CI jobs SUCCESS; integration is fecfb57, main/production unchanged.
+F01/F02 now pass local176unit/88SQL/25tooling/types/lint/Node/smoke/full28DB. Metric
+dictionary/drilldowns/oldest work and F03 operator runbook are in docs30/31. Public18/19
+found intermittent relocation input loss; unchanged focused10/10 is not a fix, and the
+next E02/E03 hydration follow-up remains a local acceptance blocker. F04/remaining E/G,
+independent R and all real data/provider/support/privacy/production gates remain open.
 Managed Apply now has a versioned acknowledgment, immutable profile/vacancy snapshot,
 operator assignment/contact/manual-handoff records and owner-only public event history.
 First-time profile completion returns to the same Apply. These facts supersede the older

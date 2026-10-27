@@ -28,6 +28,10 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const publicOnly = computed({
+  get: () => route.query.publicOnly === 'true',
+  set: value => { void router.push({ query: { ...route.query, publicOnly: value ? 'true' : undefined, before: undefined, review: undefined } }) },
+})
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
 watch(() => route.query.q, value => { search.value = typeof value === 'string' ? value : '' })
 function submitSearch() { return router.push({ query: { ...route.query, q: search.value.trim() || undefined, before: undefined, review: undefined } }) }
@@ -64,6 +68,7 @@ const query = computed(() => ({
   reviewStatus: reviewFilter.value === 'all' ? undefined : reviewFilter.value,
   q: typeof route.query.q === 'string' ? route.query.q : undefined,
   before: typeof route.query.before === 'string' ? route.query.before : undefined,
+  publicOnly: publicOnly.value ? 'true' : undefined,
 }))
 
 const { data, status, error, refresh } = await useAccountResource<AdminVacancyResponse>(
@@ -88,6 +93,7 @@ async function reviewed() {
     </div>
 
     <form class="mt-6 flex flex-wrap gap-3" role="search" @submit.prevent="submitSearch">
+      <UCheckbox v-model="publicOnly" label="Publicly visible only" class="self-center" />
       <UInput v-model="search" aria-label="Search vacancy queue" placeholder="Role, company or source" maxlength="120" class="w-full sm:w-72" />
       <UButton type="submit" icon="i-lucide-search" label="Search" :disabled="status === 'pending'" />
       <USelect

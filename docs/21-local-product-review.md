@@ -46,6 +46,10 @@ Candidate sequence:
 5. Try Saved, job filters and Settings, then switch to New candidate for empty states.
 
 Operator sequence:
+0. Overview -> current work / oldest awaiting start / activity-period counts. Counters
+   open the same filtered queue with full totals; an oldest ID can be outside first25.
+   Retry a failed count rather than interpreting it as zero. Detailed shift, handoff,
+   correction and privacy/support checklist: [operator runbook](31-operator-runbook.md).
 1. Download the sample CSV from the account chooser, then open Content operator.
 2. Vacancies -> Import CSV -> choose file -> Validate file. Preview must show one new
    Data Engineer vacancy and no writes yet.

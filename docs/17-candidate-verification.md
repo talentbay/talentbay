@@ -1,5 +1,16 @@
 # Candidate Browser Verification
 
+## Operator Overview - 2026-10-27
+
+Current work/oldest5 and bounded activity use existing Nuxt UI/Lucide/flat admin bands,
+not a replacement admin design. Six viewport widths pass overflow and44px counter-target
+assertions;320/1440 screenshots inspected. Exact off-page review links survive reload,
+matching queues retain25-row pages/full totals, and withheld-company jobs stay excluded.
+503 UI transport fixture/retry and actual role-revoked403 show errors rather than zero.
+Full28 DB browser pass; public18/19 exposed intermittent relocation input loss. Unchanged
+focused10/10 rerun passes but is not proof the failure was fixed. Follow-up hydration
+investigation remains explicit in docs14; no new freeze/independent R/human acceptance.
+
 ## Correction and Reopening - 2026-10-27
 
 Existing operator detail has one flat recovery disclosure/form using current Nuxt UI and

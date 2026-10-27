@@ -1,39 +1,34 @@
-import { and, desc, eq, lt } from 'drizzle-orm'
-import { z } from 'zod'
+import { and, count, desc, eq, lt, sql } from 'drizzle-orm'
+import type { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 import { getCandidateProfile } from '#server/services/candidates/profile'
 import type { AdminApplicationDetail, AdminApplicationsResponse } from '#shared/types/application-review'
-import { handlingStages } from '#shared/types/application-handling'
+import { applicationQueueConditions, applicationQueueQuery } from './application-queue'
 import { hasCandidateRequestedClosure } from './application-package'
 
-export const applicationQueueQuery = z.object({
-  status: z.enum(schema.applicationStatusEnum.enumValues).optional(),
-  before: z.coerce.number().int().positive().max(2147483647).optional(),
-  stage: z.enum(handlingStages).optional(),
-  assignee: z.literal('mine').optional(),
-})
+export { applicationQueueQuery }
 
 export async function listAdminApplications(filters: z.infer<typeof applicationQueueQuery>, actorID?: number): Promise<AdminApplicationsResponse> {
-  const conditions = []
-  if (filters.status) conditions.push(eq(schema.applications.status, filters.status))
-  if (filters.before) conditions.push(lt(schema.applications.id, filters.before))
-  if (filters.stage) conditions.push(eq(schema.applications.handlingStage, filters.stage))
-  if (filters.assignee === 'mine') {
-    if (!actorID) throw createError({ statusCode: 403, statusMessage: 'Current operator required' })
-    conditions.push(eq(schema.applications.assignedUserID, actorID))
-  }
-  const rows = await useDatabase().select({
-    id: schema.applications.id, status: schema.applications.status, createdAt: schema.applications.createdAt,
-    handling: { stage: schema.applications.handlingStage, revision: schema.applications.handlingRevision, assignedUserID: schema.applications.assignedUserID },
-    candidate: { id: schema.users.id, name: schema.users.name },
-    vacancy: { slug: schema.vacancies.slug, title: schema.vacancies.title, companyName: schema.organisations.name, city: schema.vacancies.city, countryCode: schema.vacancies.countryCode },
-  }).from(schema.applications)
-    .innerJoin(schema.users, eq(schema.applications.userID, schema.users.id))
-    .innerJoin(schema.vacancies, eq(schema.applications.vacancyID, schema.vacancies.id))
-    .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
-    .where(and(...conditions)).orderBy(desc(schema.applications.id)).limit(26)
-  const items = rows.slice(0, 25).map(row => ({ ...row, createdAt: row.createdAt.toISOString() }))
-  return { items, nextCursor: rows.length > 25 ? items.at(-1)!.id : null }
+  const parsed = applicationQueueQuery.safeParse(filters)
+  if (!parsed.success) throw createError({ statusCode: 400, statusMessage: 'Invalid application filters' })
+  filters = parsed.data
+  const conditions = applicationQueueConditions(filters, actorID)
+  return await useDatabase().transaction(async (tx) => {
+    await tx.execute(sql`set local statement_timeout='5s'`)
+    const rows = await tx.select({
+      id: schema.applications.id, status: schema.applications.status, createdAt: schema.applications.createdAt,
+      handling: { stage: schema.applications.handlingStage, revision: schema.applications.handlingRevision, assignedUserID: schema.applications.assignedUserID },
+      candidate: { id: schema.users.id, name: schema.users.name },
+      vacancy: { slug: schema.vacancies.slug, title: schema.vacancies.title, companyName: schema.organisations.name, city: schema.vacancies.city, countryCode: schema.vacancies.countryCode },
+    }).from(schema.applications)
+      .innerJoin(schema.users, eq(schema.applications.userID, schema.users.id))
+      .innerJoin(schema.vacancies, eq(schema.applications.vacancyID, schema.vacancies.id))
+      .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
+      .where(and(conditions, filters.before ? lt(schema.applications.id, filters.before) : undefined)).orderBy(desc(schema.applications.id)).limit(26)
+    const [total] = await tx.select({ value: count() }).from(schema.applications).where(conditions)
+    const items = rows.slice(0, 25).map(row => ({ ...row, createdAt: row.createdAt.toISOString() }))
+    return { items, total: total!.value, nextCursor: rows.length > 25 ? items.at(-1)!.id : null }
+  }, { isolationLevel: 'repeatable read', accessMode: 'read only' })
 }
 
 export async function getAdminApplication(id: number): Promise<AdminApplicationDetail> {

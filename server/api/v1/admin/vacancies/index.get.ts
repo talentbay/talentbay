@@ -5,6 +5,7 @@ import { requireAdminSession } from '#server/utils/admin-session'
 const querySchema = z.object({
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
   reviewStatus: z.enum(['UNREVIEWED', 'VERIFIED', 'FLAGGED']).optional(),
+  publicOnly: z.literal('true').optional(),
   q: z.string().optional(), before: z.string().optional(), limit: z.coerce.number().optional(),
 }).strict()
 

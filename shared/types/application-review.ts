@@ -8,6 +8,7 @@ export type AdminApplicationItem = Omit<CandidateApplicationItem, 'coverLetter'>
 
 export type AdminApplicationsResponse = {
   items: AdminApplicationItem[]
+  total: number
   nextCursor: number | null
 }
 

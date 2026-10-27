@@ -64,6 +64,13 @@
       "when": 1793103279704,
       "tag": "0008_application-history-recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793105476956,
+      "tag": "0009_operator-metric-windows",
+      "breakpoints": true
     }
   ]
 }

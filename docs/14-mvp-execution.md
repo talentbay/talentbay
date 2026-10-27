@@ -2,10 +2,42 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/application-history-recovery`; verified parent `2a3d199` / #50.
+Current work branch: `codex/operator-overview`; verified parent `fecfb57` / #51.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Operational work overview (F01/F02 and F03 runbook)
+
+#51 both CI jobs SUCCESS (`40505854280`); integration only FF to fecfb57, main/production
+unchanged. Current dashboard uses one read-only repeatable-read snapshot/DB UTC clock,
+rolling7/30/90-day activity and all-time current work, with5s statement bounds. Shared
+queue predicates cover awaiting start, all in-progress stages, no current-admin assignee,
+mine and exact received/effective-contact/handoff windows. Distinct applications exclude
+corrected facts/retry inflation; no delivery/hiring/conversion funnel is invented. First
+STARTED latency exposes its actual sample count, excludes missing legacy/bad chronology.
+Oldest5 links open an exact off-page ID; queue URL/reload/modal context and full totals
+survive25-row pages. Public counter/drilldown now uses the same organisation-aware
+visibility predicate. Profile inventory is not labelled complete profiles.
+
+Existing Nuxt UI/Lucide/admin tokens/flat bands reused; no full admin redesign or BI
+dependency. Actual SQL and browser tests compare drilldowns with aggregates, half-open
+bounds, duplicates/correction, revoked assignee/actor, withheld company, private projection,
+error/retry and six widths. Screenshot320/1440 inspected; counter touch targets44px added.
+First browser pass exposed400 on the new public filter: strict HTTP schema omitted it.
+Fixed and strengthened test to assert HTTP200/full matching total, not checkbox alone.
+Initial SQL fixture used nonexistent SUSPENDED enum; fixed to actual DRAFT, no production
+enum expansion. New0009 is two created-time indexes only, applied on disposablePG56381;
+current interactive review DB remains0008 (index-only compatibility), not shared/Neon.
+
+PASS176 unit/88 SQL/25 tooling, typecheck/lint zero warnings, final Node build/HTTP smoke,
+full28 DB/browser/HTTP. Full public run18/19: relocation input disappeared before result;
+unchanged focused relocation rerun10/10 PASS. This intermittent failure is NOT hidden or
+called a full public pass. Next focused E02/E03 hydration investigation/fix before claiming
+that suite green or K1, then F04 telemetry/recovery and remaining E/G work. docs30 defines
+metrics; docs31 provides operator/support/privacy/content steps. Human owner/deputy/channel,
+real outreach/retention/approval and non-author acceptance are G05/H04 gates, not assigned
+by this runbook. No dependencies/provider/main/deploy/shared migration/outreach changes.
 
 ### Append-only Application History Recovery (B04/B09 follow-up local code)
 

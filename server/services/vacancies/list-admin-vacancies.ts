@@ -3,6 +3,7 @@ import type { SQL } from 'drizzle-orm'
 import type { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 import { adminVacanciesQuery, containsText, readAdminCursor, writeAdminCursor } from '#server/services/admin/list-page'
+import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
 
 export type AdminVacancyFilters = z.input<typeof adminVacanciesQuery>
 
@@ -13,6 +14,7 @@ export async function listAdminVacancies(input: AdminVacancyFilters) {
   const cursor = readAdminCursor('vacancies', filters)
   const db = useDatabase()
   const conditions: (SQL | undefined)[] = []
+  if (filters.publicOnly) conditions.push(publicVacancyConditions())
 
   if (filters.status) {
     conditions.push(eq(schema.vacancies.status, filters.status))

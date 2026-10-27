@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 const base = { q: z.string().trim().max(120).default(''), limit: z.number().int().min(1).max(50).default(25), before: z.string().min(1).max(512).regex(/^[A-Za-z0-9_-]+$/).optional() }
 export const adminUsersQuery = z.object({ ...base, role: z.enum(['USER', 'ADMIN']).optional() }).strict()
-export const adminVacanciesQuery = z.object({ ...base, status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(), reviewStatus: z.enum(['UNREVIEWED', 'VERIFIED', 'FLAGGED']).optional() }).strict()
+export const adminVacanciesQuery = z.object({ ...base, status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(), reviewStatus: z.enum(['UNREVIEWED', 'VERIFIED', 'FLAGGED']).optional(), publicOnly: z.literal('true').optional() }).strict()
 const cursorSchema = z.object({ id: z.number().int().positive().max(2147483647), date: z.iso.datetime({ offset: true }), v: z.literal(1), filters: z.string().regex(/^[a-f0-9]{64}$/) }).strict()
 export type AdminCursor = z.infer<typeof cursorSchema>
 type PageQuery = { before?: string; limit: number }

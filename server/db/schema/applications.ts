@@ -55,6 +55,7 @@ export const applications = pgTable(
     index('applications_user_created_at_idx').on(table.userID, table.createdAt),
     index('applications_handling_queue_idx').on(table.handlingStage, table.id),
     index('applications_assignee_queue_idx').on(table.assignedUserID, table.id),
+    index('applications_created_queue_idx').on(table.createdAt, table.id),
   ],
 )
 
@@ -73,4 +74,5 @@ export const applicationHandlingEvents = pgTable('application_handling_events', 
 }, table => [
   uniqueIndex('application_events_revision_idx').on(table.applicationID, table.revision),
   uniqueIndex('application_events_command_idx').on(table.applicationID, table.commandKey),
+  index('application_events_recorded_idx').on(table.createdAt, table.kind),
 ])
