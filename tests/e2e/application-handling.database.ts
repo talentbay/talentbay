@@ -99,6 +99,7 @@ test('candidate → operator contact/package/manual handoff → candidate progre
     const application = view.getByRole('dialog')
     await expect(application.getByText('TalentBay recorded a manual handoff', { exact: true })).toBeVisible()
     await expect(application.getByText(/This does not confirm delivery/)).toBeVisible()
+    await expect(application).toHaveCSS('opacity', '1')
     for (const width of [320, 390, 1440]) {
       await view.setViewportSize({ width, height: 900 })
       expect(await view.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
