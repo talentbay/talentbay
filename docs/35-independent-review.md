@@ -20,6 +20,16 @@ tracked in docs14 rather than silently replacing this frozen historical target.
 
 ## Exact Target
 
+R03 closeout27Oct: a fresh read-only reviewer, uninvolved in R02 implementation, reviewed
+`b869a10cfe933c0935cac9d2903fdf370aa5dc01` against CI parent7a3a2ef. Both P1 findings are
+considered fixed; no new confirmed defects. Independently PASS193 unit,94 SQL on owned
+PG18 and6 probe groups including real Apply/write lock waits in both orders, same-name
+recipient substitution, metadata/legacy eligibility, strict preconditions and re-imports.
+No weakened assertions found; reviewer-owned databases stopped. Browser/build/typecheck/
+recovery and CI were not independently rerun. Coordinator verified exact CI40575115232
+SUCCESS separately. Subsequent closeout is docs-only. This bounded R03 permits K2 code
+preparation in the reviewed area, not public MVP/native/provider/legal/release acceptance.
+
 - Repository: `github.com/talentbay/talentbay`, private.
 - Review candidate: latest head of [draft PR59](https://github.com/talentbay/talentbay/pull/59),
   branch `codex/product-walkthrough`. Resolve its actual full SHA and own CI before starting.

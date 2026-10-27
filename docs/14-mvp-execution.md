@@ -56,8 +56,19 @@ invariants remain tested.193 unit,94 SQL with legacy upgrade,40 tooling, typeche
 warnings/Node build/smoke PASS. Actual two-cluster recovery12tables/52rows PASS, including
 new Apply contract; owned verification databases/processes stopped. No real data/providers.
 
-Next: exact R02 CI and independent R03. Main/production/shared databases, hosting/billing,
-domain/bot/provider settings and outbound contacts remain untouched. K2/K3 gates unchanged.
+Exact R02b869a10 / draft #61 CI40575115232: scope/build/PostgreSQL SUCCESS (8s/3m4/3m16;
+browser install7s in both jobs). Independent R03 on exactlyb869a10 found no confirmed defects:
+193 unit,94 SQL on its own PG18 and6 additional probe groups PASS, including actual lock
+waits in both Apply/write orders, stale/same-name company, legacy/metadata, strict inputs
+and changed/unchanged re-import. The reviewer did not independently run browser/build/
+typecheck/recovery; coordinator evidence above is separate. Both reviewer-owned DBs stopped.
+
+Next: K2 external/provider/data/policy preparation, not another speculative feature slice.
+The separate loopback review3132/3133 was restarted and its actual fixture import/Apply/
+handling requests returned200; chooser opened in the in-app browser. It remains active for
+owner inspection. Automated test clusters are stopped; don't target this review DB for
+cleanup. Main/production/shared DB, billing/domain/providers/outreach remain untouched.
+This documentation closeout changes no runtime since reviewedb869a10; read final PR own CI.
 
 ### K1 Queue Reconciliation (implementation, not independent acceptance)
 
@@ -80,7 +91,7 @@ before claiming the candidate remote-verified. Exact review procedure: docs35.
 | TB-C05, TB-D04, TB-D06, TB-G05 | GATE | CEO source permissions, reviewed city data, approved sharing/privacy/retention/support/content |
 | TB-R01 | REVIEWED_FINDINGS | Owner-authorized independent read-only review6278108 found two P1 defects; bounded probes/limits in docs35 |
 | TB-R02 | CODE_VERIFIED | Displayed-context precondition and unchanged-recheck fix; SQL/browser/legacy/recovery regressions above |
-| TB-R03 | NEXT_REVIEW | Independent exact R02 verdict still required, not executor self-approval |
+| TB-R03 | REVIEWED_CODE | Independent b869a10 read-only verdict: no confirmed defects;193unit/94SQL+6 probe groups, browser/provider limits above |
 | TB-H01..H05 | GATE | Eligible target/budget/approved operations -> protected HTTPS/native/data/human verification -> explicit beta go/no-go |
 
 Coverage:37 pre-review AUTO code slices + A05 explicit fallback =38;9 external-gate tasks;
