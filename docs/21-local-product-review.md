@@ -29,6 +29,39 @@ Do not tunnel/expose this development environment or use it with real personal d
 
 ## Walkthrough
 
+The account chooser now has a **Start at** selector for each fixed role. It opens the
+selected existing screen, not an arbitrary URL or a new privilege. `/bot` is an offline
+preview generated from the real five-command contract; links lead to the same local app
+and current test session. It does not create webhook receipts, authenticate a native host
+or send anything. The real webhook/receipt boundary is tested separately in docs28.
+
+### Five-to-ten-minute review route
+
+1. Open **Offline bot entry preview**: inspect `/start`, then choose **Browse jobs**.
+   This is the intended entry copy/link, not an actual Telegram delivery/client test.
+2. Chooser -> **New candidate / First application** -> London **Senior Backend Engineer**.
+   Read the role/source, save it, open Relocation, enter a salary and inspect costs/source/
+   demo limitations. Return to the same vacancy; no invented verified city costs.
+3. Apply -> complete the inline fictional contact/profile -> acknowledge the displayed
+   package/disclosure -> submit once. **Your applications** shows TalentBay receipt, not
+   employer delivery. The optional CV upload is not required or implemented here.
+4. Chooser -> **Content operator / Application handling** -> open that newcomer application.
+   Assign to yourself, start, record a **fictional** company contact. Preview the immutable
+   minimum package; copying/preparing is read-only. Record only a simulated manual handoff,
+   then a fictional follow-up/closure. Nothing is actually sent to a company or candidate.
+5. Chooser -> **New candidate / Applications** -> review recorded progress. Private notes/
+   references must not appear. Withdrawal closes further sharing, not stored history or
+   external recall. Existing Candidate has additional in-progress/closed/legacy examples.
+6. Download the fictional CSV -> **Content operator / CSV import** -> validate/dry run ->
+   import draft -> review/publish -> Jobs. Re-import unchanged and inspect Overview counts.
+   **Source registry** is empty pending CEO-approved sources; do not start a real fetch.
+   The actual connector/lease/retry/review pipeline is exercised offline with SQL by
+   `pnpm test:integration`, including `source-runner`/`lever-import`; CSV is not presented
+   as its replacement or as permission to republish real jobs.
+
+Record usability findings against the exact revision. These are guided synthetic actions,
+not owner/independent-R acceptance, real consent/outreach, reviewed tax data or a public beta.
+
 | Account | What to inspect | Initial state |
 | --- | --- | --- |
 | Candidate | Jobs, save, detail, relocation, profile, apply, applications | Complete fictional profile; received, in-progress, handoff, closed and legacy examples |
@@ -96,11 +129,14 @@ the actual UI, plus the public automated viewport suite. Findings are ordered by
 | P1 | Relocation figures and listings are illustrative | The main value proposition cannot yet support a real decision | Approved source-backed jobs and costs, freshness/provenance and stated calculation limits |
 | P1 | Actual Google/GitHub/native Telegram and hosted environment unverified | Local success does not prove real onboarding works | Stable eligible preview, real provider callbacks, native device checks |
 | P2 | Saved checkmark was ambiguous; search arrow was off-center | State and interaction quality looked unfinished | Filled/colored bookmark and centered controls implemented and browser tested |
-| P2 | Saved is browser-local; current status has no event history | No cross-device shortlist or end-to-end application timeline | Keep current behavior explicit; do not imply delivery/sync or fabricate events |
+| P2 | Saved is browser-local; progress now has recorded TalentBay events, not an employer funnel | No cross-device shortlist or verified employer-delivery/read history | Keep local Saved explicit and only project actual public handling events; legacy history stays absent |
 
 This review did not redesign every screen, validate financial/legal content, or test
 native Telegram, screen readers or all browsers. Existing Nuxt UI/Lucide are already the
 component/icon libraries; adopting another library is not a substitute for product work.
 
-Next work is a complete, truthful candidate outcome and its operator/recipient side,
-then source-backed content and wider UX acceptance. Hosting alone cannot close these gaps.
+The synthetic managed outcome/operator path now exists and is covered by browser/API/SQL
+regressions. Next is independent exact-revision review and approved sources/datasets/
+policy/providers/native/hosted acceptance. Hosting alone cannot close those gates. Focused
+dev chooser/bot preview320px screenshots were inspected; the newcomer profile -> offline
+bot -> shared Applications -> operator selector also passed actual local Chromium checks.

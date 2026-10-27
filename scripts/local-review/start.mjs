@@ -105,7 +105,8 @@ try {
     return { user: result.data.user, cookies: result.cookies }
   }
   await seedReview({ sql, request: async (...args) => (await request(...args)).data, signIn, personas })
-  portal = createReviewPortal({ origin: portalOrigin, appOrigin, signIn, csv: reviewCsv() })
+  const botPreview = JSON.parse(execFileSync(process.execPath, ['node_modules/tsx/dist/cli.mjs', '--tsconfig', 'tsconfig.operations.json', 'scripts/local-review/bot-preview.ts'], { env, cwd: root, stdio: 'pipe', timeout: 15_000 }).toString())
+  portal = createReviewPortal({ origin: portalOrigin, appOrigin, signIn, csv: reviewCsv(), botPreview })
   await new Promise((resolve, reject) => { portal.once('error', reject); portal.listen(portalPort, '127.0.0.1', resolve) })
   console.log(`\nTalentBay local review: ${portalOrigin}\nApplication: ${appOrigin}/jobs\nFictional content and accounts only. No external provider or employer is contacted.\nCtrl+C stops Nuxt, the review portal and this disposable PostgreSQL cluster.`)
 }

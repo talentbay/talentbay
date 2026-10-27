@@ -11,6 +11,6 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["scripts/relocation-dataset.ts", "shared/**/*.d.ts"],
+  "include": ["scripts/relocation-dataset.ts", "scripts/local-review/bot-preview.ts", "shared/**/*.d.ts"],
   "files": [".nuxt/types/nitro-imports.d.ts"]
 }

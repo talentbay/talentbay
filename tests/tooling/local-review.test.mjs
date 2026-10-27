@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
 import { request } from 'node:http'
+import { spawnSync } from 'node:child_process'
 import { assertReviewOrigin, createReviewPortal, personas } from '../../scripts/local-review/portal.mjs'
+import { recoveryEnvironment } from '../../scripts/recovery/environment.mjs'
 
 const origin = 'http://127.0.0.1:3131'
 const appOrigin = 'http://127.0.0.1:3130'
 const calls = []
 const server = createReviewPortal({
   origin, appOrigin, csv: 'title\nLocal fixture\n',
+  botPreview: [{ command: '/start', text: '<script>not executable</script>', links: [{ label: 'Open TalentBay', path: '/jobs' }] }],
   signIn: async (persona) => { calls.push(persona); return { cookies: ['nuxt-session=local-fixture; Path=/; HttpOnly; SameSite=Lax'] } },
 })
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
@@ -89,4 +92,39 @@ test('operator CSV download is a bounded fixture and not executable HTML', async
   const response = await fetch(`${target}/sample.csv`, { headers })
   assert.equal(response.headers.get('content-type'), 'text/csv; charset=utf-8')
   assert.equal(await response.text(), 'title\nLocal fixture\n')
+})
+
+test('fixed role destinations support direct review without an open redirect or privilege change', async () => {
+  const response = await session('candidate', { body: new URLSearchParams({ nonce, destination: 'applications' }) })
+  assert.equal(response.status, 303)
+  assert.equal(response.headers.get('location'), `${appOrigin}/applications`)
+  const before = calls.length
+  for (const destination of ['https://attacker.invalid', '//attacker.invalid', 'overview', '__proto__', 'constructor']) {
+    assert.equal((await session('candidate', { body: new URLSearchParams({ nonce, destination }) })).status, 400)
+  }
+  assert.equal((await session('candidate', { body: new URLSearchParams([['nonce', nonce], ['destination', 'jobs'], ['destination', 'applications']]) })).status, 400)
+  assert.equal(calls.length, before)
+})
+test('offline bot preview is non-mutating escaped HTML with only local fixed links', async () => {
+  const before = calls.length
+  const response = await fetch(`${target}/bot`, { headers })
+  const text = await response.text()
+  assert.equal(response.status, 200)
+  assert.equal(response.headers.get('cache-control'), 'no-store')
+  assert.match(text, /This is not Telegram/)
+  assert.match(text, /&lt;script&gt;not executable&lt;\/script&gt;/)
+  assert.ok(text.includes(`href="${appOrigin}/jobs"`))
+  assert.equal(calls.length, before)
+  assert.throws(() => createReviewPortal({ origin, appOrigin, signIn: () => {}, csv: '', botPreview: [{ command: '/start', text: 'Unsafe fixture', links: [{ label: 'External', path: '//attacker.invalid' }] }] }), /Invalid offline bot preview/)
+})
+test('offline generator uses the real five-command contract without DB/provider credentials', () => {
+  const result = spawnSync(process.execPath, ['node_modules/tsx/dist/cli.mjs', '--tsconfig', 'tsconfig.operations.json', 'scripts/local-review/bot-preview.ts'], { env: recoveryEnvironment(), encoding: 'utf8', timeout: 15_000 })
+  assert.equal(result.status, 0)
+  const preview = JSON.parse(result.stdout)
+  assert.deepEqual(preview.map(item => item.command), ['/start', '/jobs', '/applications', '/help', '/privacy'])
+  for (const item of preview) {
+    assert.equal(typeof item.text, 'string')
+    assert.ok(item.links.every(link => ['/jobs', '/applications', '/privacy'].includes(link.path)))
+    assert.deepEqual(Object.keys(item).sort(), ['command', 'links', 'text'])
+  }
 })

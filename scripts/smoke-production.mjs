@@ -133,6 +133,8 @@ try {
 
   // The persona chooser belongs to a separate local process, never the app server.
   await assertResponse('/session/candidate', 404)
+  await assertResponse('/bot', 404)
+  await assertResponse('/sample.csv', 404)
   const localSession = await fetch(`${baseUrl}/session/admin`, { method: 'POST', signal: AbortSignal.timeout(5000) })
   if (localSession.status !== 404 || localSession.headers.getSetCookie().some(cookie => cookie.startsWith('nuxt-session='))) {
     throw new Error('Production must not expose the local review session helper')

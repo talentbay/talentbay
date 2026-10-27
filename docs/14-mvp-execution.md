@@ -2,10 +2,40 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/api-body-hardening`; verified parent `9d0ee72` / #57.
+Current work branch: `codex/product-walkthrough`; local verified parent `a172ad8` / #58.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Repeatable whole-product review entry (E05)
+
+#58 both CI SUCCESS40524069539, only integration FFa172ad8; main/production unchanged.
+The separate loopback chooser now has fixed role-scoped destination selectors for existing
+Jobs/Profile/Applications/Saved/Settings and operator Overview/Handling/Content/Import/Sources/
+Users. Invalid/arbitrary external/privileged/duplicate destination is400 before session work;
+default legacy forms remain compatible. Offline `/bot` preview is generated through the
+real pure five-command contract using existing TSX, no database/webhook/Telegram calls or
+receipt/delivery claim. Escaped text and fixed local paths only. Actual application bot,
+source registry/cron/providers remain off. Rejected portal logs no longer echo raw headers.
+
+docs21 has the5–10-minute newcomer -> job -> estimate -> profile/Apply -> operator -> public
+progress/withdrawal -> CSV/draft/review route, plus explicit source-permission blocker and
+offline SQL connector evidence. Static old "no event history" audit copy corrected to actual
+TalentBay journal versus employer facts. No product page duplication/new admin redesign.
+
+PASS190 unit/34 tooling (including generator/escaping/destination guard), Nuxt+standalone
+CLI typecheck/lint zero warnings/Node build. Actual fresh `dev:review` started with all
+migrations and fictional fixtures, ignored developer credentials; owned prior launcher was
+identified before graceful stop and its synthetic DB retained. Chromium320 chooser -> new
+profile -> offline bot -> shared Applications -> direct operator destination PASS; chooser/
+bot/operator screenshots inspected, no horizontal overflow. Production smoke now asserts
+/bot,/sample.csv and session helper absent, no local-review auth route. Full domain/browser/
+recovery/adapter evidence remains G04 parent plus exact CI, not relabelled reruns here.
+
+No runtime dependency/schema/provider/shared data/main/deploy/outreach/billing changes.
+Next: K1 task/evidence reconciliation and exact independent-R handoff after CI. Real content,
+city data, legal/privacy/support people, eligible hosting/providers/native/H remain gates;
+code-ready synthetic review is not accepted/deployed/public MVP.
 
 ### Remaining public-body / output / abuse review (G04)
 
