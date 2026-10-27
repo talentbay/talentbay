@@ -2,10 +2,38 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/host-edge-cases`; local verified parent `e612e6f` / #56.
+Current work branch: `codex/api-body-hardening`; verified parent `9d0ee72` / #57.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Remaining public-body / output / abuse review (G04)
+
+#56 both CI SUCCESS40519754874 (build15m36 largely Chromium installation, SQL3m30), #57 both
+SUCCESS40522162621. Only integration FF9d0ee72, no main/deploy. G04 reproduced70KB whitespace
++valid signed Telegram auth accepted200. Remaining Telegram/resolve JSON reads now use
+existing bounded fatal-UTF8/uncompressed parser32KiB/16KiB and strict inputs, no new auth
+protocol/current-account/link semantics. All current JSON handlers now have explicit raw
+bounds. Compiled oversized/type/compression/malformed/unknown-role fields reject before
+persistence/query; positive resolve/auth still PASS. Legacy markup-shaped title/description
+renders literal text, no executable injection/tracker request; unsafe source scheme is not
+a link. No CSP change blocking Telegram and no fake per-process distributed rate limiter.
+
+CI Node and Vercel builds inject fixed fake server-only canaries. The output probe detects
+the marker in regular JS/maps/HTML/binary, requires actual browser JS and withholds raw
+asset/env contents. Actual canary Node and Vercel static outputs81files/70scripts PASS;
+Vercel73routes/one actual nodejs22.x bundle/fallback ordering PASS. No forge/fontless runtime
+import found in executable Vercel chunks. Ordinary Node output restored and HTTP smoke PASS.
+Fresh registry audit still3 known tooling entries (1high/1moderate/1low), not43 default-branch
+alerts or zero risk; maintainer references rechecked. No dependency/lock/schema change.
+
+PASS190 unit/90 SQL+legacy upgrade/31 tooling/typecheck/lint zero warnings/Node builds/smoke.
+Full20public/39DB PASS before adding only the extra XSS assertion; final focused2 HTTP/XSS
+PASS on unchanged runtime. These counts are not a claimed full40 rerun; exact PR CI remains
+required. docs16 records provider distributed abuse/quotas/WAF/alerts/cost/owner gate, not
+proof from local unique keys/timeouts. No provider/shared data/main/outreach/billing changes.
+Next AUTO E05 complete review walkthrough and K1 reconciliation; independent R and real
+source/dataset/legal/provider/hosting/native/operator H acceptance remain separate.
 
 ### Browser / Telegram launch and popup failures (E04)
 

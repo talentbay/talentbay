@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto'
-import { createApp, createError, eventHandler, readValidatedBody, setHeader, toWebHandler } from 'h3'
+import { createApp, createError, eventHandler, setHeader, toWebHandler } from 'h3'
 import type { EventHandler } from 'h3'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { replaceUserSession } from '../../node_modules/nuxt-auth-utils/dist/runtime/server/utils/session.js'
@@ -26,7 +26,6 @@ function initData(age = 0) {
 beforeAll(async () => {
   vi.stubGlobal('defineEventHandler', eventHandler)
   vi.stubGlobal('createError', createError)
-  vi.stubGlobal('readValidatedBody', readValidatedBody)
   vi.stubGlobal('getUserSession', sessionReader)
   vi.stubGlobal('replaceUserSession', sessionReplacer)
   vi.stubGlobal('setHeader', setHeader)
@@ -44,11 +43,23 @@ async function request(body: unknown, origin = 'https://talentbay.test') {
   const app = createApp()
   app.use('/api/v1/auth/telegram', handler)
   return toWebHandler(app)(new Request('https://talentbay.test/api/v1/auth/telegram', {
-    method: 'POST', headers: { 'content-type': 'application/json', origin, host: 'talentbay.test', 'x-forwarded-proto': 'https' }, body: JSON.stringify(body),
+    method: 'POST', headers: { 'content-type': 'application/json', origin, host: 'talentbay.test', 'x-forwarded-proto': 'https' }, body: typeof body === 'string' ? body : JSON.stringify(body),
   }))
 }
 
 describe('Telegram authentication HTTP boundary', () => {
+  it('rejects raw oversized whitespace before valid signed identity persistence', async () => {
+    const response = await request(' '.repeat(70_000)+JSON.stringify({ initData: initData() }))
+    expect(response.status).toBe(413)
+    expect(authenticate).not.toHaveBeenCalled()
+    expect(sessionReplacer).not.toHaveBeenCalled()
+  })
+  it('rejects unsupported target-user/role fields rather than silently stripping them', async () => {
+    const response = await request({ initData: initData(), userID: 123, role: 'ADMIN' })
+    expect(response.status).toBe(400)
+    expect(authenticate).not.toHaveBeenCalled()
+    expect(sessionReplacer).not.toHaveBeenCalled()
+  })
   it('verifies signed initData before persistence and writes a real sealed session', async () => {
     const response = await request({ initData: initData() })
     expect(response.status).toBe(200)

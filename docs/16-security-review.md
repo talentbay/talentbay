@@ -3,6 +3,37 @@
 Updated: 2026-10-27. Scope: repository dependency graph and admin authorization; this is not
 a penetration-test certification or evidence of a production deployment.
 
+## Remaining Public Inputs / Build Probe - 2026-10-27
+
+G04 compiled regression reproduced70KB whitespace + valid signed Telegram input accepted200.
+Telegram auth now uses32KiB fatal-UTF8/uncompressed JSON and strict fields, saved resolution
+16KiB and strict slugs contract. Original HMAC/current-account/link/session semantics remain.
+All current JSON mutation/read POST handlers now use the existing bounded parser rather
+than validating fields only after an unbounded body read. Unknown identity/role fields,
+compression/type/malformed/oversized data fail before persistence/query work; positive
+profile/Apply/link/resolve workflows remain required regressions.
+
+CI Node build receives fixed **fake** server-only canaries. A new built-output probe checks
+regular public assets for that marker, requires nonempty browser JS and never prints a
+value. Negative tooling covers JS/maps/HTML/binary. Actual canary-built Node public output
+81files/70scripts PASS. This is a regression tripwire, not a complete scanner of every
+possible secret or proof of a future provider build. Production local chooser remains
+absent per compiled HTTP smoke. Never pass real secrets as probe values or commit dotenv.
+
+Current lock unchanged: fresh full-tree registry audit still3 entries (1high/1moderate/1low),
+the same esbuild/node-forge exceptions below;43 default-branch alerts are a different graph.
+Maintainer esbuild advisories/forge issue rechecked27Oct. No new dependency, blanket override,
+advisory suppression or claim of zero vulnerabilities. Actual tests/results and exact head
+are recorded in docs14 after completion. Vue text rendering/safe URL filters and real-HTTP
+XSS/invalid-source/ownership/origin/receipt/concurrency tests are complementary, not a pentest.
+
+Public auth/read endpoints are bounded, but **distributed abuse/quotas/WAF are not proved**
+by local serialization, unique keys, a5s DB connect timeout or a per-process counter. Before
+exposure, H02/H04 must confirm provider controls, bot/source limits, alert/cost thresholds and
+responsible operator. Do not add a fake in-memory serverless rate limiter or disable existing
+deployment protection. Legal/data/retention/support/native/provider approval and independent R
+remain release gates. No financial/custody/ICO capability is introduced.
+
 ## Private API Boundary - 2026-10-27
 
 G01/G02 direct compiled HTTP regressions reproduced accepted70KB whitespace profile JSON,

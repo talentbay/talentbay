@@ -51,7 +51,13 @@ jobs:
         env:
           # Build fixture only; the local HTTP smoke below has no DB configured.
           DATABASE_URL: postgresql://user:pass@localhost:5432/db
-          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+          NUXT_SESSION_PASSWORD: talentbay_build_secret_probe_session_at_least_32_chars
+          NUXT_TELEGRAM_BOT_TOKEN: talentbay_build_secret_probe_telegram
+          NUXT_OAUTH_GOOGLE_CLIENT_SECRET: talentbay_build_secret_probe_google
+          NUXT_OAUTH_GITHUB_CLIENT_SECRET: talentbay_build_secret_probe_github
+
+      - name: Verify server-only build canaries are absent from public assets
+        run: node scripts/assert-public-output.mjs
 
       - name: Production smoke test
         run: pnpm test:smoke
@@ -68,9 +74,13 @@ jobs:
         run: |
           pnpm build
           node scripts/assert-vercel-output.mjs
+          node scripts/assert-public-output.mjs .vercel/output/static
         env:
           NITRO_PRESET: vercel
-          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+          NUXT_SESSION_PASSWORD: talentbay_build_secret_probe_session_at_least_32_chars
+          NUXT_TELEGRAM_BOT_TOKEN: talentbay_build_secret_probe_telegram
+          NUXT_OAUTH_GOOGLE_CLIENT_SECRET: talentbay_build_secret_probe_google
+          NUXT_OAUTH_GITHUB_CLIENT_SECRET: talentbay_build_secret_probe_github
 
   integration:
     name: PostgreSQL integration

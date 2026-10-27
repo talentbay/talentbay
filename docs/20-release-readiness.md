@@ -5,6 +5,17 @@ The active scope is one responsive Nuxt web/mobile/Telegram product, not token/p
 
 ## Code Progress - 2026-10-27
 
+Latest verified delivery: #38–#57 both CI SUCCESS, integration9d0ee72; main/production unchanged.
+E04 host/popup/privacy/navigation race fixes pass188unit/full20public/38DB, with21 repeated
+host matrices; native/provider acceptance remains separate. G03 safe default disposable
+integration/legacy upgrade/5000roles/1000applications pass90SQL/30tooling (docs34).
+G04 remaining bounded Telegram/resolve inputs pass190unit/90SQL/31tooling/types/lint/Node/
+smoke/full20public/39DB plus final focused2 HTTP/XSS on unchanged runtime. Canary Node/Vercel
+public81files/70scripts, Vercel73routes/1Node22 PASS, Node restored. Fresh audit still3 known
+tooling advisories; no zero-vulnerability claim. E05/K1 reconciliation, independent R and
+provider abuse controls/approved privacy-retention/support/real data/hosting/native/H remain.
+Below are historical slice results, not an instruction to repeat already closed G03/E04.
+
 #38–#54 have both CI jobs SUCCESS; integration is5a503c1, main/production unchanged.
 G01/G02 local181unit/88SQL/28tooling/types/lint/Node/Vercel/smoke/full20public/31DB PASS.
 Bounded/strict profile/link, private no-store and API-only fixed error response retain
