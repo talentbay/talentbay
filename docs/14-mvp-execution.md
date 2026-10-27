@@ -2,10 +2,32 @@
 
 Updated: 2026-10-27
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/vacancy-pagination`; verified parent `e492f8f` / #43.
+Current work branch: `codex/admin-queue-pagination`; verified parent `995b36d` / #44.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
 ## Autonomous Run Started - 2026-10-27
+
+### Complete bounded admin registries (C03)
+
+#44 both CI jobs SUCCESS (`40481614950`); integration FF to995b36d, not main/production.
+C03 replaces both100-row caps with25-default/50-max cursor pages, full filtered counts,
+microsecond timestamp/ID ties, search and strict scope/filter binding. Users retain only
+the old account projection, not profiles/contacts/sessions. Queues use account-scoped
+resources; every admin response, including denials, is no-store. Existing application
+queue is reused, not redesigned. Review selection lives in the URL and preserves its
+page/filter/hash on reload/close; changing filters resets the cursor/selection.
+
+Local139 unit/67 SQL/typecheck/lint/Node build and HTTP smoke PASS. Real111-user/111-vacancy tests cover
+all pages, last page, current role, search, malformed input, selected review and reload.
+The initial browser test caught lost hash on close; fixed without weakening URL assertion.
+Its dashboard step then exposed dynamic resolveComponent('NuxtLink') rendering non-links:
+explicit component import fixes all metric links; Applications now targets its existing
+inbox. Focused2 and final full20 browser regression PASS. Narrow/wide registry
+screens inspected; local horizontal table scrolling is keyboard-accessible and tested.
+No schema/dependency change, shared data write, permissions change or deployment.
+
+Next AUTO: C04 source dates/freshness/maintenance -> D relocation -> remaining E/F/G/I,
+plus B04/B09 event correction/reopen follow-up. R and H remain separate acceptance gates.
 
 ### Full public vacancy pagination (C02)
 

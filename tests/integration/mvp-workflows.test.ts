@@ -124,7 +124,7 @@ describe('database-backed MVP workflows', () => {
       reviewStatus: 'VERIFIED',
     })
 
-    expect(published).toContainEqual(expect.objectContaining({
+    expect(published.items).toContainEqual(expect.objectContaining({
       id: vacancyID,
       slug: vacancySlug,
       sourceName,

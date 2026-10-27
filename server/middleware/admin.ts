@@ -7,6 +7,6 @@ export default defineEventHandler(async (event) => {
   if (!isProtectedRoute) {
     return
   }
-
+  setHeader(event, 'cache-control', 'no-store')
   await requireAdminSession(event)
 })

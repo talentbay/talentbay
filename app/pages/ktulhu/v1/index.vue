@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NuxtLink } from '#components'
 type AdminDashboard = {
   users: number
   profiles: number
@@ -18,7 +19,7 @@ definePageMeta({
   authRole: 'ADMIN',
 })
 
-const { data, status, error } = await useFetch<AdminDashboard>('/api/v1/admin/dashboard')
+const { data, status, error } = await useAccountResource<AdminDashboard>('admin-dashboard', '/api/v1/admin/dashboard')
 
 const metrics = computed(() => [
   {
@@ -43,6 +44,7 @@ const metrics = computed(() => [
     label: 'Applications',
     value: data.value?.applications ?? 0,
     icon: 'i-lucide-send',
+    to: '/ktulhu/v1/applications',
   },
 ])
 </script>
@@ -72,7 +74,7 @@ const metrics = computed(() => [
 
     <div v-else class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <component
-        :is="metric.to ? resolveComponent('NuxtLink') : 'div'"
+        :is="metric.to ? NuxtLink : 'div'"
         v-for="metric in metrics"
         :key="metric.label"
         :to="metric.to"

@@ -108,6 +108,24 @@ and [LIMIT](https://www.postgresql.org/docs/18/queries-limit.html) semantics che
 
 Client route guards are UX only; server authorization is the security boundary.
 
+### Admin Lists (TB-C03)
+
+Users/review queues expose bounded pages (default25, max50), filtered total and nextCursor.
+Date/ID keysets preserve PostgreSQL microseconds. Their cursors are scope/filter/page-size
+bound and cannot be exchanged with public or other admin lists; invalid input returns400.
+Users sort by creation; vacancies by last update, so changed imported content returns near
+the review queue's top. Counts/rows use one read-only snapshot, not a frozen multi-page export.
+Search is literal bounded text (LIKE wildcards escaped), committed through a form into
+the URL. Filters/search reset the cursor; selected review ID/page/filter/hash survive reload.
+Account changes clear the resources. Existing application queue/handling is not rewritten.
+
+Every protected admin API response is no-store, including stale-role/anonymous denials.
+Each handler still independently checks current admin authorization. User transport keeps
+only the existing account fields; no profile/contact/session/identity corpus is added.
+Horizontal table regions remain local to the tool, focusable and keyboard-scrollable;
+they do not widen the mobile page. Dashboard metric links use an explicitly imported
+NuxtLink, not a dynamic global component lookup that can silently produce non-links.
+
 ## Current Domains
 
 - `auth`

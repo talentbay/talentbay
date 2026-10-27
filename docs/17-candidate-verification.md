@@ -1,5 +1,17 @@
 # Candidate Browser Verification
 
+## Focused admin queue continuation - 2026-10-27
+
+C03 adds bounded pages/search/counts and URL-owned selected review to existing user and
+vacancy tables, not a new admin design system/CRM. Current Nuxt UI and local keyboard-
+scrollable table regions remain. Existing private resource clearing is reused on account
+change. A real111-account/111-vacancy browser fixture covers last page, reload, filter reset,
+selected review, dashboard->queue navigation, revoked role and no-store denials. The test
+found both a lost hash on modal close and non-link dashboard metrics from dynamic global
+NuxtLink resolution; fixed the implementation, not the assertion. Screens320/390/1440
+inspected, horizontal scroll tested by keyboard. This is engineering verification, not
+the deferred full-admin design approval or a new Candidate Figma freeze.
+
 ## Vacancy pagination / long-content correction - 2026-10-27
 
 Replaced the hidden50-result ceiling with URL-bound Older/Newest pages, retaining existing
