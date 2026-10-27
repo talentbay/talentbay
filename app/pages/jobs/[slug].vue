@@ -194,7 +194,7 @@ const { ready, goBack } = useCandidateBack()
         class="space-y-5 lg:sticky lg:top-24"
         aria-label="Vacancy actions and estimate"
       >
-        <VacanciesVacancyActions :vacancy="vacancy" />
+        <VacanciesVacancyActions :key="vacancy.id" :vacancy="vacancy" />
         <div
           v-if="relocationLocation"
           class="hidden lg:block"

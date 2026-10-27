@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, sql, lt, or, inArray, not } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
@@ -17,6 +17,13 @@ export const applicationInputSchema = z.object({
 
 export type ApplicationInput = z.infer<typeof applicationInputSchema>
 
+export const candidateApplicationQuery = z.object({
+  status: z.enum(['all', 'active', 'closed']).optional(),
+  before: z.coerce.number().int().positive().max(2147483647).optional(),
+}).strict()
+
+const closedApplication = or(inArray(schema.applications.status, ['REJECTED', 'WITHDRAWN']), eq(schema.applications.handlingStage, 'CLOSED'))!
+
 export async function createApplication(
   userID: number,
   vacancyID: number,
@@ -30,6 +37,7 @@ export async function createApplication(
         id: schema.vacancies.id, slug: schema.vacancies.slug, title: schema.vacancies.title,
         sourceUrl: schema.vacancies.sourceUrl, sourceExternalID: schema.vacancies.sourceExternalID,
         city: schema.vacancies.city, countryCode: schema.vacancies.countryCode,
+        vacancyRevision: schema.vacancies.updatedAt, organisationRevision: schema.organisations.updatedAt,
         organisationID: schema.organisations.id, companyName: schema.organisations.name,
       })
       .from(schema.vacancies)
@@ -59,8 +67,8 @@ export async function createApplication(
         headline: profile.headline, about: profile.about, city: profile.city, countryCode: profile.countryCode,
         phone: profile.phone, telegram: profile.telegram, githubUrl: profile.githubUrl, linkedinUrl: profile.linkedinUrl,
       } : null,
-    }, { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID },
-    { organisationID: vacancy.organisationID, name: vacancy.companyName }, new Date())
+    }, { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID, revision: vacancy.vacancyRevision.toISOString() },
+    { organisationID: vacancy.organisationID, name: vacancy.companyName, revision: vacancy.organisationRevision.toISOString() }, new Date())
 
     const [application] = await tx
       .insert(schema.applications)
@@ -99,14 +107,23 @@ export async function createApplication(
 
 export async function listCandidateApplications(
   userID: number,
+  filters: z.infer<typeof candidateApplicationQuery> = {},
 ): Promise<CandidateApplicationsResponse> {
   const db = useDatabase()
+  const owned = eq(schema.applications.userID, userID)
+  const conditions = [owned]
+  if (filters.before) conditions.push(lt(schema.applications.id, filters.before))
+  if (filters.status === 'closed') conditions.push(closedApplication)
+  if (filters.status === 'active') conditions.push(not(closedApplication))
+  const [counts] = await db.select({ all: sql<number>`count(*)::int`, closed: sql<number>`count(*) filter (where ${closedApplication})::int` }).from(schema.applications).where(owned)
   const rows = await db
     .select({
       id: schema.applications.id,
       status: schema.applications.status,
       coverLetter: schema.applications.coverLetter,
       createdAt: schema.applications.createdAt,
+      snapshot: schema.applications.submissionSnapshot,
+      handling: { stage: schema.applications.handlingStage },
       slug: schema.vacancies.slug,
       title: schema.vacancies.title,
       companyName: schema.organisations.name,
@@ -122,15 +139,19 @@ export async function listCandidateApplications(
       schema.organisations,
       eq(schema.vacancies.organisationID, schema.organisations.id),
     )
-    .where(eq(schema.applications.userID, userID))
-    .orderBy(desc(schema.applications.createdAt))
+    .where(and(...conditions))
+    .orderBy(desc(schema.applications.id)).limit(26)
 
-  const items: CandidateApplicationItem[] = rows.map(row => ({
+  const items: CandidateApplicationItem[] = rows.slice(0, 25).map(row => ({
     id: row.id,
     status: row.status,
     coverLetter: row.coverLetter,
     createdAt: row.createdAt.toISOString(),
-    vacancy: {
+    handling: row.handling,
+    vacancy: row.snapshot ? {
+      slug: row.snapshot.vacancy.slug, title: row.snapshot.vacancy.title, companyName: row.snapshot.recipient.name,
+      city: row.snapshot.vacancy.city, countryCode: row.snapshot.vacancy.countryCode,
+    } : {
       slug: row.slug,
       title: row.title,
       companyName: row.companyName,
@@ -141,8 +162,16 @@ export async function listCandidateApplications(
 
   return {
     items,
-    total: items.length,
+    total: filters.status === 'active' ? counts!.all - counts!.closed : filters.status === 'closed' ? counts!.closed : counts!.all,
+    nextCursor: rows.length > 25 ? items.at(-1)!.id : null,
+    counts: { ...counts!, active: counts!.all - counts!.closed },
   }
+}
+
+export async function candidateApplicationForVacancy(userID: number, vacancyID: number) {
+  const [application] = await useDatabase().select({ id: schema.applications.id, status: schema.applications.status }).from(schema.applications)
+    .where(and(eq(schema.applications.userID, userID), eq(schema.applications.vacancyID, vacancyID))).limit(1)
+  return { application: application || null }
 }
 
 export async function withdrawApplication(userID: number, id: number) {

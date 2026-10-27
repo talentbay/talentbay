@@ -7,6 +7,37 @@ Security branch: `codex/oauth-state-security`; PR: https://github.com/talentbay/
 
 ## Autonomous Run Started - 2026-10-27
 
+### Managed handling / progress slice
+
+Branch `codex/application-handling`, baseline `31af293` / [#39](https://github.com/talentbay/talentbay/pull/39).
+Both #39 CI jobs SUCCESS, run `40469299092`; only integration was fast-forwarded, not main.
+B04/B05/B06 core code: strict bounded current-admin commands, assignment/ownership,
+expected revision, per-command replay/digest, locks, separate contact/manual handoff,
+snapshot package preview/copy and private journal. Missing/legacy/changed/withdrawn
+packages are denied; preparing is read-only; employer stage is not reinterpreted.
+B07: owned public event projection, 25-record candidate/history keyset pages, server-side
+active/closed counts and a separate per-vacancy lookup (old applications cannot fall out
+of duplicate detection). Account changes clear selected private detail. B08/B09 cover
+withdrawal/share races, closure reasons, replay after a lost committed response and
+synthetic received/in-progress/shared/closed/legacy fixtures. No external company contacted.
+
+Checks: 119 unit, 51 SQL, 24 tooling, typecheck/lint, Node build/smoke, 16 public
+browser, final full 12 DB browser PASS, plus focused handling browser rerun after a users API
+shape fix. Manual dev review caught that hidden transfer control; tests now assert its
+visibility and capture client runtime errors. Consistent read-only progress transaction,
+closure without employer rejection, and operator/candidate 320/390/1440 modal viewport
+checks passed. Synthetic record count/seed and candidate history were also read in dev UI.
+Vercel adapter build/assertion PASS (Node22, 67 routes, one function), no deploy.
+Fresh `pnpm dev:review --port 3132 --portal-port 3133` seeded all five fictional states
+through real APIs except the explicitly legacy row. Six published fictional jobs; London
+remains unapplied. Native/live provider, actual data/policy/operational acceptance stays open.
+
+Limits: no automatic sender or verified employer receipt; real-data sharing still G05.
+Reopening/correcting a closed/handoff record is not a generic edit endpoint; event
+correction/reopen acceptance remains a B04/B09 follow-up before calling that group complete.
+Full admin redesign and relocation part of E01 remain separate. Next independent code
+slice: first-time Apply/profile return path, then source/relocation/bot tasks by the backlog.
+
 ### Foundation complete; snapshot intake in progress
 
 Foundation `85fceef` / [PR #38](https://github.com/talentbay/talentbay/pull/38): both CI jobs

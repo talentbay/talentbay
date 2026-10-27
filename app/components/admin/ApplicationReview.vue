@@ -4,6 +4,7 @@ import { applicationStatuses } from '~/utils/application-status'
 import { safeHttpUrl } from '~/utils/safe-http-url'
 
 const props = defineProps<{ id: number }>()
+const emit = defineEmits<{ changed: [] }>()
 const { data, status, error, refresh } = await useFetch<AdminApplicationDetail>(() => `/api/v1/admin/applications/${props.id}`)
 const details = computed(() => {
   const profile = data.value?.candidate.profile
@@ -12,6 +13,7 @@ const details = computed(() => {
     ['Email', data.value?.candidate.user.email], ['Phone', profile?.phone], ['Telegram', profile?.telegram],
   ]
 })
+async function changed() { await refresh(); emit('changed') }
 </script>
 
 <template>
@@ -36,7 +38,7 @@ const details = computed(() => {
       </div>
     </section>
     <section><h3 class="font-semibold">Cover note</h3><p class="mt-2 whitespace-pre-wrap text-sm leading-6">{{ data.coverLetter || 'No cover note added.' }}</p></section>
-    <p class="text-sm text-muted">Company outreach is handled by TalentBay. Delivery to the company has not been recorded here.</p>
+    <AdminApplicationHandling :application="data" @changed="changed" />
     <div class="flex flex-wrap gap-3 border-t border-default pt-4">
       <UButton :to="`/jobs/${data.vacancy.slug}`" label="Open vacancy" color="neutral" variant="outline" trailing-icon="i-lucide-arrow-up-right" />
     </div>

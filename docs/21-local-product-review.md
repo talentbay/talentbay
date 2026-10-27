@@ -1,6 +1,6 @@
 # Interactive Local Product Review
 
-Updated: 2026-10-26. Local engineering review, not public beta or live-provider acceptance.
+Updated: 2026-10-27. Local engineering review, not public beta or live-provider acceptance.
 
 ## Start
 
@@ -31,7 +31,7 @@ Do not tunnel/expose this development environment or use it with real personal d
 
 | Account | What to inspect | Initial state |
 | --- | --- | --- |
-| Candidate | Jobs, save, detail, relocation, profile, apply, applications | Complete fictional profile and two seeded applications |
+| Candidate | Jobs, save, detail, relocation, profile, apply, applications | Complete fictional profile; received, in-progress, handoff, closed and legacy examples |
 | New candidate | First profile, empty applications, first application | No profile or applications |
 | Content operator | Overview, users, vacancy review, CSV import | Admin limited to this isolated database |
 | Guest | Public browsing and local Saved | Clears the current test session |
@@ -54,15 +54,20 @@ Operator sequence:
 5. Open public site: Data Engineer is now visible. Overview counts come from this DB.
 6. Re-import the same file: it should be unchanged. Altered records require review again.
 
-Application review sequence (follow-up slice): open Content operator -> Applications ->
-Read the Platform Engineer application: its status must not change. Switch to Candidate ->
-Applications. Open its detail -> Withdraw application ->
-cancel or confirm. A confirmed withdrawal moves the record to Closed and survives reload.
-The operator has no employer-status mutation. No record is deleted or forwarded.
+Application handling sequence: open Content operator -> Applications -> read Senior
+Frontend Engineer (received), Platform Engineer (in progress), Product Engineer (synthetic
+manual handoff), Staff Fullstack Engineer (closed) and Quality Engineer (legacy). Opening
+a record never changes the employer stage. Take the received record, start handling,
+record a fictional contact, prepare the snapshot package and separately record a simulated
+handoff. Preparing/copying is read-only. Do not actually send anything to any company.
+Switch to Candidate -> Applications -> detail: only recorded public facts are visible,
+never private operator notes/references. Confirm/cancel/retry withdrawal; it survives reload
+and blocks another package/handoff. Legacy has no invented snapshot/permission/history.
 
 All companies, people and jobs are fictional, even when a record has passed the local
-publication workflow. All new seeded applications are Received by TalentBay; no employer progress is
-invented. No employer receives any test application.
+publication workflow. Employer status remains NEW for the handling examples; operator
+work is separate from employer viewing/interview/offer. One explicit legacy fixture has
+no snapshot. No employer receives any test application.
 The relocation dataset is illustrative and does not establish real costs or tax advice.
 
 ## Product Audit
@@ -72,7 +77,7 @@ the actual UI, plus the public automated viewport suite. Findings are ordered by
 
 | Priority | Step / observed gap | User impact | Next acceptance criterion |
 | --- | --- | --- | --- |
-| P0 | Managed intake/manual outreach is confirmed; operator contact/share records are missing | Candidate progress beyond receipt cannot be verified in the product | Implement the agreed manual handling and approved share/follow-up steps; do not default to external redirects |
+| P0 | Manual handling now has a tested synthetic workflow; real operator/data/policy gates remain | Local events do not prove real company outreach or public readiness | Verify approved people/channels/policy and real preview; no automatic sender is claimed |
 | P1 | Previous review had no DB/providers; only non-applicable demo roles | Owner could not assess profile, apply or operator functionality | Repeatable local role chooser now works; still needs owner product acceptance |
 | P1 | Relocation figures and listings are illustrative | The main value proposition cannot yet support a real decision | Approved source-backed jobs and costs, freshness/provenance and stated calculation limits |
 | P1 | Actual Google/GitHub/native Telegram and hosted environment unverified | Local success does not prove real onboarding works | Stable eligible preview, real provider callbacks, native device checks |

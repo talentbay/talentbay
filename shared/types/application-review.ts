@@ -1,8 +1,9 @@
 import type { CandidateApplicationItem, CandidateProfileResponse } from './candidates'
-import type { ApplicationSnapshot } from './application-handling'
+import type { AdminHandlingEvent, ApplicationSnapshot, HandlingState } from './application-handling'
 
 export type AdminApplicationItem = Omit<CandidateApplicationItem, 'coverLetter'> & {
   candidate: { id: number; name: string }
+  handling: HandlingState
 }
 
 export type AdminApplicationsResponse = {
@@ -13,4 +14,8 @@ export type AdminApplicationsResponse = {
 export type AdminApplicationDetail = CandidateApplicationItem & {
   candidate: CandidateProfileResponse
   submissionSnapshot: ApplicationSnapshot | null
+  handling: HandlingState
+  events: AdminHandlingEvent[]
+  eventsTruncated: boolean
+  handoffRecorded: boolean
 }

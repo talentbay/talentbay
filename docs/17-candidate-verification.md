@@ -1,5 +1,23 @@
 # Candidate Browser Verification
 
+## Managed handling / progress deviation - 2026-10-27
+
+Existing operator inbox/detail now have stage/mine filters, current-admin assignment,
+bounded commands, private journal and snapshot package preview/copy. Preparing is not
+sending; recording a completed manual handoff is a distinct acknowledged action.
+Candidate detail exposes only allowlisted recorded facts and explains that manual records
+are not employer delivery/read receipts. Candidate application/history keyset pages and a
+per-vacancy ownership lookup avoid a hidden 25-record duplicate-check cap. Account switches
+clear selected private detail. These are focused workflow additions, not the deferred
+admin redesign or a new Figma freeze.
+
+Synthetic browser tests exercise candidate -> operator -> company-contact/package ->
+recorded handoff -> candidate progress -> withdrawal; one response is deliberately lost
+after the DB commit and retry must produce one event. Runtime-error capture and explicit
+transfer-control visibility were added after manual dev review caught a users-response
+shape mismatch; relying only on the main happy-path assertions had missed that hidden field.
+Narrow/wide screenshots are engineering checks, not owner acceptance or native Telegram QA.
+
 ## Managed Apply implementation deviation - 2026-10-27
 
 The focused Apply modal now previews the submitted name/contact/profile, names the

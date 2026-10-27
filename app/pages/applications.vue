@@ -3,17 +3,20 @@ import type {
   CandidateApplicationItem,
   CandidateApplicationsResponse,
 } from '#shared/types/candidates'
-import { applicationStatuses } from '~/utils/application-status'
+import { applicationStatuses, candidateApplicationBadge } from '~/utils/application-status'
+import { handlingLabels } from '~/utils/application-handling'
 
 definePageMeta({ layout: 'product' })
 useSeoMeta({ title: 'Your applications · TalentBay', robots: 'noindex' })
 const route = useRoute()
 const router = useRouter()
-const { loggedIn } = useUserSession()
+const { loggedIn, user } = useUserSession()
+const query = computed(() => ({ status: typeof route.query.status === 'string' ? route.query.status : undefined, before: typeof route.query.before === 'string' ? route.query.before : undefined }))
 const { data, status, error, refresh } =
   await useAccountResource<CandidateApplicationsResponse>(
     'candidate-applications',
     '/api/v1/applications',
+    query,
   )
 const filter = computed({
   get: () =>
@@ -22,29 +25,17 @@ const filter = computed({
       : 'all',
   set: (value) => {
     void router.replace({
-      query: { ...route.query, status: value === 'all' ? undefined : value },
+      query: { ...route.query, status: value === 'all' ? undefined : value, before: undefined },
     })
   },
 })
-const counts = computed(() => {
-  const items = data.value?.items || []
-  const closed = items.filter(
-    (item) => applicationStatuses[item.status].closed,
-  ).length
-  return { all: items.length, active: items.length - closed, closed }
-})
+const counts = computed(() => data.value?.counts || { all: 0, active: 0, closed: 0 })
 const tabs = computed(() => [
   { label: `All · ${counts.value.all}`, value: 'all' },
   { label: `Active · ${counts.value.active}`, value: 'active' },
   { label: `Closed · ${counts.value.closed}`, value: 'closed' },
 ])
-const items = computed(() =>
-  (data.value?.items || []).filter(
-    (item) =>
-      filter.value === 'all' ||
-      applicationStatuses[item.status].closed === (filter.value === 'closed'),
-  ),
-)
+const items = computed(() => data.value?.items || [])
 const selected = ref<CandidateApplicationItem | null>(null)
 const detailsOpen = computed({
   get: () => Boolean(selected.value),
@@ -56,7 +47,7 @@ async function withdrawn() {
   selected.value = null
   await refresh()
 }
-watch(loggedIn, () => {
+watch(() => user.value?.id, () => {
   selected.value = null
 })
 const date = (value: string) =>
@@ -122,12 +113,13 @@ const date = (value: string) =>
                 </p>
               </div>
               <UBadge
-                :color="applicationStatuses[item.status].color"
-                :label="applicationStatuses[item.status].label"
+                :color="candidateApplicationBadge(item).color"
+                :label="candidateApplicationBadge(item).label"
                 variant="soft"
-                class="shrink-0"
+                class="max-w-[55%] whitespace-normal text-right"
               />
             </div>
+            <p v-if="item.status !== 'NEW' && item.handling.stage !== 'RECEIVED'" class="mt-2 text-xs text-muted">{{ handlingLabels[item.handling.stage] }}</p>
             <p class="mt-3 text-xs text-muted">
               {{
                 [item.vacancy.city, item.vacancy.countryCode]
@@ -166,12 +158,17 @@ const date = (value: string) =>
           />
         </template>
       </div>
+      <nav v-if="!error && status !== 'pending'" aria-label="Application pages" class="mt-5 flex flex-wrap gap-3">
+        <UButton v-if="route.query.before" label="Newest" icon="i-lucide-arrow-up" color="neutral" variant="outline" :to="{ query: { ...route.query, before: undefined } }" />
+        <UButton v-if="data?.nextCursor" label="Older applications" trailing-icon="i-lucide-arrow-right" color="neutral" variant="outline" :to="{ query: { ...route.query, before: data.nextCursor } }" />
+      </nav>
       <UModal
         v-model:open="detailsOpen"
         :title="selected?.vacancy.title || 'Application'"
         :description="selected?.status === 'NEW'
           ? 'Your application is with TalentBay. Our team handles company outreach and follow-up.'
           : 'Your application and current status.'"
+        :ui="{ wrapper: 'min-w-0 pe-10', title: 'break-words', content: '[overflow-wrap:anywhere]' }"
       >
         <template #body>
           <div
@@ -186,9 +183,10 @@ const date = (value: string) =>
                 Applied {{ date(selected.createdAt) }}
               </p>
             </div>
+            <CandidatesApplicationProgress :id="selected.id" :key="selected.id" />
             <UBadge
-              :color="applicationStatuses[selected.status].color"
-              :label="applicationStatuses[selected.status].label"
+              :color="candidateApplicationBadge(selected).color"
+              :label="candidateApplicationBadge(selected).label"
               variant="soft"
             />
             <div>

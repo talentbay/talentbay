@@ -128,7 +128,27 @@ narrow/wide screenshots are implementation evidence, not owner acceptance.
 Remaining E01 relocation sketch/data contract is independent of this application contract
 and remains open; application implementation uses the focused state matrix above.
 
-## Subsequent Operator Work
+## Implementation Boundary - 2026-10-27
+
+The focused workflow is now implemented for synthetic verification: assigned-operator
+commands, snapshot package preview/copy, explicit recording of a completed manual handoff,
+private journal, public event projection, candidate application/history keyset pages and
+withdrawal serialization. All these operations use the existing PostgreSQL monolith.
+No email/bot sender, public profile export, employer read receipt or external contact is
+performed by these endpoints. B09 browser/fixture acceptance and actual check results are
+tracked in execution log; this is not an independent audit or public release.
+
+Package preview and handoff recheck the public vacancy/company revisions captured at
+submission. Missing revisions, legacy, withdrawn/closed, changed/re-imported or unpublished
+records are denied rather than silently substituting a current recipient/package. The
+current app stops further package access after withdrawal; it cannot control a human's
+previously copied information outside the app. One handoff is recorded per application;
+correction/re-sharing requires a future explicit reviewed workflow, not another send key.
+
+The points below preserve the earlier follow-up checklist; real operational/policy gates
+are still open even where the corresponding synthetic code now exists.
+
+## Subsequent Operational Work
 
 1. Separate TalentBay handling from employer hiring stages. Record actual company contact
    and candidate-information handoff with operator, time and a bounded reference; opening

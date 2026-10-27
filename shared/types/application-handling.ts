@@ -19,8 +19,8 @@ export type ApplicationSnapshot = {
     email: string | null
     profile: CandidateProfileData
   }
-  recipient: { organisationID: number; name: string }
-  vacancy: { id: number; slug: string; title: string; city: string | null; countryCode: string; sourceUrl: string | null; sourceExternalID: string | null }
+  recipient: { organisationID: number; name: string; revision?: string }
+  vacancy: { id: number; slug: string; title: string; city: string | null; countryCode: string; sourceUrl: string | null; sourceExternalID: string | null; revision?: string }
 }
 
 export type HandlingEventData = {
@@ -29,4 +29,28 @@ export type HandlingEventData = {
   occurredAt?: string
   reference?: string
   closeReason?: HandlingCloseReason
+}
+
+export type HandlingState = {
+  stage: HandlingStage
+  revision: number
+  assignedUserID: number | null
+}
+
+export type AdminHandlingEvent = {
+  id: number
+  revision: number
+  kind: HandlingEventKind
+  stage: HandlingStage
+  actorUserID: number | null
+  createdAt: string
+  data: HandlingEventData
+  privateNote: string | null
+}
+
+export type ApplicationPackage = {
+  applicationID: number
+  revision: number
+  snapshot: ApplicationSnapshot
+  coverLetter: string | null
 }

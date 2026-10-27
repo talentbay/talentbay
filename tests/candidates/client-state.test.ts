@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseSavedVacancies } from '../../app/utils/saved-vacancies'
 import { profileSections } from '../../app/utils/candidate-profile'
-import { applicationStatuses } from '../../app/utils/application-status'
+import { applicationStatuses, candidateApplicationBadge } from '../../app/utils/application-status'
 import { annualSalaryMidpoint, formatVacancySalary } from '../../app/utils/vacancy-salary'
 import { safeHttpUrl } from '../../app/utils/safe-http-url'
 import { relocationPreviewQuery } from '#server/services/relocation/preview-query'
@@ -25,6 +25,12 @@ describe('candidate presentation contracts', () => {
     expect(applicationStatuses.OFFER.closed).toBe(false)
     expect(applicationStatuses.REJECTED.closed).toBe(true)
     expect(applicationStatuses.WITHDRAWN.closed).toBe(true)
+  })
+  it('shows actual TalentBay handling after receipt, without reinterpreting employer outcomes', () => {
+    expect(candidateApplicationBadge({ status: 'NEW', handling: { stage: 'SHARED' } }).label).toBe('Manual handoff recorded')
+    expect(candidateApplicationBadge({ status: 'NEW', handling: { stage: 'CLOSED' } }).closed).toBe(true)
+    expect(candidateApplicationBadge({ status: 'OFFER', handling: { stage: 'SHARED' } }).label).toBe('Offer')
+    expect(candidateApplicationBadge({ status: 'WITHDRAWN', handling: { stage: 'CLOSED' } }).label).toBe('Withdrawn')
   })
   it('distinguishes salary periods and never assumes hourly working time', () => {
     const salary = { min: 4000, max: 6000, currency: 'EUR', period: 'MONTH' as const }

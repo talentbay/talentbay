@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 
 const roles = [
   ['senior-backend-engineer-london', 'Senior Backend Engineer', 'Atlas Video', 'atlas-video', 'GB', 'London', 'GBP', 95000, 125000, ['TypeScript', 'PostgreSQL', 'Node.js']],
@@ -7,6 +8,7 @@ const roles = [
   ['product-engineer-lisbon', 'Product Engineer', 'Harbor Finance', 'harbor-finance', 'PT', 'Lisbon', 'EUR', 55000, 72000, ['TypeScript', 'Vue', 'PostgreSQL']],
   ['staff-fullstack-engineer-remote-emea', 'Staff Fullstack Engineer', 'Common Thread', 'common-thread', 'DE', 'Berlin', 'EUR', 105000, 140000, ['TypeScript', 'Vue', 'Node.js']],
   ['data-engineer-amsterdam', 'Data Engineer', 'Northstar Canvas', 'northstar-canvas', 'NL', 'Amsterdam', 'EUR', 80000, 100000, ['Python', 'SQL', 'dbt']],
+  ['quality-engineer-tallinn', 'Quality Engineer', 'Clear Signal', 'clear-signal', 'EE', 'Tallinn', 'EUR', 52000, 68000, ['Playwright', 'TypeScript', 'Accessibility']],
 ]
 
 export const reviewVacancies = roles.map(([slug, title, name, companySlug, countryCode, city, currency, min, max, skills], index) => ({
@@ -42,7 +44,7 @@ export async function seedReview({ sql, request, signIn, personas }) {
   const operator = await signIn(personas.admin)
   await sql`update users set role = 'ADMIN' where id = ${operator.user.id}`
   const admin = await signIn(personas.admin)
-  const imported = await request('/api/v1/admin/vacancies/import', { method: 'POST', body: { items: reviewVacancies.slice(0, 5) }, cookies: admin.cookies })
+  const imported = await request('/api/v1/admin/vacancies/import', { method: 'POST', body: { items: [...reviewVacancies.slice(0, 5), reviewVacancies[6]] }, cookies: admin.cookies })
   for (const item of imported.items) {
     const record = await request(`/api/v1/admin/vacancies/${item.id}`, { cookies: admin.cookies })
     await request(`/api/v1/admin/vacancies/${item.id}`, {
@@ -56,7 +58,22 @@ export async function seedReview({ sql, request, signIn, personas }) {
     method: 'PUT', cookies: candidate.cookies,
     body: { headline: 'Senior software engineer', about: 'Fictional candidate exploring international engineering roles. Interested in product teams, accessible interfaces and reliable services.', countryCode: 'PT', city: 'Porto', telegram: '@local_review_fixture', githubUrl: 'https://example.invalid/portfolio', linkedinUrl: null, phone: null },
   })
-  for (const item of imported.items.slice(1, 3)) {
-    await request(`/api/v1/vacancies/${item.id}/applications`, { method: 'POST', cookies: candidate.cookies, body: { coverLetter: 'A fictional application for the local product review.', disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
+  const applications = []
+  for (const item of imported.items.slice(1, 5)) {
+    applications.push(await request(`/api/v1/vacancies/${item.id}/applications`, { method: 'POST', cookies: candidate.cookies, body: { coverLetter: 'A fictional application for the local product review.', disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } }))
   }
+  const command = async (id, revision, action, extra = {}) => request(`/api/v1/admin/applications/${id}/handling`, {
+    method: 'POST', cookies: admin.cookies, body: { action, expectedRevision: revision, commandKey: randomUUID(), ...extra },
+  })
+  for (const application of applications.slice(1)) {
+    await command(application.id, 1, 'ASSIGN', { assigneeID: admin.user.id })
+    await command(application.id, 2, 'START')
+  }
+  const shared = applications[2]
+  const contact = { channel: 'OTHER', occurredAt: new Date().toISOString(), reference: 'Synthetic local simulation only; no external company contacted.' }
+  await command(shared.id, 3, 'CONTACT', contact)
+  await command(shared.id, 4, 'SHARE', { ...contact, confirmCompleted: true })
+  await command(applications[3].id, 3, 'CLOSE', { reason: 'CONTACT_UNAVAILABLE', privateNote: 'Synthetic closed example, not an employer rejection.' })
+  // This explicitly legacy fixture must never receive invented consent or a snapshot.
+  await sql`insert into applications (user_id,vacancy_id,cover_letter) values (${candidate.user.id},${imported.items[5].id},'Legacy synthetic application; no submission snapshot.')`
 }

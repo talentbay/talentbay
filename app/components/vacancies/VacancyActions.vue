@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CandidateApplicationsResponse, CandidateProfileResponse } from '#shared/types/candidates'
+import type { CandidateProfileResponse } from '#shared/types/candidates'
 import { applicationDisclosureVersion } from '#shared/types/application-handling'
 import { applicationContacts, canSubmitApplication } from '#shared/utils/application-contact'
 import { safeHttpUrl } from '~/utils/safe-http-url'
@@ -23,16 +23,14 @@ const {
   data: applications,
   status,
   refresh,
-} = await useAccountResource<CandidateApplicationsResponse>(
-  'candidate-applications',
-  '/api/v1/applications',
+} = await useAccountResource<{ application: { id: number } | null }>(
+  `vacancy-application-${props.vacancy.id}`,
+  `/api/v1/vacancies/${props.vacancy.id}/application`,
 )
 const applied = computed(() =>
   Boolean(
     outcome.value ||
-    applications.value?.items.some(
-      (item) => item.vacancy.slug === props.vacancy.slug,
-    ),
+    applications.value?.application,
   ),
 )
 watch(

@@ -1,3 +1,5 @@
+import type { HandlingState, HandlingCloseReason, HandlingEventKind, HandlingStage } from './application-handling'
+
 export type CandidateProfileData = {
   headline: string | null
   about: string | null
@@ -24,6 +26,7 @@ export type CandidateApplicationItem = {
   status: 'NEW' | 'VIEWED' | 'INTERVIEW' | 'OFFER' | 'REJECTED' | 'WITHDRAWN'
   coverLetter: string | null
   createdAt: string
+  handling: Pick<HandlingState, 'stage'>
   vacancy: {
     slug: string
     title: string
@@ -36,4 +39,21 @@ export type CandidateApplicationItem = {
 export type CandidateApplicationsResponse = {
   items: CandidateApplicationItem[]
   total: number
+  nextCursor: number | null
+  counts: { all: number; active: number; closed: number }
+}
+
+export type CandidateApplicationProgress = {
+  id: number
+  stage: HandlingStage
+  legacy: boolean
+  handoffRecorded: boolean
+  nextCursor: number | null
+  events: {
+    revision: number
+    kind: Exclude<HandlingEventKind, 'ASSIGNED'>
+    createdAt: string
+    occurredAt: string | null
+    closeReason: HandlingCloseReason | null
+  }[]
 }
