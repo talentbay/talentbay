@@ -49,6 +49,14 @@ reconfirmed. Main/domain/billing, provider env/menu/webhook and Neon schema/gran
 not changed by the recovery. Demo Apply guard remains. Rollback target is the prior test
 deployment `dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs`; no DB rollback/secret rotation needed.
 
+One additional hydrated guest Profile/Applications HTTPS check PASS4.4s: configured Telegram
+offers opening the bot, not unavailable-preview copy; no auth POST was made. A raw-HTML
+assertion was inapplicable because these private routes intentionally use client rendering.
+Negative-only format/HMAC probes returned401/no-store with generic public bodies; scoped
+runtime logs confirmed the corresponding fixed stages for those two exact probe request IDs.
+No successful native request is inferred from these negatives. Final94SQL/legacy upgrade/
+replay repeated PASS on the committed source with owned PostgreSQL stopped afterwards.
+
 Fixed failure-stage logs accept only eight enum values on auth401 and expose no raw data.
 Native successful login/Profile/Applications still requires the fresh post-deploy owner
 check now requested. Reproduced defects are not proof of the cause of the original native
