@@ -86,4 +86,20 @@ describe('observability', () => {
     setRequestOperation(event, 'source.preview')
     expect(createRequestLog(telemetry, 200).result).toBe('completed')
   })
+
+  it('records only allowlisted Telegram rejection stages, never arbitrary error data', () => {
+    const event = createEvent('/api/v1/auth/telegram', 'POST')
+    attachRequestTelemetry(event, 'auth-rejection')
+    for (const reason of ['payload', 'duplicate', 'format', 'expired', 'future', 'hmac', 'user_json', 'user_schema']) {
+      const error = { statusCode: 401, data: { telegramAuthFailure: reason, initData: 'PRIVATE_LAUNCH', user: 'PRIVATE_USER' } }
+      const log = createErrorLog(error, 'nitro', event)
+      expect(log).toMatchObject({ telegramAuthFailure: reason })
+      expect(JSON.stringify(log)).not.toContain('PRIVATE')
+    }
+    const unexpected = { statusCode: 401, data: { telegramAuthFailure: 'PRIVATE_VALUE' } }
+    expect(JSON.stringify(createErrorLog(unexpected, 'nitro', event))).not.toContain('PRIVATE_VALUE')
+    const other = createEvent('/api/v1/profile')
+    attachRequestTelemetry(other, 'not-auth')
+    expect(createErrorLog({ statusCode: 401, data: { telegramAuthFailure: 'expired' } }, 'nitro', other)).not.toHaveProperty('telegramAuthFailure')
+  })
 })

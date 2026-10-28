@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ConnectedIdentity } from '#shared/types/auth'
 const { loggedIn, clear } = useUserSession()
-const { state: host } = useProductHost()
+const { state: host, getTelegramInitData } = useProductHost()
 const {
   data,
   error: identitiesError,
@@ -56,7 +56,7 @@ async function connect(provider: 'GOOGLE' | 'GITHUB' | 'TELEGRAM') {
   linkingTelegram.value = true
   telegramError.value = ''
   try {
-    const initData = window.Telegram?.WebApp?.initData
+    const initData = getTelegramInitData()
     if (!initData) throw new Error('No Telegram launch')
     await $fetch('/api/v1/auth/telegram', {
       method: 'POST',

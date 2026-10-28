@@ -83,6 +83,17 @@ async function signIn(provider: 'GOOGLE' | 'GITHUB') {
       />
     </div>
     <p
+      v-else-if="data?.telegram"
+      class="mt-5 text-sm text-muted"
+      role="status"
+    >
+      {{ host.status === 'error'
+        ? 'Telegram sign-in did not complete. Close this Mini App and open it again from the bot.'
+        : host.status === 'conflict'
+          ? 'Manage your sign-in methods in Settings to connect this Telegram account.'
+          : 'Open TalentBay from its Telegram bot to sign in.' }}
+    </p>
+    <p
       v-else
       class="mt-5 text-sm text-muted"
       role="status"

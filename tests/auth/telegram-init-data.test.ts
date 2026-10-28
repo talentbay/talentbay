@@ -39,6 +39,12 @@ describe('Telegram initData verification', () => {
     expect(() => validateTelegramInitData(raw, 'other-bot-token', now)).toThrow()
   })
 
+  it('preserves modern signed fields, escaped avatar URLs and Unicode until verification', async () => {
+    const modern = { ...user, first_name: '\u0410\u043b\u0435\u043a\u0441 + & %', last_name: '', username: 'fixture_user', is_premium: true, allows_write_to_pm: false, photo_url: 'https://t.me/i/userpic/320/fixture.svg' }
+    const raw = await signed({ user: JSON.stringify(modern).replaceAll('/', '\\/'), signature: 'synthetic_ed25519_signature-field_-', chat_instance: 'fixture-instance', chat_type: 'sender' })
+    expect(validateTelegramInitData(raw, token, now)).toMatchObject({ providerAccountID: String(user.id), name: modern.first_name, avatarUrl: modern.photo_url })
+  })
+
   it.each([-301, 31])('rejects auth_date offset %i seconds', async (offset) => {
     const raw = await signed({ auth_date: String(now / 1000 + offset) })
     expect(() => validateTelegramInitData(raw, token, now)).toThrow()
@@ -59,5 +65,29 @@ describe('Telegram initData verification', () => {
   it.each(['{}', '{', '{"id":"42","first_name":"Test"}', '{"id":-1,"first_name":"Test"}'])('rejects signed malformed user %s', async (value) => {
     const raw = await signed({ user: value })
     expect(() => validateTelegramInitData(raw, token, now)).toThrow()
+  })
+
+  it('classifies rejection stages without attaching launch data or user values', async () => {
+    const valid = await signed()
+    const badHash = new URLSearchParams(valid)
+    badHash.set('hash', '0'.repeat(64))
+    const cases = [
+      ['', 'payload'],
+      [valid + '&user=%7B%7D', 'duplicate'],
+      [await signed({ auth_date: 'not-a-date' }), 'format'],
+      [await signed({ auth_date: String(now / 1000 - 301) }), 'expired'],
+      [await signed({ auth_date: String(now / 1000 + 31) }), 'future'],
+      [badHash.toString(), 'hmac'],
+      [await signed({ user: '{' }), 'user_json'],
+      [await signed({ user: '{}' }), 'user_schema'],
+    ]
+    for (const [raw, reason] of cases) {
+      let failure: unknown
+      try { validateTelegramInitData(raw!, token, now) } catch (error) { failure = error }
+      expect(failure).toMatchObject({ statusCode: 401, data: { telegramAuthFailure: reason } })
+      expect(JSON.stringify((failure as { data: unknown }).data)).not.toContain('auth_date')
+      expect(JSON.stringify((failure as { data: unknown }).data)).not.toContain('Candidate')
+      expect(JSON.stringify((failure as { data: unknown }).data)).not.toContain(token)
+    }
   })
 })

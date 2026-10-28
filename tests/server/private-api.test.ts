@@ -16,5 +16,7 @@ describe('private API response boundary', () => {
     for (const statusCode of [NaN, Infinity, 200, 600, '403', undefined]) expect(safeApiFailure({ statusCode }).status).toBe(500)
     expect(safeApiFailure({ statusCode: 418 }).body.message).toBe('Request failed')
     expect(safeApiFailure({ statusCode: 503 }).status).toBe(503)
+    const authError = { statusCode: 401, data: { telegramAuthFailure: 'expired' } }
+    expect(safeApiFailure(authError).body).toEqual({ error: true, statusCode: 401, statusMessage: 'Authentication required', message: 'Authentication required' })
   })
 })

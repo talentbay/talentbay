@@ -1,4 +1,9 @@
 import type { ProductHostController, ProductHostState, TelegramWebApp } from '~/types/telegram'
+import { hasCachedTelegramLaunch } from '~/utils/telegram-launch'
+
+// Capture at client-module evaluation, before the router can normalize or remove the hash.
+const launch = new URLSearchParams(window.location.hash.slice(1))
+const launchInitData = launch.get('tgWebAppData') || ''
 
 export default defineNuxtPlugin((nuxtApp) => {
   const state = useState<ProductHostState>('product-host', () => ({
@@ -6,6 +11,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   }))
   const hapticsEnabled = useState('haptics-enabled', () => true)
   let host: TelegramWebApp | undefined
+  let telegramInitData: string | null = null
   let backAction: (() => void) | null = null
   const router = useRouter()
   const session = useUserSession()
@@ -18,6 +24,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   const controller: ProductHostController = {
+    getTelegramInitData: () => telegramInitData,
     haptic(type = 'selection') {
       if (!hapticsEnabled.value || !host?.HapticFeedback) return
       optional(() => type === 'selection'
@@ -42,8 +49,11 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   async function initialize() {
-    const launch = new URLSearchParams(window.location.hash.slice(1))
-    if (!window.Telegram?.WebApp?.initData && !launch.has('tgWebAppData')) return
+    const cleanupHash = window.location.hash
+    // The official SDK restores launch parameters from its cache after a hashless reload.
+    // This is a loading hint only; identity still requires the server's signed-data check.
+    if (!window.Telegram?.WebApp?.initData && !launch.has('tgWebAppData')
+      && !hasCachedTelegramLaunch(key => window.sessionStorage.getItem(key))) return
     let navigationStarted = false
     const stopTrackingNavigation = router.beforeEach(() => { navigationStarted = true })
     state.value.status = 'connecting'
@@ -60,7 +70,10 @@ export default defineNuxtPlugin((nuxtApp) => {
         })
       }
       host = window.Telegram?.WebApp
-      if (!host?.initData) throw new Error('Launch data unavailable')
+      // Navigation can remove the hash before the asynchronous SDK reads it.
+      const initData = launchInitData || host?.initData
+      if (!host || !initData) throw new Error('Launch data unavailable')
+      telegramInitData = initData
       state.value.kind = 'telegram'
       state.value.haptics = Boolean(host.HapticFeedback)
       updateHost()
@@ -72,9 +85,9 @@ export default defineNuxtPlugin((nuxtApp) => {
       controller.setBackAction(backAction)
       for (const event of ['safeAreaChanged', 'contentSafeAreaChanged', 'themeChanged']) optional(() => host?.onEvent?.(event, updateHost))
 
-      await $fetch('/api/v1/auth/telegram', { method: 'POST', body: { initData: host.initData }, timeout: 10_000 })
+      await $fetch('/api/v1/auth/telegram', { method: 'POST', body: { initData }, timeout: 10_000 })
       await session.fetch()
-      const start = new URLSearchParams(host.initData).get('start_param') || ''
+      const start = new URLSearchParams(initData).get('start_param') || ''
       const job = start.length <= 124 ? /^job_([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(start) : null
       if (job && !navigationStarted && ['/', '/jobs'].includes(router.currentRoute.value.path)) await router.replace(`/jobs/${job[1]}`)
       state.value.status = 'ready'
@@ -89,8 +102,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     finally {
       stopTrackingNavigation()
       // The SDK must read the launch hash first; failures must not retain it either.
-      const current = new URLSearchParams(window.location.hash.slice(1))
-      if (launch.has('tgWebAppData') && current.get('tgWebAppData') === launch.get('tgWebAppData')) {
+      if (launch.has('tgWebAppData') && window.location.hash === cleanupHash) {
         window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
       }
     }

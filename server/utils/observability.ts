@@ -1,4 +1,6 @@
 import type { H3Event } from 'h3'
+import { telegramAuthRejectionReasons } from '#shared/types/auth'
+import type { TelegramAuthRejectionReason } from '#shared/types/auth'
 
 type RequestTelemetry = {
   requestId: string
@@ -35,6 +37,7 @@ type ErrorLog = {
   source: string
   errorType: string
   statusCode?: number
+  telegramAuthFailure?: TelegramAuthRejectionReason
 }
 
 type TelemetryContext = {
@@ -159,6 +162,11 @@ export function createErrorLog(
     ? ['Error', 'TypeError', 'RangeError', 'SyntaxError', 'URIError', 'AbortError', 'TimeoutError', 'H3Error', 'PostgresError', 'ZodError', 'DrizzleQueryError'].includes(error.name) ? error.name : 'Error'
     : 'UnknownError'
   const statusCode = getErrorStatusCode(error)
+  const data = typeof error === 'object' && error !== null && 'data' in error ? error.data : undefined
+  const failure = typeof data === 'object' && data !== null && 'telegramAuthFailure' in data ? data.telegramAuthFailure : undefined
+  const authFailure = statusCode === 401 && telemetry?.path === '/api/v1/auth/telegram'
+    ? telegramAuthRejectionReasons.find(reason => reason === failure)
+    : undefined
 
   return {
     timestamp: new Date(occurredAt).toISOString(),
@@ -170,6 +178,7 @@ export function createErrorLog(
     source: ['nitro', 'oauth.google', 'oauth.github'].includes(source) ? source : 'application',
     errorType,
     statusCode,
+    ...(authFailure ? { telegramAuthFailure: authFailure } : {}),
   }
 }
 

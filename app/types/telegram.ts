@@ -25,6 +25,7 @@ export type ProductHostState = {
 }
 
 export type ProductHostController = {
+  getTelegramInitData: () => string | null
   haptic: (type?: 'selection' | 'success' | 'error') => void
   setBackAction: (action: (() => void) | null) => void
 }

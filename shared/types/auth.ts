@@ -8,6 +8,9 @@ export type SessionUser = {
 
 export type IdentityProvider = 'GOOGLE' | 'GITHUB' | 'TELEGRAM'
 
+export const telegramAuthRejectionReasons = ['payload', 'duplicate', 'format', 'expired', 'future', 'hmac', 'user_json', 'user_schema'] as const
+export type TelegramAuthRejectionReason = typeof telegramAuthRejectionReasons[number]
+
 export type ConnectedIdentity = {
   provider: IdentityProvider
   email: string | null
