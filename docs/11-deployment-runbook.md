@@ -8,7 +8,8 @@ Use [release readiness](20-release-readiness.md) for the current verified checkl
 The owner-approved separate internal test project now serves
 <https://talentbay-review.vercel.app/jobs>. Database is connected under a restricted role;
 Test-bot settings and10 HTTPS security probes are verified;8 DB-backed API/UI checks repeated
-PASS after enabling Telegram. Native login/profile acceptance is still pending.
+PASS after enabling Telegram and again after auth recovery15b8ca3 (8 checks/30.3s).
+Initial native login failed401; the fresh post-recovery owner check is pending.
 Main project/domain and billing are unchanged. Exact source,
 deployment, operations and pending gates are in docs14; sections below dated26 October/July
 are historical, not a revocation of the separate28 October test-project permission.
@@ -17,7 +18,9 @@ are historical, not a revocation of the separate28 October test-project permissi
 
 - Scope `alexs-projects-76662c2b` / `team_cjyqd17DfaDhcsylDIgQmBTl`, Hobby, no paid changes.
 - Only project `talentbay-review` / `prj_e1D1S2QPVCWeIQPD7ACbF08ydyuW`; no Git integration.
-- Current deployment `dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs`, prebuilt source19eecf3/runtimeb869a10.
+- Current deployment `dpl_8Wz9SXdX64hmMvDRNSa7W6RENqua`, source/runtime15b8ca3, draft #62.
+- Auth-recovery rollback: prior test deployment `dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs`.
+  No migration, provider env/menu/webhook or role/grant changes accompany this hotfix.
 - Stable test alias is public; unique deployment keeps SSO. Do not weaken protection or
   put bypass/auth credentials in Mini App URLs. Noindex is not a privacy boundary.
 - Runtime `DATABASE_URL` is the sensitive pooled connection for `talentbay_review_runtime`

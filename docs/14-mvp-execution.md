@@ -2,8 +2,57 @@
 
 Updated: 2026-10-28
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/application-context-consent`; R01 target `6278108` / #59.
+Current work branch: `codex/telegram-miniapp-recovery`; runtime `15b8ca3` / draft #62, stacked on #61.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
+
+## Native Mini App Auth Recovery - 2026-10-28
+
+Owner reports guest Profile/Applications and a Telegram sign-in error even after fully
+restarting Telegram. Two initial native requests returned401 before session creation;
+old runtime logs did not classify the rejection. Same-key negative-link probes confirmed
+the configured bot HMAC key matches the owner's local test-bot key without authenticating
+a fake identity or writing an account. Provider/local clocks agreed within3seconds.
+
+Reproduced SDK-load/navigation race: fresh launch hash disappears during navigation and
+the SDK restores an expired cache; real compiled request returned401/expired. Capturing
+only at onNuxtReady then failed401/format because Nuxt already normalized the nested hash.
+Final code captures original bytes at client-module evaluation before router setup and
+uses them for startup, start_param and explicit linking. Independent review found the
+old Connect action still selected another SDK identity: a compiled RED regression proved
+the wrong valid identity was posted. The action now uses the adapter's closure-held source.
+No raw launch data in reactive state, new storage, logs, artifacts or public error bodies.
+
+Hashless reload can load the official SDK using its existing bounded cache as a hint only;
+HMAC,300second age limit, account-conflict and origin checks are unchanged. Cleanup tracks
+the normalized URL carrier separately, clearing unchanged success/failure fragments while
+preserving navigation. Expired SDK caches remain fail-closed: reopen from the bot; do not
+write private SDK storage or reuse a browser session as proof of the Telegram identity.
+
+Source `15b8ca3e0bd0bf48aece2b13be8ea6f43be77ef9`, draft
+[PR62](https://github.com/talentbay/talentbay/pull/62), base #61's branch, not merged.
+Current CI branch filters exclude that stacked base; no new GitHub CI success is claimed.
+Actual clean-env local checks:198 unit,94 SQL integration plus migration upgrade/replay,
+46 compiled DB-browser,20 public browser,40 tooling tests; Nuxt/operations typechecks,
+lint, Node build and production HTTP smoke PASS. Loopback-restricted sandbox first blocked
+smoke/tooling; permission-correct reruns passed without source/test weakening. An initial
+link-test setup referenced removed legacy columns; fixture corrected to current oauth_accounts.
+Independent read-only review reproduced linking/cleanup findings, then passed ten focused
+scenarios with no remaining confirmed actionable defect. Owned test PG/servers stopped.
+
+Fresh clean Vercel build/output guards PASS:1Node22/74routes after restoring the ignored
+test-only noindex rule,81 public files/70scripts; actual bot token absent from public output
+and commit. Published only to the already-approved `talentbay-review`:
+`dpl_8Wz9SXdX64hmMvDRNSa7W6RENqua` READY, stable
+<https://talentbay-review.vercel.app/jobs>. Eight HTTPS API/browser checks PASS30.3s;
+public200/noindex, Telegram capability true, anonymous profile401/no-store and unique SSO302
+reconfirmed. Main/domain/billing, provider env/menu/webhook and Neon schema/grants/data were
+not changed by the recovery. Demo Apply guard remains. Rollback target is the prior test
+deployment `dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs`; no DB rollback/secret rotation needed.
+
+Fixed failure-stage logs accept only eight enum values on auth401 and expose no raw data.
+Native successful login/Profile/Applications still requires the fresh post-deploy owner
+check now requested. Reproduced defects are not proof of the cause of the original native
+request. Code ready / local tests passed / draft published / test deployed / native pending.
 
 ## Test Telegram Bot Connected - 2026-10-28
 

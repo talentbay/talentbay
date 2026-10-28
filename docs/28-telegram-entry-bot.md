@@ -3,7 +3,21 @@
 I01 implementation contract, 2026-10-27. One Nuxt application and existing server-validated
 Mini App identity flow. No Pre-ICO bot, chat support inbox, CV intake or proactive delivery.
 
-## Test Connection - 2026-10-28
+## Native Auth Recovery - 2026-10-28
+
+Owner's initial native Profile/Applications stayed guest with401 even after reopening.
+Auth hotfix15b8ca3/draft #62 deployed only to talentbay-review as
+dpl_8Wz9SXdX64hmMvDRNSa7W6RENqua; bot settings/keys/webhook unchanged.
+Client captures signed bytes before Nuxt normalizes the launch hash; startup and explicit
+linking use the same closure-held source. SDK cache is only a bounded loading hint, never
+identity proof. No new raw-data persistence or relaxed signature/freshness checks.
+URL cleanup and navigation races have compiled regressions. Eight hosted API/UI checks
+passed after deployment; fresh native Profile/Applications acceptance remains pending.
+Reopen the bot menu to receive a fresh launch and current build; a hard reload can retain
+expired SDK launch data. Never send initData/tokens for diagnosis. Only fixed failure-stage
+enum values enter private error logs; public responses remain generic. Full evidence: docs14.
+
+## Test Connection - 2026-10-28 (Initial Checkpoint)
 
 Owner supplied token through the ignored/mode600 local file; getMe verified exactly
 @talentbay_tester_bot/9279549942. Only talentbay-review is configured, no Pre-ICO bot.

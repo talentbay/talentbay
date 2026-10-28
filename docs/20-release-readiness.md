@@ -3,7 +3,18 @@
 Updated: 2026-10-28. This is an engineering checklist, not production acceptance.
 The active scope is one responsive Nuxt web/mobile/Telegram product, not token/payments.
 
-## Telegram Test Connection - 2026-10-28
+## Native Auth Recovery - 2026-10-28
+
+Original owner check failed401 even after reopening. Source15b8ca3/draft #62 is now test-only
+deployed as dpl_8Wz9SXdX64hmMvDRNSa7W6RENqua: original launch capture before router mutation,
+stable startup/link identity source, cache-based SDK loading hint and safe rejection-stage logs.
+Actual198unit/94SQL/46DB-browser/20public/40tooling, types/lint/Node/smoke/Vercel guards PASS;
+independent final review clear.8 hosted API/browser checks repeated PASS30.3s, noindex/SSO/
+private guards retained. Not merged; stacked-base CI not triggered. Provider/DB/domain/billing
+unchanged. Fresh native Profile/Applications check requested, not yet passed; first reported
+failure's exact reason remains unknown. See docs14 for reproduced RED/GREEN and rollback.
+
+## Telegram Test Connection - 2026-10-28 (Initial Checkpoint)
 
 The owner added the tester token, now exact getMe verified @talentbay_tester_bot/9279549942.
 New test-only deployment dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs has Telegram capability true and
