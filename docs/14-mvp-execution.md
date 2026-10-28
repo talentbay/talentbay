@@ -1,9 +1,59 @@
 # MVP Execution Log
 
-Updated: 2026-10-27
+Updated: 2026-10-28
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Current work branch: `codex/application-context-consent`; R01 target `6278108` / #59.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
+
+## Public Internal Review Stand - 2026-10-28
+
+Owner explicitly approved the separate free `talentbay-review` project and its public
+test URL, knowing Vercel calls its first deployment Production. This is not the primary
+TalentBay production, a commercial beta or provider/legal certification of Hobby use.
+The owner's non-commercial classification is reported; do not re-request the same hosting
+permission. No paid plans/trials, main merge, primary project/domain change or outreach.
+
+Created project `prj_e1D1S2QPVCWeIQPD7ACbF08ydyuW` in existing Hobby scope
+`team_cjyqd17DfaDhcsylDIgQmBTl` / `alexs-projects-76662c2b`, no Git integration.
+MCP project creation returned403 without creating anything; same-account CLI65.5.0 creation
+succeeded. CLI auth/link and exact new project ID were verified; no account switch/login.
+CLI-generated OIDC file is ignored/mode600; its extra gitignore line was removed without
+changing the existing ignore policy. CLI is temporary under `/private/tmp`, not a dependency.
+
+Published source `19eecf39c8fdae53ce9754c6b7e9dae9ce8e5588` (runtime `b869a10`, R03):
+deployment `dpl_7VyosvQp3LbjPryHWLoWYYGEvVph`, READY, stable public review URL
+<https://talentbay-review.vercel.app/jobs>. Unique deployment URL retains Vercel SSO302;
+the stable alias returns200 without Vercel login. No protection setting was weakened.
+Fresh clean-env `NITRO_PRESET=vercel pnpm build --dotenv /dev/null` PASS, one generated
+Node22 function/73 routes; public-output guard81 files/70 scripts PASS. Only the ignored
+test deployment artifact then gained a continuing `X-Robots-Tag: noindex, nofollow, noarchive`
+route (74 routes). Header verified over HTTPS. This rule must be reapplied after a rebuild;
+it is not an application-code change or an access-control mechanism.
+
+New project session secret was generated independently and stored as sensitive provider
+configuration. An owner-role URL for the new preview DB was briefly prepared in this new
+project, then replaced with an empty value **before the first deployment**. Runtime DB is
+disabled: guest/demo catalogue only, no DB reads/writes/seed or candidate records. Automatic
+security review rejected the proposed least-privilege login-role provisioning before
+execution. No role/grants were created; a separate explicit approval was requested for
+`talentbay_review_runtime` and DML/sequence access to only the11 existing test tables.
+Do not bypass that rejection by deploying owner credentials or creating the role indirectly.
+
+Actual HTTPS verification: public catalogue200/DEMO5, private profile401/admin403/no-store;
+17 candidate-shell browser tests plus3 relocation tests PASS (32.4s/7.7s). Six viewport widths
+320..1440, save/remove/undo/cross-tab state, keyboard/filter/back navigation, hydration,
+currency boundaries, delayed/error/retry calculations and mobile context were exercised.
+Desktop/mobile screenshots inspected. These are guest tests, not DB/native/user acceptance.
+Existing fallback fixtures include Amsterdam; they do not expand the agreed launch geography.
+
+Owner supplied test bot `@talentbay_tester_bot`; token still absent from the ignored/mode600
+`.env.preview-review.local` at the last presence check. No getMe identity verification,
+bot env/menu/commands/webhook mutation, OAuth setup or real Telegram acceptance yet.
+Next: explicit runtime-role approval, guarded fictional DB content/runtime connection,
+token via the local file only, exact bot verification/setup and real native/operator/CEO
+walkthrough. Existing source/data/privacy/retention/beta gates remain. Rollback for this
+guest publication: leave the new review DB disconnected and stop sharing this isolated URL;
+do not touch the primary project, domain, legacy neondb or other branches.
 
 ## Isolated Neon Preview Database - 2026-10-27
 

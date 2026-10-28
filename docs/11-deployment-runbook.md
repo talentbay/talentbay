@@ -1,18 +1,53 @@
 # Deployment Runbook
 
-Last updated: 2026-10-26
+Last updated: 2026-10-28
 
 ## Latest readiness
 
 Use [release readiness](20-release-readiness.md) for the current verified checklist.
-26 October reads still find Hobby/no TalentBay Git link and archived Neon branches;
-`talentbay.org` returns DEPLOYMENT_NOT_FOUND. No cloud writes/deployments were performed.
-Local Node and Vercel-adapter builds passed; the generated Vercel runtime is **nodejs22.x**
-through package engines precedence, despite old project metadata showing 24.x. Check the
-real provider build/runtime when an eligible preview is deployed. Synthetic local backup/
-restore passed; preview/production backup acceptance remains separate.
+The owner-approved separate internal test project now serves
+<https://talentbay-review.vercel.app/jobs>. Actual20 guest browser tests PASS; database and
+bot sign-in are not connected. Main project/domain and billing are unchanged. Exact source,
+deployment, operations and pending gates are in docs14; sections below dated26 October/July
+are historical, not a revocation of the separate28 October test-project permission.
 
-## Current operating boundary
+## Current Review Project Boundary - 2026-10-28
+
+- Scope `alexs-projects-76662c2b` / `team_cjyqd17DfaDhcsylDIgQmBTl`, Hobby, no paid changes.
+- Only project `talentbay-review` / `prj_e1D1S2QPVCWeIQPD7ACbF08ydyuW`; no Git integration.
+- Current deployment `dpl_7VyosvQp3LbjPryHWLoWYYGEvVph`, source19eecf3/runtimeb869a10.
+- Stable test alias is public; unique deployment keeps SSO. Do not weaken protection or
+  put bypass/auth credentials in Mini App URLs. Noindex is not a privacy boundary.
+- Runtime `DATABASE_URL` is empty. A new session secret is sensitive provider configuration.
+  Never copy the old project's OAuth/DB/session configuration implicitly. New runtime-role
+  creation was rejected before execution; obtain the specifically requested permission,
+  not an indirect/owner-credential workaround. No role rotation or legacy DB migration.
+- Test bot is reported as `@talentbay_tester_bot`; token is missing. Owner may put it in
+  ignored `.env.preview-review.local` (mode600), never chat. Verify exact getMe ID/username
+  before any provider mutation. Bot setup/rollback is in docs28; native acceptance is separate.
+
+For the next authorized review deployment, verify project ID/scope/source before publishing.
+Build from clean environment without developer dotenv using pinned Node22/pnpm and Nitro's
+Vercel preset; do not migrate/seed from a build hook. Run both output guards. After each build,
+prepend this test-only rule to the generated `.vercel/output/config.json` routes using the
+normal file-edit process (the build overwrites it). Do not apply it to the primary project:
+
+```json
+{"src":"/(.*)","headers":{"X-Robots-Tag":"noindex, nofollow, noarchive"},"continue":true}
+```
+
+Then use the verified existing CLI65.5.0 with explicit targets:
+
+```bash
+vercel deploy --prebuilt --prod --project prj_e1D1S2QPVCWeIQPD7ACbF08ydyuW --scope alexs-projects-76662c2b
+```
+
+Here `--prod` is only this isolated test project's Vercel label. It does not authorize
+primary production promotion, domains, paid plans or public-beta outreach. Verify the stable
+alias without credentials, noindex, private API rejection and relevant browser flows after
+deployment. Do not claim guest tests prove authenticated DB/native/operator journeys.
+
+## Historical Operating Boundary - 2026-10-26
 
 The access/runtime results below are historical July observations unless dated otherwise.
 October metadata, project/branch IDs and SHA are centralized in `docs/14-mvp-execution.md`.

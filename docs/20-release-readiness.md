@@ -1,7 +1,34 @@
 # Release Readiness
 
-Updated: 2026-10-27. This is an engineering checklist, not production acceptance.
+Updated: 2026-10-28. This is an engineering checklist, not production acceptance.
 The active scope is one responsive Nuxt web/mobile/Telegram product, not token/payments.
+
+## Internal Review Update - 2026-10-28
+
+Owner approved current free/non-commercial review use and a **separate** `talentbay-review`
+project. It now serves <https://talentbay-review.vercel.app/jobs> without Vercel login.
+Deployment `dpl_7VyosvQp3LbjPryHWLoWYYGEvVph` is READY; its Production label applies only
+to the new test project, not TalentBay's primary production. Main/domain/old project and
+billing were not changed. Hobby classification remains owner-reported, not provider approval;
+do not repeatedly ask the same internal-demo permission or infer commercial-beta acceptance.
+
+Source19eecf3/runtimeb869a10 with clean Vercel build/public-output checks and actual20 HTTPS
+guest browser tests PASS; desktop/mobile screenshots inspected. Stable alias public200,
+unique deployment retains SSO302 and private APIs reject unauthenticated requests/no-store.
+Test-only generated routing adds verified noindex; it is not access protection. See docs14/11
+for the exact project, source and repeatable deployment boundary.
+
+**Not a complete deployed MVP:** runtime DATABASE_URL is intentionally empty, catalogue is
+the existing five fictional/demo records and relocation figures are illustrative. Owner-role
+credentials were removed from the new project before publication. Security review rejected
+new runtime-role provisioning before execution; an explicit limited-role permission is
+pending. No Neon data/role writes or seed in this deployment pass. Token for the reported
+`@talentbay_tester_bot` is still absent; no real bot configuration/login/native acceptance,
+OAuth callback, authenticated Apply, admin/operator, real content or beta policy acceptance.
+An initialized empty DB and previous disposable SQL tests do not close those live gates.
+
+The dated provider observations below remain historical. They must not override this
+explicit new-project authorization or be mistaken for current deployment state.
 
 ## Provider Update - 2026-10-27
 
