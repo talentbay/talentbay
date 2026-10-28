@@ -11,7 +11,9 @@ stable startup/link identity source, cache-based SDK loading hint and safe rejec
 Actual198unit/94SQL/46DB-browser/20public/40tooling, types/lint/Node/smoke/Vercel guards PASS;
 independent final review clear.8 hosted API/browser checks repeated PASS30.3s, noindex/SSO/
 private guards retained. Not merged; stacked-base CI not triggered. Provider/DB/domain/billing
-unchanged. Fresh native Profile/Applications check requested, not yet passed; first reported
+unchanged. Owner subsequently confirmed the fresh native sign-in/Profile/Applications
+check passed on28 October. This is manual owner evidence, not agent access to private data.
+Real Apply/operator, other native clients and full beta acceptance remain separate; the first
 failure's exact reason remains unknown. See docs14 for reproduced RED/GREEN and rollback.
 
 ## Telegram Test Connection - 2026-10-28 (Initial Checkpoint)

@@ -9,7 +9,9 @@ The owner-approved separate internal test project now serves
 <https://talentbay-review.vercel.app/jobs>. Database is connected under a restricted role;
 Test-bot settings and10 HTTPS security probes are verified;8 DB-backed API/UI checks repeated
 PASS after enabling Telegram and again after auth recovery15b8ca3 (8 checks/30.3s).
-Initial native login failed401; the fresh post-recovery owner check is pending.
+Initial native login failed401; the fresh post-recovery sign-in/Profile/Applications check
+passed according to the owner's28 October reply. Broader native/Apply/operator acceptance
+is not implied.
 Main project/domain and billing are unchanged. Exact source,
 deployment, operations and pending gates are in docs14; sections below dated26 October/July
 are historical, not a revocation of the separate28 October test-project permission.
@@ -39,7 +41,8 @@ are historical, not a revocation of the separate28 October test-project permissi
 - Test bot getMe verified `@talentbay_tester_bot`/9279549942; token is now configured only
   in the new project and owner's ignored/mode600 `.env.preview-review.local`. Never request
   it in chat. Menu/private commands/webhook read-back matches docs28. Telegram capability
-  true, Google/GitHub false. Native login/profile is a separate human gate, not yet verified.
+  true, Google/GitHub false. Native sign-in/Profile/Applications is owner-confirmed after
+  recovery15b8ca3; other native clients, real Apply and operator flows remain separate gates.
 
 For the next authorized review deployment, verify project ID/scope/source before publishing.
 Build from clean environment without developer dotenv using pinned Node22/pnpm and Nitro's

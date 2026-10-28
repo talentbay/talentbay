@@ -12,7 +12,8 @@ Client captures signed bytes before Nuxt normalizes the launch hash; startup and
 linking use the same closure-held source. SDK cache is only a bounded loading hint, never
 identity proof. No new raw-data persistence or relaxed signature/freshness checks.
 URL cleanup and navigation races have compiled regressions. Eight hosted API/UI checks
-passed after deployment; fresh native Profile/Applications acceptance remains pending.
+passed after deployment. Owner's subsequent28 October reply confirms fresh native sign-in,
+Profile and Applications work. This is a manual owner pass, not full bot/Apply acceptance.
 Reopen the bot menu to receive a fresh launch and current build; a hard reload can retain
 expired SDK launch data. Never send initData/tokens for diagnosis. Only fixed failure-stage
 enum values enter private error logs; public responses remain generic. Full evidence: docs14.

@@ -58,9 +58,13 @@ No successful native request is inferred from these negatives. Final94SQL/legacy
 replay repeated PASS on the committed source with owned PostgreSQL stopped afterwards.
 
 Fixed failure-stage logs accept only eight enum values on auth401 and expose no raw data.
-Native successful login/Profile/Applications still requires the fresh post-deploy owner
-check now requested. Reproduced defects are not proof of the cause of the original native
-request. Code ready / local tests passed / draft published / test deployed / native pending.
+Post-deploy owner reply on2026-10-28: "Yes, Profile and Applications open" in response to
+the fresh bot-open/profile/no-warning check. Native sign-in and those two screens are now
+owner-confirmed manual acceptance, not an agent-read of the user's profile or session.
+This does not prove command delivery, all Telegram platforms, explicit linking, real Apply,
+operator handling or full MVP/beta acceptance. Reproduced defects still do not identify the
+exact rejection stage of the original request. No code/provider changes followed this reply.
+Code ready / local tests passed / draft published / test deployed / native entry owner-passed.
 
 ## Test Telegram Bot Connected - 2026-10-28
 
