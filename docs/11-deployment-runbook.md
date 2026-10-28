@@ -7,7 +7,8 @@ Last updated: 2026-10-28
 Use [release readiness](20-release-readiness.md) for the current verified checklist.
 The owner-approved separate internal test project now serves
 <https://talentbay-review.vercel.app/jobs>. Database is connected under a restricted role;
-8 hosted DB-backed API/UI checks plus2 calculator tests PASS. Bot sign-in is not connected.
+Test-bot settings and10 HTTPS security probes are verified;8 DB-backed API/UI checks repeated
+PASS after enabling Telegram. Native login/profile acceptance is still pending.
 Main project/domain and billing are unchanged. Exact source,
 deployment, operations and pending gates are in docs14; sections below dated26 October/July
 are historical, not a revocation of the separate28 October test-project permission.
@@ -16,7 +17,7 @@ are historical, not a revocation of the separate28 October test-project permissi
 
 - Scope `alexs-projects-76662c2b` / `team_cjyqd17DfaDhcsylDIgQmBTl`, Hobby, no paid changes.
 - Only project `talentbay-review` / `prj_e1D1S2QPVCWeIQPD7ACbF08ydyuW`; no Git integration.
-- Current deployment `dpl_Fa64rRp3SiwfssVLX9qoVy71mZSr`, prebuilt source19eecf3/runtimeb869a10.
+- Current deployment `dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs`, prebuilt source19eecf3/runtimeb869a10.
 - Stable test alias is public; unique deployment keeps SSO. Do not weaken protection or
   put bypass/auth credentials in Mini App URLs. Noindex is not a privacy boundary.
 - Runtime `DATABASE_URL` is the sensitive pooled connection for `talentbay_review_runtime`
@@ -32,9 +33,10 @@ are historical, not a revocation of the separate28 October test-project permissi
   Demo Apply remains disabled. The one-time seed requires an empty DB; do not reset/replay
   it against later user data. Use the existing reviewed operator import flow for new content.
   Separate session secret remains sensitive provider configuration; do not copy old env.
-- Test bot is reported as `@talentbay_tester_bot`; token is missing. Owner may put it in
-  ignored `.env.preview-review.local` (mode600), never chat. Verify exact getMe ID/username
-  before any provider mutation. Bot setup/rollback is in docs28; native acceptance is separate.
+- Test bot getMe verified `@talentbay_tester_bot`/9279549942; token is now configured only
+  in the new project and owner's ignored/mode600 `.env.preview-review.local`. Never request
+  it in chat. Menu/private commands/webhook read-back matches docs28. Telegram capability
+  true, Google/GitHub false. Native login/profile is a separate human gate, not yet verified.
 
 For the next authorized review deployment, verify project ID/scope/source before publishing.
 Build from clean environment without developer dotenv using pinned Node22/pnpm and Nitro's
@@ -61,6 +63,11 @@ Review-only rollback target is the prior guest deployment `dpl_7VyosvQp3LbjPryHW
 its immutable runtime DB configuration is empty. Restore only this test project's alias if
 needed. Changing a project env affects future deployments, not an already deployed runtime.
 Retain role/data until separately approved cleanup; no destructive down-migration/drop/reset.
+
+Bot-only rollback first removes only the tester webhook with drop_pending_updates=false,
+restores menu type commands and the prior empty all_private_chats command scope, then restores
+the prior DB-backed/no-bot deployment `dpl_Fa64rRp3SiwfssVLX9qoVy71mZSr`. Do not leave an active
+webhook targeting an unconfigured runtime or discard updates/rotate credentials to simplify rollback.
 
 ## Historical Operating Boundary - 2026-10-26
 

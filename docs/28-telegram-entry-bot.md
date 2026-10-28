@@ -3,6 +3,26 @@
 I01 implementation contract, 2026-10-27. One Nuxt application and existing server-validated
 Mini App identity flow. No Pre-ICO bot, chat support inbox, CV intake or proactive delivery.
 
+## Test Connection - 2026-10-28
+
+Owner supplied token through the ignored/mode600 local file; getMe verified exactly
+@talentbay_tester_bot/9279549942. Only talentbay-review is configured, no Pre-ICO bot.
+Stable origin https://talentbay-review.vercel.app, deployment dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs.
+Read-back verifies Open TalentBay web_app menu to /jobs, five all_private_chats commands
+below and webhook to /api/v1/bot/telegram, message updates/max_connections2/pending0 at check.
+Existing state was empty/default; pending updates were preserved. First immediate menu read
+still showed commands; guarded retry made no write, later read matched. Do not overwrite
+the existing verified webhook just because a one-time setup helper reports a conflict.
+
+Telegram=true capability and10 HTTPS security probes PASS;8 DB-backed UI/API probes PASS.
+No forged successful login/user/receipt was generated. Real Start/command delivery/native
+Profile is awaiting owner confirmation. Bot has no Main Mini App: use
+[the bot chat](https://t.me/talentbay_tester_bot) -> Start -> Open TalentBay, not an assumed
+startapp link. Google/GitHub are not configured on this test project. Demo Apply stays off.
+Prior settings for rollback: empty webhook, commands menu, empty default/private command
+sets. See docs14/11 for the exact deployed state and safe rollback order. Secrets stay out
+of these records; don't rotate them merely to reconstruct a setup command.
+
 ## Architecture and Delivery Meaning
 
 Use an HTTPS Nitro webhook and Telegram's documented JSON webhook-reply mechanism for

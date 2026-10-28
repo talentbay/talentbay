@@ -3,6 +3,17 @@
 Updated: 2026-10-28. This is an engineering checklist, not production acceptance.
 The active scope is one responsive Nuxt web/mobile/Telegram product, not token/payments.
 
+## Telegram Test Connection - 2026-10-28
+
+The owner added the tester token, now exact getMe verified @talentbay_tester_bot/9279549942.
+New test-only deployment dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs has Telegram capability true and
+Google/GitHub false. Menu/private commands/webhook read-back verified, pending0 at check;
+no prior bot configuration overwritten or updates dropped.10 HTTPS security checks and
+8 repeated DB-backed API/browser checks PASS; no successful native identity was fabricated.
+Actual Telegram Start/command delivery/login/Profile awaits the owner's requested test.
+Neither settings nor negative HMAC tests prove native acceptance. Demo Apply is still off;
+operator/approved real source/privacy/beta gates remain. docs14/28/11 hold evidence/rollback.
+
 ## DB-backed Review Update - 2026-10-28
 
 The separately requested limited DB-role permission is now explicit and completed, not

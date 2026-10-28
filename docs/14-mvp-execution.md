@@ -5,6 +5,39 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Current work branch: `codex/application-context-consent`; R01 target `6278108` / #59.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
+## Test Telegram Bot Connected - 2026-10-28
+
+Owner populated the approved ignored/mode600 token file. getMe verified the exact separate
+test bot `talentbay_tester_bot`, ID9279549942; no Pre-ICO bot/account switch. Prior state:
+no webhook/pending updates, menu commands, no default/private commands. Five new server env
+keys were created only in `talentbay-review` (token/webhook secret sensitive, bot ID/username/
+app origin config); no old credentials or paid settings changed. No real secrets entered
+CLI arguments, Git, notes or the build. Actual bot token absent from all81 public build files.
+
+Same prebuilt19eecf3/runtimeb869a10, new test-only deployment
+`dpl_CBXZ9Kq4RhJwYevBKDWNEqMhHHrs` READY. Capabilities now Telegram=true, Google/GitHub=false.
+Ten actual HTTPS probes PASS: wrong HMAC/origin rejected, missing/wrong webhook secret403,
+correct secret/no-message update200 and malformed400, private/admin denial/no-store and
+no secrets in SSR. No fake identity/session or receipt was created by these probes.
+Eight DB-backed HTTPS API/browser checks repeated PASS30.9s; only the temporary capability
+expectation changed false->true to match the newly configured environment. Runtime source
+and the existing code/SQL tests were not changed. Public alias/noindex and unique SSO302 retained.
+
+Telegram accepted five all_private_chats commands, menu Open TalentBay -> /jobs and webhook
+-> /api/v1/bot/telegram, secret header/max_connections2/allowed_updates message only;
+drop_pending_updates=false. Immediate menu read still showed commands; a guarded menu-only
+attempt aborted before mutation because state had changed. Subsequent read verified the exact
+web_app menu, all commands and webhook, pending0/no error reported. No blind webhook reset.
+has_main_web_app=false: share the bot chat URL, not an unverified startapp direct link.
+
+Owner asked to check real Telegram Start -> Open TalentBay -> Profile. Native successful
+login/profile, command delivery and operator/human acceptance remain pending, not inferred
+from HMAC-negative probes or provider settings. No real candidate data was read, no admin
+promotion/outreach/primary project/domain/billing change. Demo Apply protection unchanged.
+Rollback: first delete only this test webhook preserving pending updates, restore previous
+commands menu/private command scope, then restore prior DB-backed/no-bot deployment
+`dpl_Fa64rRp3SiwfssVLX9qoVy71mZSr`; retain accounts/data, do not rotate secrets/drop tables.
+
 ## Restricted DB Runtime Connected - 2026-10-28
 
 Owner explicitly answered "Yes, a separate restricted DB user" to the11-table DML/sequence
