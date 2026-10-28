@@ -5,6 +5,65 @@ Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Current work branch: `codex/application-context-consent`; R01 target `6278108` / #59.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
 
+## Restricted DB Runtime Connected - 2026-10-28
+
+Owner explicitly answered "Yes, a separate restricted DB user" to the11-table DML/sequence
+permission. This supersedes the earlier rejected/pending operation below; no workaround or
+existing-role/password rotation was used. Read-only preflight confirmed the exact new DB,
+PG18.6,10 migrations,11 public tables/7 sequences and no existing runtime role.
+
+Created SQL role `talentbay_review_runtime` only on preview `br-jolly-glade-ash2y5iy` with
+LOGIN and no superuser/CREATEDB/CREATEROLE/REPLICATION/BYPASSRLS. Explicit named grants only:
+44 SELECT/INSERT/UPDATE/DELETE privileges on the11 current tables and USAGE/SELECT on7
+current sequences; no default/future-object grants, grant option, TRUNCATE/REFERENCES/
+TRIGGER/MAINTAIN or sequence UPDATE. Same-transaction assertions verified no inherited
+memberships, database/schema CREATE or migration-schema/journal access. Baseline PUBLIC
+privileges were not rewritten; roles are branch-scoped, grants are in the new DB only.
+The generated credential is sensitive configuration of the new Vercel project, not Git,
+local dotenv or migration credentials. No grants/SQL to old neondb or other branches.
+
+Before cloud seed, existing import Zod/content mapping and Drizzle compiled the five
+fictional non-Amsterdam fixtures. One disposable PG18 rehearsal proved wrong-DB rejection,
+late-error rollback, DRAFT/UNREVIEWED before deliberate test publication, and rejection of
+replay into a nonempty target without overwriting. First local startup failed due to macOS
+locale before SQL; LANG/LC_ALL=C fixed the temporary process only. Owned clusters stopped.
+The17-statement plan then committed only in `talentbay_mvp_preview`, with exact-database,
+migration-count/empty-table guards and locks. Actual counts:5 organisations/5 vacancies,
+0 users/profiles/applications. Titles/descriptions are explicit DEMO, source is the existing
+preview dataset, no real external URL/fetch/source publication/reviewer identity is invented.
+Demo source status and the server-side Apply prohibition are preserved, not renamed around.
+
+Same prebuilt19eecf3/runtimeb869a10 deployed only to `talentbay-review`:
+`dpl_Fa64rRp3SiwfssVLX9qoVy71mZSr` READY, stable <https://talentbay-review.vercel.app/jobs>.
+Live200 returns the5 prefixed DB rows; pg_stat_activity independently shows2 idle connections
+as `talentbay_review_runtime`.44 non-grantable DML grants/0 inherited memberships/no CREATE/
+journal access reconfirmed read-only. Noindex persists; unique URL retains SSO302.
+Eight HTTPS API/browser checks PASS26s: detail, country/full-text search, three cursor pages
+without duplication, private/admin denial/no-store and320/390/1024/1440 layouts/Saved/back.
+The first probe used unsupported `cursor` and got400; corrected to contract `before`, retaining
+a separate400 assertion for the unknown field. No application assertion/code was weakened.
+Two existing HTTPS calculator/hydration tests PASS10.3s; screenshots inspected. Output guards
+remain1Node22/74routes/public81files70scripts PASS. Runtime source/dependencies unchanged;
+these10 hosted checks are separate from the previous deployment's20 guest checks and R03/CI.
+
+Actual operational commands (temporary probe files, not committed product runners):
+
+```bash
+node --import tsx /private/tmp/talentbay-review-seed-plan.mjs
+pnpm exec playwright test --config /private/tmp/talentbay-review-db-playwright.config.mjs
+pnpm exec playwright test relocation-outcome.spec.ts relocation-hydration.spec.ts --grep 'currency boundaries|SSR relocation controls' --config /private/tmp/talentbay-review-public-playwright.config.mjs --output /private/tmp/talentbay-review-db-relocation-results
+node scripts/assert-vercel-output.mjs
+node scripts/assert-public-output.mjs .vercel/output/static
+```
+
+Auth capabilities are all false; test-bot token still absent. No real user/admin bootstrap,
+Telegram/OAuth/provider login, operator/Apply/native/CEO acceptance or real content acceptance.
+No primary production/domain/billing change. Live test DB may scale to zero normally; no
+background polling or forced suspension of the running site's requests. Next: test bot token
+through the ignored file, exact getMe verification and docs28 setup/native acceptance.
+Rollback: restore prior test-only guest deployment `dpl_7VyosvQp3LbjPryHWLoWYYGEvVph` (its DB
+config is empty); retain role/data pending approved cleanup, never drop/reset another DB.
+
 ## Public Internal Review Stand - 2026-10-28
 
 Owner explicitly approved the separate free `talentbay-review` project and its public

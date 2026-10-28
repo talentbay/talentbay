@@ -3,6 +3,28 @@
 Updated: 2026-10-28. This is an engineering checklist, not production acceptance.
 The active scope is one responsive Nuxt web/mobile/Telegram product, not token/payments.
 
+## DB-backed Review Update - 2026-10-28
+
+The separately requested limited DB-role permission is now explicit and completed, not
+pending. SQL-created `talentbay_review_runtime` has44 non-grantable DML permissions on the11
+existing test tables/USAGE+SELECT on7 sequences, no elevated memberships/schema CREATE/
+migration-journal access and no future-object grants. Only the new isolated DB is connected.
+Five deliberately fictional DEMO vacancies/companies were seeded after a guarded disposable
+rehearsal; no users/profiles/applications or real source fetch. Apply stays prohibited for
+Demo listings; do not rename the source to bypass that protection for a presentation.
+
+Current review deployment `dpl_Fa64rRp3SiwfssVLX9qoVy71mZSr` is READY on the same public alias.
+Actual DB rows and active runtime-role connection metadata verified. Eight hosted API/UI
+checks plus2 existing calculator tests PASS; screenshots inspected. Anonymous private/admin
+access rejected/no-store, noindex and unique-deployment SSO retained. Runtime b869a10 is
+unchanged. Exact operational evidence/rollback: docs14/11. The previous20 guest checks below
+belong to the previous deployment; they are not relabelled as current DB/native acceptance.
+
+Token for @talentbay_tester_bot is still absent; Google/GitHub/Telegram capabilities false.
+Real login/link/profile/operator/Apply/native/CEO and approved real sources/data/policies are
+still acceptance gates. Primary project/main/domain, production/integration/legacy DBs and
+billing untouched. No fully accepted MVP or commercial launch claim.
+
 ## Internal Review Update - 2026-10-28
 
 Owner approved current free/non-commercial review use and a **separate** `talentbay-review`

@@ -6,8 +6,9 @@ Last updated: 2026-10-28
 
 Use [release readiness](20-release-readiness.md) for the current verified checklist.
 The owner-approved separate internal test project now serves
-<https://talentbay-review.vercel.app/jobs>. Actual20 guest browser tests PASS; database and
-bot sign-in are not connected. Main project/domain and billing are unchanged. Exact source,
+<https://talentbay-review.vercel.app/jobs>. Database is connected under a restricted role;
+8 hosted DB-backed API/UI checks plus2 calculator tests PASS. Bot sign-in is not connected.
+Main project/domain and billing are unchanged. Exact source,
 deployment, operations and pending gates are in docs14; sections below dated26 October/July
 are historical, not a revocation of the separate28 October test-project permission.
 
@@ -15,13 +16,22 @@ are historical, not a revocation of the separate28 October test-project permissi
 
 - Scope `alexs-projects-76662c2b` / `team_cjyqd17DfaDhcsylDIgQmBTl`, Hobby, no paid changes.
 - Only project `talentbay-review` / `prj_e1D1S2QPVCWeIQPD7ACbF08ydyuW`; no Git integration.
-- Current deployment `dpl_7VyosvQp3LbjPryHWLoWYYGEvVph`, source19eecf3/runtimeb869a10.
+- Current deployment `dpl_Fa64rRp3SiwfssVLX9qoVy71mZSr`, prebuilt source19eecf3/runtimeb869a10.
 - Stable test alias is public; unique deployment keeps SSO. Do not weaken protection or
   put bypass/auth credentials in Mini App URLs. Noindex is not a privacy boundary.
-- Runtime `DATABASE_URL` is empty. A new session secret is sensitive provider configuration.
-  Never copy the old project's OAuth/DB/session configuration implicitly. New runtime-role
-  creation was rejected before execution; obtain the specifically requested permission,
-  not an indirect/owner-credential workaround. No role rotation or legacy DB migration.
+- Runtime `DATABASE_URL` is the sensitive pooled connection for `talentbay_review_runtime`
+  in the new `talentbay_mvp_preview` DB only. Owner explicitly approved its limited-role
+  creation; earlier rejection/pending records are superseded. SQL role, no inherited/elevated
+  memberships/CREATE/migration-journal rights; grants name only11 current tables/7 sequences.
+  Do not recreate it via the Neon control-plane API, rotate an existing password or grant
+  future objects automatically. Owner/migration credentials never belong in this runtime.
+  Baseline PUBLIC privileges are unchanged. [Neon SQL vs control-plane roles](https://neon.com/docs/manage/roles),
+  [PostgreSQL grant semantics](https://www.postgresql.org/docs/18/sql-grant.html).
+- Five existing fixtures were validated/rehearsed then deliberately published only as DEMO;
+  no users, profiles, applications or fake admin/reviewer were seeded. No real source fetched.
+  Demo Apply remains disabled. The one-time seed requires an empty DB; do not reset/replay
+  it against later user data. Use the existing reviewed operator import flow for new content.
+  Separate session secret remains sensitive provider configuration; do not copy old env.
 - Test bot is reported as `@talentbay_tester_bot`; token is missing. Owner may put it in
   ignored `.env.preview-review.local` (mode600), never chat. Verify exact getMe ID/username
   before any provider mutation. Bot setup/rollback is in docs28; native acceptance is separate.
@@ -46,6 +56,11 @@ Here `--prod` is only this isolated test project's Vercel label. It does not aut
 primary production promotion, domains, paid plans or public-beta outreach. Verify the stable
 alias without credentials, noindex, private API rejection and relevant browser flows after
 deployment. Do not claim guest tests prove authenticated DB/native/operator journeys.
+
+Review-only rollback target is the prior guest deployment `dpl_7VyosvQp3LbjPryHWLoWYYGEvVph`;
+its immutable runtime DB configuration is empty. Restore only this test project's alias if
+needed. Changing a project env affects future deployments, not an already deployed runtime.
+Retain role/data until separately approved cleanup; no destructive down-migration/drop/reset.
 
 ## Historical Operating Boundary - 2026-10-26
 
