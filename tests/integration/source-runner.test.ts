@@ -146,8 +146,9 @@ describe('bounded source runner with durable batch checkpoints', () => {
     const [current] = await sql`select items from source_imports where source_key=${key}`
     await sql`update source_imports set config_revision=${legacyRevision}, items=${sql.json(legacyPayload)} where source_key=${key}`
     try {
-      await expect(previewSourceBatch(source, runID, admin)).rejects.toMatchObject({ statusCode: 409 })
-      await expect(importSourceBatch(source, { runID, offset: 0, revision: 'a'.repeat(64) }, admin)).rejects.toMatchObject({ statusCode: 409 })
+      const mismatch = { statusCode: 409, statusMessage: 'Source configuration or run changed. Reload source progress.' }
+      await expect(previewSourceBatch(source, runID, admin)).rejects.toMatchObject(mismatch)
+      await expect(importSourceBatch(source, { runID, offset: 0, revision: 'a'.repeat(64) }, admin)).rejects.toMatchObject(mismatch)
       expect(await sql`select id from vacancies where source_name=${key} and description=${legacyPayload[0]!.vacancy.description}`).toHaveLength(0)
     } finally { await sql`update source_imports set config_revision=${sourceConfigRevision(source)},items=${sql.json(current!.items)} where source_key=${key}` }
     await sql`update users set role='USER' where id=${admin}`
