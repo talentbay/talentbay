@@ -11,7 +11,14 @@ checks the current account/role. Promote accounts only through the documented co
 admin procedure; never add a public test login or automatically promote a new provider.
 
 Use only sources that the product owner has approved for republication. Public visibility
-on another website is not an import license. Record a real original source URL and stable
+on another website is not an import license. Owner16 November direction: automated feeds
+are facts-only, never copied descriptions/requirements or AI paraphrases. Do not use
+logged-in scraping or scrape LinkedIn/Indeed; prefer approved employer ATS APIs, not merely
+accessible feeds. CSV/JSON is not a workaround: manual descriptions must be first-party or
+permission-cleared, not pasted job-board prose. The shared source URL schema blocks the
+known main linkedin.com/indeed.com domains and subdomains only; this is not an exhaustive
+provider or rights check. See [source contract](25-source-contract.md) and
+[compliance boundaries](08-compliance-guardrails.md). Record a real original source URL and stable
 source record ID. Do not put credentials, private candidate information or passport data
 in files. Synthetic data belongs in isolated tests, not the real-content catalogue.
 

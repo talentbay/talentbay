@@ -1,9 +1,67 @@
 # MVP Execution Log
 
-Updated: 2026-10-28
+Updated: 2026-11-16
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/telegram-miniapp-recovery`; runtime `15b8ca3` / draft #62, stacked on #61.
+Current work branch: `codex/source-rights-guardrails`; source hardening `b7e00be` / draft #64 on #62.
+Existing test deployment still runs `15b8ca3`; new source safeguards are not deployed or merged.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
+
+## Source Rights / Current-State Reconciliation — 2026-11-16
+
+Owner requires no copied third-party job descriptions, no logged-in scraping and preference
+for employer ATS feeds. Official LinkedIn/Indeed terms and Lever/Greenhouse API docs were
+checked; public access, anonymous access, facts-only selection and robots instructions do
+not establish republication rights. hiQ2022 is preliminary CFAA relief, not blanket scraping
+permission/prohibition. Project-specific permission remains CEO/legal/content-owner work;
+see docs08/25 for primary references and bounded engineering policy, not legal advice.
+
+Implemented b7e00be in [draft PR64](https://github.com/talentbay/talentbay/pull/64): automated
+Lever factual whitelist + constant TalentBay notice, original link/IDs preserved; no source
+description/HTML/list/additional/salary or unmapped location prose in snapshots/items.
+Public-ATS/facts-only approval, terms URL, existing permission reference/owner/date mandatory.
+Policy fingerprint invalidates old/changed-permission snapshots. Fetch explicitly omits
+credentials; fixed origins/redirect/budget constraints retained. Shared source URL validation
+rejects known main linkedin.com/indeed.com subdomains, including normalized case/trailing dot;
+this limited blocklist is not an all-provider authorization or a text-origin detector.
+CSV/JSON/manual publishing remain server-authorized and require first-party/cleared text;
+source registry stays empty, scheduling off. No new dependencies/migrations or live source run.
+
+Actual checks:202unit PASS, Nuxt and operations typechecks PASS, lint PASS, clean Node build
+PASS2m01s,95SQL integration plus legacy upgrade/replay PASS,4compiled DB-backed admin/source
+browser checks PASS37.3s. Initial8 focused regressions failed before implementation; malformed
+URL refinement regression was caught and fixed with existing tests retained. The first smoke
+could not become ready with no stdout under concurrent local work; unchanged repeat PASS.
+Independent read-only review found no production-code defect. Its optional legacy-snapshot
+test was added; reviewer then found a test-only generic409 assertion gap. Exact config-mismatch
+message now required; focused8source SQL tests PASS after full95suite, final static review
+closed the gap. This is not an independent rerun of our full tests.
+
+Expanded compiled browser run:45passed/1failed out of46; long CSV/publication scenario hit
+its unchanged30s test budget. The same scenario passed in the earlier focused run. Trace
+shows cumulative navigation/viewport work reaching the budget, not a source-fetch/legal
+gate rejection. Address-specific unchanged rerun PASS9.8s (13.5s including setup); the
+original45/46 run remains recorded as failed, not retroactively relabelled all-green.
+
+Second CLI0.149.1 was attempted in workspace-write sandbox, explicit cached gpt-5.6-sol/high;
+existing authorization was revoked (token_revoked/exit1), so no delegated implementation ran.
+No login/account switch/auth copy/retry workaround; coordinator implemented and the separate
+built-in read-only reviewer checked it. Do not call self-verification independent review.
+
+Fresh live read-only evidence: review/jobs200/noindex, Telegram capability true, Google/
+GitHub false, profile401/admin403. First vacancies request500 at18:44UTC; one repeat returned
+200/5DEMO at18:47UTC. Exact preview compute active; Vercel MCP logs403, same-scope CLI65.5.0
+fallback succeeded. Logs show generic500 then200/648ms, not a proven cause or a deployed
+reliability fix. Primary talentbay.org404/DEPLOYMENT_NOT_FOUND. No candidate data read,
+Neon SQL, runtime env/bot/protection, billing or domain mutation. Demo Apply remains off.
+GitHub reports74default-branch dependency alerts (25high/37moderate/12low); not triaged here
+and not established as the advisory count of this different MVP branch/runtime.
+
+Current five states: code ready / listed local checks passed / draft64published / not merged /
+not deployed. Stacked base #62 is outside current CI filters; no new successful CI claimed.
+Next: source64 review/consolidated integration+CI, one CEO-approved employer feed with terms/
+field-use evidence, isolated factual pilot→review/publish, human candidate/operator acceptance.
+Separately diagnose recurrence of the initial catalogue failure before beta. No new date,
+hours/full-time commitment, pre-ICO/payment/custody scope or public release is implied.
 
 ## Native Mini App Auth Recovery - 2026-10-28
 

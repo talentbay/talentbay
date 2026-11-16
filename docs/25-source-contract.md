@@ -1,6 +1,6 @@
 # First Job Source Contract
 
-Checked: 2026-10-27. TB-C01/C06 engineering work, not source-rights approval or a live run.
+Checked: 2026-11-16. TB-C01/C06 engineering work, not source-rights approval or a live run.
 First adapter: **Lever Postings JSON API**. Existing CSV remains a correction/fallback path.
 No crawler fleet, CAPTCHA bypass, browser automation, AI extraction or candidate submission.
 
@@ -8,6 +8,11 @@ Owner reply on2026-10-27: no already-agreed company career pages/boards are avai
 this must be clarified with the CEO. This is a confirmed missing source approval, not
 permission to choose and republish arbitrary live listings. Registry stays empty and
 real ingestion/scheduling remains off; synthetic connector/service/UI work can continue.
+
+Owner direction16 November supersedes the earlier description-copying behavior: **all
+automated imports are facts-only**. Do not scrape through login or use LinkedIn/Indeed.
+Public ATS endpoints and facts-only selection still require documented source-use permission.
+No new live source is approved by this change. See [compliance boundaries](08-compliance-guardrails.md).
 
 ## Source Register
 
@@ -39,11 +44,21 @@ Public access/API availability alone is not a blanket copyright/contract/privacy
 - Currency/period remain source units. Unknown salary periods, partial/decimal or invalid
   ranges require correction; no rounding or currency conversion. No source publication date
   is fabricated from fetch time. `fetchedAt` belongs to the run report.
-- HTML lists/descriptions use [html-to-text](https://github.com/html-to-text/node-html-to-text),
-  MIT, 10.0.1 (Node >=20.19; compatible with locked Node22); external type definitions9.0.4.
-  Parser is checked with its real library, not an ad-hoc HTML regex. Images/scripts/styles
-  and link destinations are excluded, no resources execute/fetch. Bounded omissions are
-  surfaced for review, never silently published as a complete description.
+- Whitelist structured facts; strip unselected provider fields before normalization. Do not
+  copy descriptions/HTML/requirements/additional/salary commentary or unmapped location
+  prose into normalized items or persisted snapshots. The required description column gets
+  only a constant TalentBay-authored notice directing readers to the original employer page.
+  Records do not need source prose to be eligible. Do not use AI rewriting as a rights bypass.
+- Explicit `credentials: omit`, no Cookie/Authorization headers, fixed HTTPS roots and no
+  redirect following. A non-Lever URL is never accepted as an automated transport target.
+- Approval has mandatory `reference`, `contentOwner`, `approvedAt`, `termsUrl`,
+  `accessMethod: PUBLIC_ATS_API` and `allowedUse: FACTS_ONLY`; no default acceptance of old
+  generic records. Schema checks the record, not its truth/legal sufficiency. Review the
+  exact employer/board, applicable terms, permission scope, volume and stop/removal procedure.
+- The run fingerprint includes `facts-only-v1` and the complete approval record. Old-policy
+  or changed-permission snapshots cannot be resumed/imported. This does not erase historical
+  payloads or withdraw old listings automatically; approved operators must review those if
+  any exist. No real source had been enabled in the known registry at this checkpoint.
 - Output uses the existing import schema and separates valid items/issues/counts/provenance.
   It does not import or publish. Any issues require review before a runner is allowed to
   commit a batch; raw responses are not error messages/logs.
@@ -109,7 +124,8 @@ fictional responses, explicitly **not** a live end-to-end provider claim; the se
 with injected offline fetch and real SQL separately. No production test-source bypass exists.
 
 Before the first real pilot, record the exact company/site/region, rights reference,
-content owner, allowed fields/volume and target isolated preview. Do not collect candidate
+content owner, terms URL, public-ATS/facts-only allowed use/volume and target isolated preview.
+Do not collect candidate
 data or call Lever's application POST endpoint: managed TalentBay intake is separate.
 
 ## Dates and Maintenance (TB-C04)
