@@ -1,18 +1,10 @@
-import { compile } from 'html-to-text'
 import type { VacancyImportItem } from '#server/services/vacancies/import-schema'
 import { vacancyImportItemSchema } from '#server/services/vacancies/import-schema'
 import { leverPostingSchema, leverSourceSchema } from './lever-contract'
 import type { LeverPosting, LeverSource, SourceRecordIssue } from './lever-contract'
 
-const omitted = '[TalentBay source content omitted]'
-const htmlText = compile({
-  wordwrap: false,
-  limits: { maxInputLength: 100_000, maxDepth: 100, maxChildNodes: 2_000, ellipsis: omitted },
-  selectors: [
-    { selector: 'script', format: 'skip' }, { selector: 'style', format: 'skip' }, { selector: 'img', format: 'skip' },
-    { selector: 'a', options: { ignoreHref: true } },
-  ],
-})
+// TalentBay-authored notice, not a copied or machine-paraphrased source description.
+const description = 'The full job description is available on the original employer page.'
 const employment: Record<string, VacancyImportItem['vacancy']['employmentType']> = {
   'full-time': 'FULL_TIME', 'full time': 'FULL_TIME', 'fulltime': 'FULL_TIME',
   'part-time': 'PART_TIME', 'part time': 'PART_TIME', 'contract': 'CONTRACT', 'internship': 'INTERNSHIP', 'intern': 'INTERNSHIP',
@@ -22,8 +14,7 @@ const periods: Record<string, 'YEAR' | 'MONTH' | 'HOUR'> = {
   'per-year': 'YEAR', year: 'YEAR', yearly: 'YEAR', annual: 'YEAR',
   'per-month': 'MONTH', month: 'MONTH', monthly: 'MONTH', 'per-hour': 'HOUR', hour: 'HOUR', hourly: 'HOUR',
 }
-const recordIssueCodes = new Set(['UNSUPPORTED_EMPLOYMENT', 'UNSPECIFIED_WORKPLACE', 'UNRESOLVED_LOCATION', 'INVALID_SOURCE_URL', 'CONTENT_LIMIT', 'UNSUPPORTED_SALARY_PERIOD', 'INVALID_IMPORT_FIELDS'])
-const descriptionText = (plain: string | null | undefined, html: string | null | undefined) => plain?.trim() || htmlText(html || '')
+const recordIssueCodes = new Set(['UNSUPPORTED_EMPLOYMENT', 'UNSPECIFIED_WORKPLACE', 'UNRESOLVED_LOCATION', 'INVALID_SOURCE_URL', 'UNSUPPORTED_SALARY_PERIOD', 'INVALID_IMPORT_FIELDS'])
 
 function normalizePosting(source: LeverSource, job: LeverPosting): VacancyImportItem {
   const id = job.id.toLowerCase()
@@ -38,14 +29,6 @@ function normalizePosting(source: LeverSource, job: LeverPosting): VacancyImport
   const host = source.region === 'EU' ? 'jobs.eu.lever.co' : 'jobs.lever.co'
   if (url.protocol !== 'https:' || url.hostname !== host || url.port || url.username || url.password || url.pathname.toLowerCase() !== `/${source.site}/${id}`) throw new Error('INVALID_SOURCE_URL')
   url.search = ''; url.hash = ''
-  const body = [
-    descriptionText(job.descriptionPlain, job.description),
-    ...job.lists.map(list => `${list.text}\n${htmlText(list.content)}`),
-    descriptionText(job.additionalPlain, job.additional),
-  ].filter(Boolean).join('\n\n').trim()
-  if (body.length < 20) throw new Error('INVALID_IMPORT_FIELDS')
-  const description = [body, job.salaryDescriptionPlain, job.categories.location ? `Source location: ${job.categories.location}` : null].filter(Boolean).join('\n\n')
-  if (description.includes(omitted)) throw new Error('CONTENT_LIMIT')
   const salary = job.salaryRange
   const interval = salary?.interval.trim().toLowerCase()
   const period = interval && Object.hasOwn(periods, interval) ? periods[interval] : undefined

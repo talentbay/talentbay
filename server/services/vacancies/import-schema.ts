@@ -17,8 +17,16 @@ const salarySchema = z.object({
   period: z.enum(['YEAR', 'MONTH', 'HOUR']),
 }).refine(value => value.max >= value.min, { message: 'Salary maximum must be greater than or equal to minimum', path: ['max'] })
 
+// Defense in depth for known excluded boards, not proof that other sources are licensed.
+const sourceUrl = httpUrl.refine(value => {
+  try {
+    const host = new URL(value).hostname.toLowerCase().replace(/\.+$/, '')
+    return !['linkedin.com', 'indeed.com'].some(domain => host === domain || host.endsWith(`.${domain}`))
+  } catch { return false }
+}, 'LinkedIn and Indeed sources are excluded from imports')
+
 export const vacancyImportItemSchema = z.object({
-  source: z.object({ name: text(120, 2), url: httpUrl, externalId: text(255, 1) }),
+  source: z.object({ name: text(120, 2), url: sourceUrl, externalId: text(255, 1) }),
   company: z.object({ name: text(160, 2), slug: slugSchema, websiteUrl: httpUrl.optional() }),
   vacancy: z.object({
     slug: slugSchema, title: text(180, 2), summary: text(500).optional(),

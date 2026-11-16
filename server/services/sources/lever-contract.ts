@@ -11,21 +11,17 @@ export const leverSourceSchema = z.object({
 }).strict()
 export type LeverSource = z.infer<typeof leverSourceSchema>
 
-const plain = z.string().max(100_000)
+// Whitelist structured facts. Zod strips source prose/HTML and other unselected fields.
 export const leverPostingSchema = z.object({
   id: z.uuid(), text: z.string().trim().min(2).max(180),
   categories: z.object({ location: z.string().max(500).nullable().optional(), commitment: z.string().max(100) }),
   country: z.string().regex(/^[a-z]{2}$/i).nullish(),
   workplaceType: z.enum(['on-site', 'hybrid', 'remote', 'unspecified']),
-  descriptionPlain: plain.nullish(), description: plain.nullish(),
-  additionalPlain: plain.nullish(), additional: plain.nullish(),
-  lists: z.array(z.object({ text: z.string().max(300), content: plain })).max(30).default([]),
   hostedUrl: z.url().max(2048),
   salaryRange: z.object({
     currency: z.string().regex(/^[a-z]{3}$/i), interval: z.string().max(50),
     min: z.number().int().nonnegative().max(2147483647), max: z.number().int().positive().max(2147483647),
   }).nullable().optional(),
-  salaryDescriptionPlain: plain.nullish(),
 })
 export type LeverPosting = z.infer<typeof leverPostingSchema>
 export type SourceRecordIssue = { index: number; id: string | null; code: string }

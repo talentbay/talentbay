@@ -64,4 +64,11 @@ describe('fixed-template CSV validation', () => {
     const result = parseVacancyCsv(file([record({ source_url: 'not a URL', country_code: '123' })]))
     expect(result.issues.map(issue => issue.field)).toEqual(expect.arrayContaining(['source_url', 'country_code']))
   })
+  it.each(['https://linkedin.com/jobs/123', 'https://www.LINKEDIN.com./jobs/123', 'https://de.indeed.com/viewjob?jk=123'])('rejects excluded board URLs in both CSV and JSON: %s', (url) => {
+    const csv = parseVacancyCsv(file([record({ source_url: url })]))
+    expect(csv.issues).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'source_url' })]))
+    const baseline = parseVacancyCsv(file([record()])).items[0]!.item
+    expect(vacancyImportRequestSchema.safeParse({ items: [{ ...baseline, source: { ...baseline.source, url } }] }).success).toBe(false)
+    expect(vacancyImportRequestSchema.safeParse({ items: [{ ...baseline, company: { ...baseline.company, websiteUrl: url } }] }).success).toBe(true)
+  })
 })

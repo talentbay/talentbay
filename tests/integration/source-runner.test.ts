@@ -1,17 +1,19 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { closeDatabase } from '#server/db'
 import { fetchSourceRun } from '#server/services/sources/fetch-run'
+import * as leverFetch from '#server/services/sources/lever-fetch'
+import { normalizeLeverJobs } from '#server/services/sources/lever-normalize'
 import { getSourceProgress, importSourceBatch, previewSourceBatch } from '#server/services/sources/import-run'
-import { approvedSourceSchema, sourceKey } from '#server/services/sources/registry'
+import { approvedSourceSchema, sourceConfigRevision, sourceKey } from '#server/services/sources/registry'
 import { reviewVacancy } from '#server/services/vacancies/review-vacancy'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
 const site = `runner-${randomUUID()}`
 const source = approvedSourceSchema.parse({
   adapter: 'LEVER', config: { site, region: 'GLOBAL', company: { name: 'Fictional Runner Company', slug: site } },
-  approval: { reference: 'local synthetic fixture only, not real approval', contentOwner: 'Fictional Test Operator', approvedAt: '2026-10-27T00:00:00Z' },
+  approval: { reference: 'local synthetic fixture only, not real approval', contentOwner: 'Fictional Test Operator', approvedAt: '2026-10-27T00:00:00Z', accessMethod: 'PUBLIC_ATS_API', allowedUse: 'FACTS_ONLY', termsUrl: 'https://example.com/fixture-terms' },
 })
 const key = sourceKey(source)
 const raw = (id = randomUUID()) => ({ id, text: 'Fictional Runner Engineer', country: 'GB', workplaceType: 'remote', categories: { commitment: 'Full-time' }, descriptionPlain: 'A complete fictional role used to exercise durable import checkpoints.', hostedUrl: `https://jobs.lever.co/${site}/${id}` })
@@ -57,6 +59,9 @@ describe('bounded source runner with durable batch checkpoints', () => {
       expect(locks[0]!.count).toBe(0)
     } finally { release() }
     expect(await running).toMatchObject({ state: 'READY', nextOffset: 0, report: { recordCount: 51 } })
+    const [snapshot] = await sql`select items from source_imports where source_key=${key}`
+    expect(JSON.stringify(snapshot!.items)).not.toContain('A complete fictional role')
+    expect(snapshot!.items[0].vacancy.description).toBe('The full job description is available on the original employer page.')
     expect(await sql`select id from vacancies where source_name=${key}`).toHaveLength(0)
     const plan = await previewSourceBatch(source, runID, admin)
     expect(plan.preview.rowCount).toBe(50)
@@ -73,6 +78,7 @@ describe('bounded source runner with durable batch checkpoints', () => {
     const observations = await sql`select source_fetched_at,last_imported_at,reviewed_at from vacancies where source_name=${key}`
     expect(observations).toHaveLength(51)
     expect(observations.every(value => value.source_fetched_at.toISOString() === progress!.report.fetchedAt && value.last_imported_at instanceof Date && value.reviewed_at === null)).toBe(true)
+    expect((await sql`select description from vacancies where source_name=${key}`).every(value => value.description === 'The full job description is available on the original employer page.')).toBe(true)
     expect(await sql`select id from vacancies where source_name=${key} and status!='DRAFT'`).toHaveLength(0)
     // Replaying the completed fetch never calls the source again.
     expect((await fetchSourceRun(source, runID, admin, base)).state).toBe('IMPORTED')
@@ -131,6 +137,19 @@ describe('bounded source runner with durable batch checkpoints', () => {
     await fetchSourceRun(source, runID, admin, transportFor([raw()]))
     await expect(previewSourceBatch(source, runID, candidate)).rejects.toMatchObject({ statusCode: 403 })
     await expect(previewSourceBatch({ ...source, approval: { ...source.approval, reference: 'Changed approval revision' } }, runID, admin)).rejects.toMatchObject({ statusCode: 409 })
+    await expect(previewSourceBatch({ ...source, approval: { ...source.approval, termsUrl: 'https://example.com/changed-terms' } }, runID, admin)).rejects.toMatchObject({ statusCode: 409 })
+    // A payload produced before the facts-only policy must not become importable on upgrade.
+    const legacySource = { ...source, approval: { reference: source.approval.reference, contentOwner: source.approval.contentOwner, approvedAt: source.approval.approvedAt } }
+    const legacyRevision = createHash('sha256').update(JSON.stringify(legacySource)).digest('hex')
+    const legacyItem = normalizeLeverJobs(source.config, [raw()]).items[0]!
+    const legacyPayload = [{ ...legacyItem, vacancy: { ...legacyItem.vacancy, description: 'Legacy copied prose must not be imported by the new policy.' } }]
+    const [current] = await sql`select items from source_imports where source_key=${key}`
+    await sql`update source_imports set config_revision=${legacyRevision}, items=${sql.json(legacyPayload)} where source_key=${key}`
+    try {
+      await expect(previewSourceBatch(source, runID, admin)).rejects.toMatchObject({ statusCode: 409 })
+      await expect(importSourceBatch(source, { runID, offset: 0, revision: 'a'.repeat(64) }, admin)).rejects.toMatchObject({ statusCode: 409 })
+      expect(await sql`select id from vacancies where source_name=${key} and description=${legacyPayload[0]!.vacancy.description}`).toHaveLength(0)
+    } finally { await sql`update source_imports set config_revision=${sourceConfigRevision(source)},items=${sql.json(current!.items)} where source_key=${key}` }
     await sql`update users set role='USER' where id=${admin}`
     await expect(previewSourceBatch(source, runID, admin)).rejects.toMatchObject({ statusCode: 403 })
     await sql`update users set role='ADMIN' where id=${admin}`
@@ -142,8 +161,15 @@ describe('bounded source runner with durable batch checkpoints', () => {
   })
 
   it('rejects oversized normalized snapshots and a role revoked while the source request was in flight', async () => {
-    const records = Array.from({ length: 110 }, () => ({ ...raw(), descriptionPlain: 'x'.repeat(20_000) }))
-    expect(await fetchSourceRun(source, randomUUID(), admin, transportFor(records))).toMatchObject({ state: 'FAILED', report: { failure: 'SNAPSHOT_LIMIT' } })
+    // Exercise the runner's independent last-resort bound, even if an adapter regresses.
+    const item = normalizeLeverJobs(source.config, [raw()]).items[0]!
+    const oversized = vi.spyOn(leverFetch, 'fetchLeverJobs').mockResolvedValueOnce({
+      source: key, items: Array.from({ length: 110 }, () => ({ ...item, vacancy: { ...item.vacancy, description: 'x'.repeat(20_000) } })),
+      issues: [], recordCount: 110, pageCount: 3, fetchedAt: new Date().toISOString(),
+    })
+    try {
+      expect(await fetchSourceRun(source, randomUUID(), admin, transportFor([]))).toMatchObject({ state: 'FAILED', report: { failure: 'SNAPSHOT_LIMIT' } })
+    } finally { oversized.mockRestore() }
     const transport = vi.fn<typeof fetch>().mockImplementation(async () => {
       await sql`update users set role='USER' where id=${admin}`
       return json([raw()])
@@ -152,6 +178,17 @@ describe('bounded source runner with durable batch checkpoints', () => {
     expect((await sql`select state,items from source_imports where source_key=${key}`)[0]).toEqual({ state: 'FETCHING', items: null })
     await sql`update users set role='ADMIN' where id=${admin}`
     await expire()
+  })
+
+  it('rejects generic or disallowed source approvals before any network or run persistence', async () => {
+    const before = await sql`select run_id,state,items from source_imports where source_key=${key}`
+    const transport = transportFor([raw()])
+    const legacy = { reference: 'generic approval', contentOwner: 'Fictional Owner', approvedAt: '2026-10-27T00:00:00Z' }
+    for (const approval of [legacy, { ...source.approval, allowedUse: 'FULL_TEXT' }, { ...source.approval, accessMethod: 'LOGGED_IN_SCRAPING' }]) {
+      await expect(fetchSourceRun({ ...source, approval } as unknown as typeof source, randomUUID(), admin, transport)).rejects.toThrow()
+    }
+    expect(transport).not.toHaveBeenCalled()
+    expect(await sql`select run_id,state,items from source_imports where source_key=${key}`).toEqual(before)
   })
 
   it('rejects a late old worker after lease takeover; empty feeds do not archive the catalogue', async () => {

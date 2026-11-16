@@ -48,7 +48,7 @@ export async function fetchLeverJobs(config: LeverSource, transport: typeof fetc
     const url = new URL(`/v0/postings/${source.site}`, root)
     url.search = new URLSearchParams({ mode: 'json', skip: String(page * pageSize), limit: String(pageSize) }).toString()
     try {
-      const response = await transport(url, { method: 'GET', redirect: 'error', signal: AbortSignal.timeout(10_000), headers: { accept: 'application/json' } })
+      const response = await transport(url, { method: 'GET', credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(10_000), headers: { accept: 'application/json' } })
       if (response.status === 429) {
         const retry = response.headers.get('retry-after') || ''
         await discard(response)

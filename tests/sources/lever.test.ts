@@ -19,13 +19,14 @@ function posting() {
 const response = (data: unknown) => new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json' } })
 
 describe('Lever source normalization', () => {
-  it('normalizes structured values and real HTML lists without AI or invented support/date fields', () => {
+  it('keeps structured facts but never copies source prose, HTML, lists or salary commentary', () => {
     const raw = posting()
+    Object.assign(raw, { additionalPlain: 'PRIVATE_ADDITIONAL_PROSE', salaryDescriptionPlain: 'PRIVATE_SALARY_COMMENTARY' })
     const result = normalizeLeverJobs(source, [raw])
     expect(result.issues).toEqual([])
     expect(result.items[0]).toMatchObject({ source: { externalId: raw.id, name: 'Lever:global:fixture-company' }, vacancy: { city: 'Berlin', countryCode: 'DE', workplaceType: 'HYBRID', employmentType: 'FULL_TIME', salary: { min: 70000, max: 90000, currency: 'EUR', period: 'YEAR' }, skills: [], relocationOffered: false, visaSponsorship: false } })
-    expect(result.items[0]!.vacancy.description).toContain('TypeScript & PostgreSQL')
-    expect(result.items[0]!.vacancy.description).not.toMatch(/<li>|<script>|do not retain|attacker.invalid/)
+    expect(result.items[0]!.vacancy.description).toBe('The full job description is available on the original employer page.')
+    expect(JSON.stringify(result.items)).not.toMatch(/fictional engineering role|TypeScript & PostgreSQL|<li>|<script>|do not retain|attacker.invalid|PRIVATE_/)
     expect(result.items[0]!.vacancy.sourcePublishedAt).toBeUndefined()
     expect(normalizeLeverJobs(source, [raw]).items[0]!.vacancy.slug).toBe(result.items[0]!.vacancy.slug)
     expect(normalizeLeverJobs(source, [{ ...raw, text: 'Updated title' }]).items[0]!.vacancy.slug).toBe(result.items[0]!.vacancy.slug)
@@ -40,7 +41,6 @@ describe('Lever source normalization', () => {
       [{ ...raw, salaryRange: { ...raw.salaryRange, min: 1.5 } }, 'INVALID_RECORD'],
       [{ ...raw, hostedUrl: 'https://attacker.invalid/job' }, 'INVALID_SOURCE_URL'],
       [{ ...raw, hostedUrl: `https://user:password@jobs.lever.co/fixture-company/${raw.id}` }, 'INVALID_SOURCE_URL'],
-      [{ ...raw, descriptionPlain: '', lists: [] }, 'INVALID_IMPORT_FIELDS'],
     ] as const
     for (const [record, code] of cases) {
       const result = normalizeLeverJobs(source, [record])
@@ -55,13 +55,16 @@ describe('Lever source normalization', () => {
     expect(normalizeLeverJobs(source, [{ ...raw, country: null }]).items[0]!.vacancy.city).toBe('Berlin')
     const result = normalizeLeverJobs(source, [{ ...raw, categories: { ...raw.categories, location: 'Remote in Germany' } }])
     expect(result.items[0]!.vacancy.city).toBeUndefined()
-    expect(result.items[0]!.vacancy.description).toContain('Source location: Remote in Germany')
+    expect(JSON.stringify(result.items)).not.toContain('Remote in Germany')
   })
-  it('reports bounded HTML omissions rather than calling a truncated description complete', () => {
+  it('does not require or parse descriptions, even malformed or excessive optional prose', () => {
     const raw = posting()
     const result = normalizeLeverJobs(source, [{ ...raw, descriptionPlain: undefined, description: '<div>'.repeat(200) + raw.descriptionPlain + '</div>'.repeat(200) }])
-    expect(result.items).toHaveLength(0)
-    expect(result.issues[0]!.code).toBe('CONTENT_LIMIT')
+    expect(result.items).toHaveLength(1)
+    expect(result.issues).toEqual([])
+    const withoutProse = { ...raw, descriptionPlain: undefined, description: undefined, lists: undefined }
+    expect(normalizeLeverJobs(source, [withoutProse]).items[0]).toEqual(result.items[0])
+    expect(normalizeLeverJobs(source, [{ ...withoutProse, description: 'x'.repeat(100_001), lists: { untrusted: 'not parsed' } }]).items[0]).toEqual(result.items[0])
   })
 })
 
@@ -74,7 +77,8 @@ describe('bounded server-only Lever fetch', () => {
     expect(result.pageCount).toBe(2)
     const [url, options] = transport.mock.calls[0]!
     expect(String(url)).toBe('https://api.lever.co/v0/postings/fixture-company?mode=json&skip=0&limit=50')
-    expect(options).toMatchObject({ method: 'GET', redirect: 'error', headers: { accept: 'application/json' } })
+    expect(options).toMatchObject({ method: 'GET', redirect: 'error', credentials: 'omit', headers: { accept: 'application/json' } })
+    expect(Object.keys(options!.headers!)).toEqual(['accept'])
     expect(options!.signal).toBeInstanceOf(AbortSignal)
     expect(String(transport.mock.calls[1]![0])).toContain('skip=50')
   })
