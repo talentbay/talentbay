@@ -32,3 +32,4 @@ logs
 # Browser test outputs may contain session state; never commit them.
 /test-results/
 /playwright-report/
+pnpm-lock.yaml
