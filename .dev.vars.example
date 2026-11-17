@@ -1,0 +1,12 @@
+# Copy to .dev.vars for local Wrangler development.
+# Never commit real secrets.
+
+# Until the Hyperdrive binding lands, Wrangler dev can use the same direct
+# PostgreSQL connection as normal local Nuxt development.
+DATABASE_URL=
+
+NUXT_SESSION_PASSWORD=
+NUXT_OAUTH_GOOGLE_CLIENT_ID=
+NUXT_OAUTH_GOOGLE_CLIENT_SECRET=
+NUXT_OAUTH_GITHUB_CLIENT_ID=
+NUXT_OAUTH_GITHUB_CLIENT_SECRET=

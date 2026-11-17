@@ -22,6 +22,17 @@ export default defineNuxtConfig({
     fonts: false,
   },
 
+  nitro: {
+    cloudflare: {
+      nodeCompat: true,
+    },
+    rollupConfig: {
+      external: [
+        'cloudflare:sockets',
+      ],
+    },
+  },
+
   routeRules: {
     '/': { redirect: { to: '/jobs', statusCode: 302 } },
     '/landing': { redirect: { to: '/jobs', statusCode: 302 } },
