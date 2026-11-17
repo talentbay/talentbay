@@ -1,10 +1,45 @@
 # MVP Execution Log
 
-Updated: 2026-11-16
+Updated: 2026-11-17
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/source-rights-guardrails`; source hardening `b7e00be` / draft #64 on #62.
-Existing test deployment still runs `15b8ca3`; new source safeguards are not deployed or merged.
+Current work branch: `codex/mvp-integration`; consolidated review route in
+`docs/06-infrastructure-and-process.md`. Superseded PRs are history, not separate release steps.
+Existing test deployment still runs `15b8ca3`; new source safeguards are not deployed or merged into main.
 Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
+
+## Repository Consolidation — 2026-11-17
+
+Owner requested cleanup of stale PRs and the repository workflow. The open-PR snapshot
+contained19items:18human cumulative changes and Dependabot63. Exact Git ancestry showed
+17human heads already included in source-rights43f74aa; the remaining baseline25 head
+5f5f3b5 carries main57b03a0 and its tested CI/health resolution. Integration fast-forwards
+the existing remote line, then merges25 to preserve every head without rebasing history.
+CI reconciliation retains public/browser/privacy/Vercel output gates, PostgreSQL integration
+and the already-merged optional Cloudflare build. No new source activation or provider change.
+
+One integration-to-main draft PR will replace the cumulative human review queue after
+verification; close reasons must link the replacement and never claim a main merge.
+Do not delete the preserved source branches. Dependabot63 contains newer security updates
+than the MVP lockfile and is not a duplicate; retain it for an isolated update/retest.
+Local verification of the consolidated working tree: Nuxt/operations types, lint,
+205unit tests,40tooling tests,95SQL tests plus legacy migration upgrade/replay PASS.
+Node build/HTTP smoke/public-output checks PASS;20public browser and46database browser
+tests PASS (the full46run, not the16November timeout rerun). Vercel build/output guards
+PASS1Node22/74routes/81public files; Cloudflare build PASS and local Node output restored.
+The old test runtime and primary provider settings were not used for these checks.
+CI YAML assertions preserve all gates;52relative documentation links in7changed files
+resolve. Independent read-only review of the consolidation and closure policy reported
+no findings; it did not rerun the tests. Published-head CI remains a separate checkpoint,
+not inferred from local results. No dependency or migration version changed in this consolidation.
+
+### Historical PR25 reconciliation earlier on17November
+
+PR24 was merged by the owner as57b03a0. Earlier October entries saying it is unmerged
+are historical. Baseline25 merge5f5f3b5 preserved Cloudflare+PostgreSQL checks and health
+runtime/timestamp/liveness/no-store. Local28unit/13CIguard/2SQL/types/lint/Node+Cloudflare
+build/compiled smoke passed; independent focused review had no findings. GitHub
+[CI44036893450](https://github.com/talentbay/talentbay/actions/runs/44036893450) passed both
+jobs, PR25 was CLEAN/MERGEABLE and unmerged at that checkpoint. Not a current MVP release.
 
 ## Source Rights / Current-State Reconciliation — 2026-11-16
 

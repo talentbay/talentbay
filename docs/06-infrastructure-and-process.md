@@ -1,17 +1,23 @@
 # Infrastructure and Process
 
-Last updated: 2026-10-27
+Last updated: 2026-11-17
 
 ## Active Integration Route
 
-The autonomous run starts from `4e1be73` (approved scope docs plus cumulative product work).
-`codex/mvp-integration` preserves that complete line; topic branches/PRs target it. CI runs
-on its pushes and PRs as well as main. No main merge, production promotion or cloud change
-is implicit. #25-#37 are cumulative review records, not independent squash patches.
+`codex/mvp-integration` is the single current pre-release line. It contains the cumulative
+MVP through source-rights `43f74aa`, the updated baseline `5f5f3b5` and main `57b03a0`.
+One draft PR from this branch to `main` is the release-review entry. The earlier topic
+PRs below are preserved review history, not independent squash patches to merge in order.
+
+Repository cleanup closes superseded PRs only after verifying that their exact head
+commits are retained in the published integration branch. A closed PR does not mean
+that its code was rejected, deployed or merged into main. Source branches remain intact.
+PRs targeting integration may become indirectly merged when their commits become reachable;
+that is still not a production merge. Do not force-push or delete branches during this cleanup.
 
 | Layer | Included head | Existing PR |
 | --- | --- | --- |
-| Baseline / CI | ffbefd8 | #25 |
+| Baseline / CI and main reconciliation | 5f5f3b5 | #25 |
 | OAuth state | 9e6dbcd | #26 |
 | Publication safety | cb462cc | #27 |
 | Local identities / Telegram | 36f93b2 | #28 |
@@ -21,9 +27,32 @@ is implicit. #25-#37 are cumulative review records, not independent squash patch
 | Release checks / hydration | b5f1aea / c602b42 | #32 / #33 |
 | Local review / withdrawal | 71b9b8a / c256387 | #34 / #35 |
 | Managed receipt / agreed scope | af2c4ec / 4e1be73 | #36 / #37 |
+| Repeatable candidate/operator walkthrough | 6278108 | #59 |
+| Conservative CI feedback | 7a3a2ef | #60 |
+| Displayed role/recipient consent | 0b990b4 | #61 |
+| Native Telegram launch recovery | 45f43f5 | #62 |
+| Facts-only permission-gated source import | 43f74aa | #64 |
 
-All these heads are ancestors of the integration baseline. Keep #24 Cloudflare deferred.
-Old PR disposition and main release require reviewed integration, not blind repeated squash.
+All listed heads must remain ancestors of the integration result. Dependabot #63 is a
+separate security update (including Nuxt4.6.4 and newer transitive packages), not a duplicate
+of this inventory; do not discard it or copy its older main lockfile over the current MVP.
+Reconcile it in a separate focused update with full tests before a public release.
+
+The owner merged Cloudflare preparation #24 into main on17November. Its existing build
+check/configuration are preserved, but no Worker deployment, Hyperdrive migration or change
+to the Vercel/Neon launch target follows from that merge. Earlier deferral statements are history.
+
+| Branch group | Role |
+| --- | --- |
+| `main` | Production boundary; current product code is not assumed deployed or complete |
+| `codex/mvp-integration` | One active pre-release review line; not a second production branch |
+| Previous topic/source branches | Preserved history and rollback references; no parallel merge queue |
+| Dependabot branches | Focused dependency review, not an implicit product release |
+
+Until the consolidated release, short topic branches target integration. Once released,
+return to short branches against main; do not keep growing a permanent alternative trunk.
+Do not change merge strategy or branch protections as part of PR cleanup. Follow the
+repository's permitted merge method only after explicit release approval.
 
 Environment passport: local review has fictional data/ephemeral credentials and its own PG;
 CI has runner-only PostgreSQL; preview/production require distinct targets and secrets.
@@ -31,28 +60,36 @@ Runtime needs `DATABASE_URL`/session/provider configuration; migration URL belon
 the approved migration process. Deployment/callback/backup/rollback gates: `docs/20-release-readiness.md`.
 Do not interpret July observations below as fresh provider checks.
 
-## Current State
+## Provider Boundaries
 
 - Main repository is GitHub.
 - Deployment target is Vercel.
 - Budget before pre-ICO is limited.
 - MVP should avoid infrastructure that requires dedicated DevOps work.
 - CI runs typecheck, lint, unit tests and production build.
-- Vercel is not connected to this local repository through the available account.
-- No production PostgreSQL connection is available yet.
+- The owner reports an existing GitHub-to-Vercel deployment for the primary domain.
+  Available Alex test projects have no Git link; that does not disprove the primary setup.
+- The separate `talentbay-review` project is CLI/prebuilt deployed and uses its restricted
+  review database. Do not infer primary production configuration from that test project.
+- Fresh17November public primary-domain reads returned Vercel404/DEPLOYMENT_NOT_FOUND.
+  The actual primary project's build logs/domain binding are not available to the current
+  agent, so the exact root cause remains unproven. See the deployment runbook.
 
 ## Recommended MVP Infrastructure
 
 ### Hosting
 
-Use a new Vercel project in the intended owner account:
+Use the existing intended founder/company Vercel project after its ownership and settings
+are verified. Do not create another replacement or move the domain as a cleanup shortcut:
 
 - Pull Request -> Preview Deployment.
 - `main` -> Production Deployment.
 
 For the first MVP, PR Preview and Production are enough. A separate staging environment can be added after the team, budget or release risk grows.
 
-Creating the Vercel project, binding `talentbay.org` and performing the first production deployment are explicit external changes. They require the correct account connection and release confirmation.
+Linking or replacing a Vercel project, binding `talentbay.org` and performing a production
+deployment require correct access and explicit release confirmation. The owner's Git
+integration may deploy main automatically, so a main merge is itself a release operation.
 
 ### Database
 
@@ -84,7 +121,7 @@ Do not use Telegram or committed files as a secrets store.
 
 Recommended process:
 
-- `main` is always deployable.
+- `main` is the production boundary; never assume a historical baseline is the complete MVP.
 - Short-lived feature branches.
 - Pull Requests for changes.
 - CI must pass before merge.
@@ -117,7 +154,7 @@ The repository smoke script starts the compiled Nitro server and checks the root
 
 MVP release can start simple:
 
-- Merge to `main` deploys production.
+- Treat merge to `main` as potentially deploying production through the owner's integration.
 - Tags can be introduced later for investor-demo/release snapshots.
 - Rollback should use Vercel deployment rollback.
 

@@ -1,6 +1,25 @@
 # Deployment Runbook
 
-Last updated: 2026-10-28
+Last updated: 2026-11-17
+
+## Primary Project Is Not the Review Project — 17 November
+
+The owner confirms an existing GitHub `talentbay/talentbay` integration in the primary
+Vercel project serving `talentbay.org`. This is owner-reported configuration, not a fresh
+provider-settings read by the agent. The accessible Alex projects have `link:null`; this
+does not establish whether the separate primary project is connected. Do not repeat that
+inference or treat a missing GitHub Vercel check as proof that no external deploy ran.
+
+Fresh HTTPS apex/www requests returned404/DEPLOYMENT_NOT_FOUND. Primary project/domain
+management and its actual latest build logs remain inaccessible to the current connection.
+The exact missing-target/build cause is not proven; a Nuxt code error or Hobby restriction
+must not be asserted as the cause without the relevant evidence. Inspect the actual primary
+project's Git, production branch, Domains and deployment logs, not only the test projects.
+
+`codex/mvp-integration` consolidates the current MVP for one draft PR to main. Publishing
+this review or closing superseded PRs does not authorize main merge, manual deployment,
+domain changes, database migrations or billing. A main merge may trigger the owner's
+production integration, so it remains an explicit release decision.
 
 ## Latest readiness
 

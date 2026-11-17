@@ -66,6 +66,13 @@ archived admin screens or expand it into a new content platform.
 Use small, coherent branches/PRs. Do not mix a mechanical repository move with product
 changes. Keep schema changes, migrations and tests together. Do not remove tests to pass CI.
 
+During pre-release consolidation, `codex/mvp-integration` is the single review line to main.
+Old cumulative topic PRs are preserved history, not separate squash/merge steps. Before
+closing one as superseded, verify its exact head is retained in the published integration
+branch and link the replacement review. Do not delete its source branch or rewrite history.
+See `docs/06-infrastructure-and-process.md`; a main merge may trigger the owner's Vercel
+deployment and requires a separate release decision, not just repository-cleanup permission.
+
 Run the applicable checks:
 
 ```bash

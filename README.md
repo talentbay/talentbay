@@ -4,6 +4,19 @@ TalentBay is an English-first international job board MVP with relocation-cost p
 
 The active product is Web2-only: vacancies, OAuth accounts, candidate profiles, applications, admin review and relocation estimates. Token, ICO, payment, custody and KYC flows are outside this application until separately specified and legally approved.
 
+## Repository Status
+
+`main` is the production integration boundary, not the current complete MVP. The active
+pre-release line is `codex/mvp-integration`; it consolidates the cumulative topic PRs into
+one review against `main`. Historical PRs are not a checklist to merge individually.
+See [repository workflow and preserved PR inventory](docs/06-infrastructure-and-process.md)
+and [contributing](CONTRIBUTING.md) before changing branches or preparing a release.
+
+Code in this branch is not automatically deployed. The separate review stand and the
+primary `talentbay.org` project have different ownership and deployment routes; consult
+the [deployment runbook](docs/11-deployment-runbook.md). A merge into `main` may trigger
+the owner's configured production deployment and is a separate release decision.
+
 ## Stack
 
 - Nuxt `4.6.2`, Vue `3.5.44`, Nitro.

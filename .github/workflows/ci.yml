@@ -112,6 +112,12 @@ jobs:
           NUXT_OAUTH_GOOGLE_CLIENT_SECRET: talentbay_build_secret_probe_google
           NUXT_OAUTH_GITHUB_CLIENT_SECRET: talentbay_build_secret_probe_github
 
+      - name: Cloudflare build
+        run: pnpm build:cloudflare
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+
   integration:
     name: PostgreSQL integration
     needs: scope

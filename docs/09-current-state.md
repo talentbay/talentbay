@@ -1,6 +1,16 @@
 # Current State
 
-Last updated: 2026-11-16
+Last updated: 2026-11-17
+
+## Repository Reconciliation — 17 November
+
+The current review line is `codex/mvp-integration`, combining source-rights43f74aa with
+baseline25 reconciliation5f5f3b5 and main57b03a0. One draft integration-to-main PR replaces
+the cumulative human queue after exact-head ancestry verification; source branches remain.
+Dependabot63 has unique newer security updates and remains a separate release gate.
+Main/provider deployment is not changed by this cleanup. PR24 Cloudflare preparation is
+now in main; its configuration/build check are preserved, not a Worker launch decision.
+The runtime/product table below is the16November snapshot unless separately dated.
 
 ## Current MVP Line — 16 November
 
@@ -20,7 +30,7 @@ runtime is required. No packages were upgraded for the16 November source hardeni
 | Operator | /ktulhu/v1; server/services/admin | CSV/JSON dry-run/import, review/publish/archive, source controls, application queue/handling/export and operational metrics; not a complete redesigned admin product |
 | Persistence | server/db/schema, server/db/migrations | PostgreSQL/Drizzle, migrations0000..0009; restricted review-runtime role previously configured; no shared SQL changes this checkpoint |
 | Ingestion | server/services/sources | Lever connector/runner implemented;16Nov hardening b7e00be/draft64 is facts-only, mandatory explicit rights record; live registry empty/schedule off, Greenhouse/Workday not implemented |
-| Hosting/process | Vercel review project; GitHub Actions | Review alias deployed15b8ca3, not16Nov code. Focused stacked PRs unmerged; current CI filters do not run on their non-main bases |
+| Hosting/process | Vercel review project; GitHub Actions | Review alias deployed15b8ca3, not16Nov code. Consolidated integration-to-main review uses existing CI filters; old stacked PR checks are historical |
 
 Fresh anonymous HTTPS16Nov: review/jobs200/noindex, Telegram capability true, Google/GitHub
 false, profile401/admin403. First catalogue request500, one repeat200 with5explicit DEMO rows.
