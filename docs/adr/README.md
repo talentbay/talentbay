@@ -10,6 +10,8 @@ This directory stores project-level architecture decisions.
 - [0002-oauth-first-auth.md](0002-oauth-first-auth.md)
 - [0003-nuxt-modular-monolith.md](0003-nuxt-modular-monolith.md)
 - [0004-separate-saas-and-token-surfaces.md](0004-separate-saas-and-token-surfaces.md)
+- [0006-mvp-first-vercel-neon.md](0006-mvp-first-vercel-neon.md)
+- [0007-local-provider-identities.md](0007-local-provider-identities.md)
 
 ## ADR Template
 

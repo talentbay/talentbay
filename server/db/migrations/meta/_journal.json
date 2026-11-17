@@ -15,6 +15,62 @@
       "when": 1784836578641,
       "tag": "0001_round_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792963246721,
+      "tag": "0002_telegram-identities",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793086662535,
+      "tag": "0003_goofy_betty_ross",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793091471480,
+      "tag": "0004_sudden_toxin",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793095548318,
+      "tag": "0005_rapid_mentallo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793098292759,
+      "tag": "0006_wealthy_pixie",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793102028813,
+      "tag": "0007_telegram-entry-receipts",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793103279704,
+      "tag": "0008_application-history-recovery",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793105476956,
+      "tag": "0009_operator-metric-windows",
+      "breakpoints": true
     }
   ]
 }

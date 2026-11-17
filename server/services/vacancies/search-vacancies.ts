@@ -1,17 +1,12 @@
 import type { VacancyListItem, VacancySearchResponse } from '#shared/types/vacancies'
 import { demoVacancies } from '#server/data/demo-catalog'
+import { decodeVacancyCursor, encodeVacancyCursor, parseVacancySearch } from './search-query'
+import type { VacancySearch } from './search-query'
+export type { VacancySearch } from './search-query'
 
-export type VacancySearch = {
-  q: string
-  countryCode?: string
-  workplaceType?: VacancyListItem['workplaceType']
-  visaSponsorship?: boolean
-  salaryDisclosed?: boolean
-  sort: 'newest' | 'salary-desc'
-  limit: number
-}
-
-export function searchVacancies(query: VacancySearch): VacancySearchResponse {
+export function searchVacancies(input: VacancySearch): VacancySearchResponse {
+  const query = parseVacancySearch(input)
+  const cursor = decodeVacancyCursor(query)
   const normalizedQuery = query.q.toLocaleLowerCase('en')
 
   const items = demoVacancies
@@ -49,21 +44,33 @@ export function searchVacancies(query: VacancySearch): VacancySearchResponse {
       if (query.salaryDisclosed && !vacancy.salary) {
         return false
       }
+      if (query.salaryCurrency && vacancy.salary?.currency !== query.salaryCurrency) return false
+      if (query.salaryPeriod && vacancy.salary?.period !== query.salaryPeriod) return false
 
       return true
     })
     .sort((left, right) => {
       if (query.sort === 'salary-desc') {
-        return (right.salary?.max ?? 0) - (left.salary?.max ?? 0)
+        const salary = (right.salary?.max ?? 0) - (left.salary?.max ?? 0)
+        if (salary) return salary
       }
-
-      return Date.parse(right.publishedAt) - Date.parse(left.publishedAt)
+      const a = left.publishedAt ? Date.parse(left.publishedAt) : -Infinity
+      const b = right.publishedAt ? Date.parse(right.publishedAt) : -Infinity
+      return a === b ? right.id - left.id : b - a
     })
-
+  const remaining = cursor ? items.filter(item => {
+    if (query.sort === 'salary-desc' && item.salary!.max !== cursor.salary) return item.salary!.max < cursor.salary!
+    const date = item.publishedAt ? Date.parse(item.publishedAt) : -Infinity
+    const boundary = cursor.date ? Date.parse(cursor.date) : -Infinity
+    return date < boundary || (date === boundary && item.id < cursor.id)
+  }) : items
+  const page = remaining.slice(0, query.limit)
+  const last = page.at(-1)
   return {
-    items: items.slice(0, query.limit),
+    items: page,
     total: items.length,
     dataStatus: 'DEMO',
+    nextCursor: remaining.length > query.limit && last ? encodeVacancyCursor(query, { id: last.id, date: last.publishedAt, salary: last.salary?.max ?? null }) : null,
   }
 }
 

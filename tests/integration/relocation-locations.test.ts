@@ -1,0 +1,30 @@
+import { randomUUID } from 'node:crypto'
+import postgres from 'postgres'
+import { afterAll, expect, it } from 'vitest'
+import { closeDatabase } from '#server/db'
+import { getRelocationPreview, listRelocationLocations, toLocationKey } from '#server/repositories/relocation'
+
+const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
+const city = `São Browser ${randomUUID().slice(0, 8)}`
+const costs = { rent: 1000, utilities: 100, groceries: 200, transport: 50, healthcare: 100, other: 50 }
+const oneTime = { flight: 200, visa: 0, deposit: 1000, temporaryHousing: 300, other: 0 }
+const sources = [{ label: 'Synthetic provenance only', url: 'https://example.invalid/relocation', accessedAt: '2026-01-01' }]
+afterAll(async () => { await closeDatabase(); await sql`delete from relocation_locations where city = ${city}`; await sql.end() })
+
+it('does not promote legacy same-named/accented rows without a reviewed package', async () => {
+  const ids: number[] = []
+  for (const country of ['DE', 'GB']) {
+    const [row] = await sql`insert into relocation_locations (country_code, city, currency, status, monthly_costs, one_time_costs, tax_model, sources, effective_from, reviewed_at) values (${country}, ${city}, ${country === 'DE' ? 'EUR' : 'GBP'}, 'VERIFIED', ${sql.json(costs)}, ${sql.json(oneTime)}, ${sql.json({ type: 'effective_rate', rateBps: 2000 })}, ${sql.json(sources)}, '2026-01-01', now()) returning id`
+    ids.push(row!.id)
+  }
+  const destinations = (await listRelocationLocations()).filter(location => location.city === city)
+  expect(destinations).toEqual([])
+  for (const id of ids) expect(await getRelocationPreview(`location-${id}`, 60_000)).toBeUndefined()
+  expect(await getRelocationPreview(toLocationKey(city), 60_000)).toBeUndefined()
+  await sql`update relocation_locations set status = 'DRAFT' where id = ${ids[1]!}`
+  expect(await getRelocationPreview(toLocationKey(city), 60_000)).toBeUndefined()
+  expect(await getRelocationPreview(`location-${ids[1]}`, 60_000)).toBeUndefined()
+  await sql`update relocation_locations set monthly_costs=${sql.json({ ...costs, rent: -1 })} where id=${ids[0]!}`
+  expect((await listRelocationLocations()).some(location => location.key === `location-${ids[0]}`)).toBe(false)
+  expect(await getRelocationPreview(`location-${ids[0]}`, 60_000)).toBeUndefined()
+})

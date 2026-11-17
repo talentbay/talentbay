@@ -1,6 +1,20 @@
 # Local Development
 
-Last updated: 2026-07-29
+Last updated: 2026-10-27
+
+## Safe Review Environment
+
+For the full synthetic Candidate/operator journey without cloud credentials:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dev:review
+```
+
+PostgreSQL 18 must be installed locally. The launcher creates its own disposable loopback
+cluster, migrations, fictional content and account chooser at `http://127.0.0.1:3131`;
+the application is at port 3130. It does not use developer dotenv, Neon or a real bot.
+Do not mistake this for real OAuth/native Telegram acceptance. See `docs/21-local-product-review.md`.
 
 ## Requirements
 
@@ -71,6 +85,35 @@ pnpm db:studio
 
 ## Quality Checks
 
+### Feedback Loop
+
+Use one coherent code/test/documentation slice per PR. During implementation, run the
+affected unit/API/browser regressions first; run the complete applicable matrix on the
+finished slice. Do not repeatedly rerun unchanged domain suites just to copy their results
+into another note. Serialize Nuxt type generation and builds. CI remains the exact-head
+integration check, not independent review or deployment approval.
+
+CI always starts the scope check. Only a complete PR diff containing `README.md` and/or
+`docs/**/*.md` may skip the existing `build` and `PostgreSQL integration` jobs. Their names
+remain unchanged; missing revisions/diffs, non-Markdown files, code/configuration and all
+protected-branch pushes run full checks. Classifier failure explicitly fails the dependent
+required checks instead of letting them disappear. No workflow-level path filtering.
+See [GitHub required checks](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
+
+Headless Chromium installation uses `--only-shell`, matching the existing default test
+channel. A real startup probe avoids blanket system-package installation on ready runners;
+missing Linux libraries trigger official `playwright install-deps chromium` and a second
+startup. Other errors, installer errors and retry failures fail CI. Full browser suites
+still run; no retries/assertions/target guards are weakened. Browser caching is deliberately
+not introduced: the observed slow step was Ubuntu package downloads, not browser download.
+See [Playwright headless shell](https://playwright.dev/docs/browsers#chromium-headless-shell)
+and [CI guidance](https://playwright.dev/docs/ci#caching-browsers).
+
+Keep detailed commands/findings in the execution log and review report. Obsidian keeps a
+short current state, decisions and links, not a copied task board or every passing command.
+Update it after a completed slice/blocker, not after every tool call. Global vault rules
+and structure are outside this project workflow change.
+
 ```bash
 pnpm lint
 pnpm typecheck
@@ -78,27 +121,34 @@ pnpm test
 pnpm build
 ```
 
-All four checks currently pass without ESLint warnings.
+CI and automated browser/integration tests use disposable loopback PostgreSQL named
+`talentbay_ci`, with `CI=true`, `TALENTBAY_TEST_DATABASE=disposable` and both runtime and
+migration URLs pointing to it. Run `node scripts/assert-ci-database.mjs` before migrations.
+The actual commands are in `.github/workflows/ci.yml`; no cloud secrets are required.
 
-Database integration tests use the isolated Neon `integration` branch and a
-local, ignored `.env.integration`:
+Default local integration command (installed PostgreSQL18 required; no installer):
 
 ```bash
 pnpm test:integration
 ```
 
-The workflow creates unique user, organisation, vacancy, profile and application
-records, verifies the admin and candidate service paths, and removes all test
-records. Never point `.env.integration` at Preview or Production.
+This creates an owned fresh loopback cluster without reading dotenv or inheriting DB/
+provider credentials, applies0000/0001, seeds synthetic legacy rows, upgrades to HEAD and
+compares original fields/IDs plus unchanged replay. It then runs the full SQL suite and
+stops its database before reporting PASS. No existing-target arguments are accepted.
+`PG_BIN` may select an already installed PostgreSQL18 bin directory.
 
-To run the compiled-server smoke against a database:
+Vitest's integration config itself invokes the guard **before** test-module imports, so a
+direct `pnpm exec vitest run --config vitest.integration.config.ts` also refuses unmarked,
+shared/cloud/mismatched targets. CI's empty disposable service uses the same upgrade
+verification. Upgrade verification refuses any existing public/drizzle table; it does not
+drop/reset a database. Do not use ignored `.env.integration` as an implicit target or
+change the guard to make a shared environment pass. Approved Neon integration needs a
+separate verified-target adapter/approval, not merely a copied URL or cleanup promise.
 
-```bash
-node --env-file=.env.integration scripts/smoke-production.mjs
-```
-
-When `DATABASE_URL` is present, the smoke test compares the vacancy API total
-with PostgreSQL instead of only checking the fallback catalogue.
+Compiled-server smoke with no DB is `pnpm test:smoke`. Real DB-backed browser tests require
+the existing disposable guard and compiled Node output; see docs17. Production/preview
+database migration and release remain separate operations, never a test/build side effect.
 
 ## OAuth Callbacks
 

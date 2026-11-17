@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { closeDatabase } from '#server/db'
+import { applicationInputFor } from './helpers/application-input'
 import {
   createApplication,
   listCandidateApplications,
@@ -123,7 +124,7 @@ describe('database-backed MVP workflows', () => {
       reviewStatus: 'VERIFIED',
     })
 
-    expect(published).toContainEqual(expect.objectContaining({
+    expect(published.items).toContainEqual(expect.objectContaining({
       id: vacancyID,
       slug: vacancySlug,
       sourceName,
@@ -148,7 +149,7 @@ describe('database-backed MVP workflows', () => {
     const application = await createApplication(
       userID,
       vacancyID,
-      'Integration test application.',
+      { ...await applicationInputFor(vacancyID), coverLetter: 'Integration test application.' },
     )
 
     expect(application.status).toBe('NEW')
@@ -163,5 +164,11 @@ describe('database-backed MVP workflows', () => {
         title: 'Integration Engineer',
       },
     })
+  })
+
+  it('retains a contact-only profile and clears optional fields explicitly', async () => {
+    const result = await saveCandidateProfile(userID, { headline: null, about: null, city: null, countryCode: null, githubUrl: null, phone: '+49 1234' })
+    expect(result.profile).toMatchObject({ headline: null, phone: '+49 1234' })
+    expect((await getCandidateProfile(userID)).profile?.phone).toBe('+49 1234')
   })
 })

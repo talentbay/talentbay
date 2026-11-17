@@ -80,6 +80,13 @@ export const vacancies = pgTable(
     sourceUrl: text('source_url'),
     sourceExternalID: text('source_external_id'),
     publishedAt: timestamp('published_at', { withTimezone: true }),
+    // Legacy ordering above is preserved; its provenance cannot be inferred retroactively.
+    talentbayPublishedAt: timestamp('talentbay_published_at', { withTimezone: true, precision: 3 }),
+    sourcePublishedAt: timestamp('source_published_at', { withTimezone: true, precision: 3 }),
+    sourceFetchedAt: timestamp('source_fetched_at', { withTimezone: true, precision: 3 }),
+    lastImportedAt: timestamp('last_imported_at', { withTimezone: true, precision: 3 }),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true, precision: 3 }),
+    reviewedByUserID: integer('reviewed_by_user_id').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()

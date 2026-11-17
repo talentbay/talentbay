@@ -1,5 +1,6 @@
-import { authenticateOAuthUser } from '#server/services/auth/oauth-user'
+import { completeOAuthAuthentication } from '#server/utils/oauth-completion'
 import { logHandledRequestError } from '#server/utils/observability'
+import { withOAuthCallbackState } from '#server/utils/oauth-callback-state'
 
 type GitHubEmail = {
   email: string
@@ -7,7 +8,7 @@ type GitHubEmail = {
   verified: boolean
 }
 
-export default defineOAuthGitHubEventHandler({
+export default withOAuthCallbackState(defineOAuthGitHubEventHandler({
   config: {
     emailRequired: true,
   },
@@ -29,7 +30,7 @@ export default defineOAuthGitHubEventHandler({
       })
     }
 
-    const sessionUser = await authenticateOAuthUser({
+    return completeOAuthAuthentication(event, {
       provider: 'GITHUB',
       providerAccountID: String(user.id),
       name: user.name || user.login,
@@ -38,11 +39,9 @@ export default defineOAuthGitHubEventHandler({
       emailVerified: true,
     })
 
-    await setUserSession(event, { user: sessionUser })
-    return send(event, '<html><script>window.close();</script></html>', 'text/html')
   },
   onError(event, error) {
     logHandledRequestError(event, error, 'oauth.github')
     return send(event, '<!doctype html><html><body><script>window.close()</script></body></html>', 'text/html')
   },
-})
+}))

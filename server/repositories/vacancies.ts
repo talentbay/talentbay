@@ -1,31 +1,53 @@
-import { and, count, desc, eq, sql } from 'drizzle-orm'
+import { and, count, eq, inArray, or, sql } from 'drizzle-orm'
 import { isDatabaseConfigured, schema, useDatabase } from '#server/db'
+import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
 import {
   findVacancyBySlug as findDemoVacancyBySlug,
   searchVacancies as searchDemoVacancies,
 } from '#server/services/vacancies/search-vacancies'
 import type { VacancySearch } from '#server/services/vacancies/search-vacancies'
+import { decodeVacancyCursor, encodeVacancyCursor, parseVacancySearch } from '#server/services/vacancies/search-query'
+import { olderVacancies, pageDate, salaryPresent, vacancyOrder } from './vacancy-page'
+import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
+import type { ApplicationContextRow } from '#server/services/vacancies/application-context'
 import type {
   VacancyDataStatus,
   VacancyListItem,
+  VacancyResolveResponse,
   VacancySearchResponse,
 } from '#shared/types/vacancies'
 
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
 
-export async function listVacancies(query: VacancySearch): Promise<VacancySearchResponse> {
+export async function resolveVacancies(slugs: string[]): Promise<VacancyResolveResponse> {
+  const unique = [...new Set(slugs)]
+  const items = !isDatabaseConfigured()
+    ? unique.flatMap(slug => findDemoVacancyBySlug(slug) ?? [])
+    : (await useDatabase().select(vacancySelection).from(schema.vacancies)
+        .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
+        .where(and(publicVacancyConditions(), inArray(schema.vacancies.slug, unique))))
+        .map(toVacancyListItem)
+  const bySlug = new Map(items.map(item => [item.slug, item]))
+  return {
+    items: unique.flatMap(slug => bySlug.get(slug) ?? []),
+    unavailableSlugs: unique.filter(slug => !bySlug.has(slug)),
+  }
+}
+
+export async function listVacancies(input: VacancySearch): Promise<VacancySearchResponse> {
+  const query = parseVacancySearch(input)
   if (!isDatabaseConfigured()) {
     return searchDemoVacancies(query)
   }
 
   const db = useDatabase()
+  const cursor = decodeVacancyCursor(query)
   const conditions = [
-    eq(schema.vacancies.status, 'PUBLISHED'),
-    eq(schema.organisations.status, 'ACTIVE'),
+    publicVacancyConditions(),
   ]
 
   if (query.q) {
-    conditions.push(sql<boolean>`
+    conditions.push(or(sql<boolean>`
       to_tsvector(
         'english',
         ${schema.vacancies.title}
@@ -34,7 +56,8 @@ export async function listVacancies(query: VacancySearch): Promise<VacancySearch
         || ' '
         || ${schema.vacancies.description}
       ) @@ websearch_to_tsquery('english', ${query.q})
-    `)
+    `, sql<boolean>`to_tsvector('simple', ${schema.organisations.name}) @@ websearch_to_tsquery('simple', ${query.q})`,
+    sql<boolean>`to_tsvector('simple', array_to_string(${schema.vacancies.skills}, ' ')) @@ websearch_to_tsquery('simple', ${query.q})`)!)
   }
 
   if (query.countryCode) {
@@ -50,43 +73,44 @@ export async function listVacancies(query: VacancySearch): Promise<VacancySearch
   }
 
   if (query.salaryDisclosed) {
-    conditions.push(sql<boolean>`${schema.vacancies.salaryMin} is not null`)
+    conditions.push(salaryPresent())
   }
+  if (query.salaryCurrency) conditions.push(eq(schema.vacancies.salaryCurrency, query.salaryCurrency))
+  if (query.salaryPeriod) conditions.push(eq(schema.vacancies.salaryPeriod, query.salaryPeriod))
+  if (query.sort === 'salary-desc') conditions.push(salaryPresent())
 
   const where = and(...conditions)
-  const orderBy = query.sort === 'salary-desc'
-    ? [desc(schema.vacancies.salaryMax), desc(schema.vacancies.publishedAt)]
-    : [desc(schema.vacancies.publishedAt)]
-
-  const [rows, totals] = await Promise.all([
-    db
-      .select(vacancySelection)
+  return await db.transaction(async (tx) => {
+    const rows = await tx
+      .select({ ...vacancySelection, pageDate })
       .from(schema.vacancies)
       .innerJoin(
         schema.organisations,
         eq(schema.vacancies.organisationID, schema.organisations.id),
       )
-      .where(where)
-      .orderBy(...orderBy)
-      .limit(query.limit),
-    db
+      .where(and(where, cursor ? olderVacancies(query, cursor) : undefined))
+      .orderBy(...vacancyOrder(query))
+      .limit(query.limit + 1)
+    const totals = await tx
       .select({ value: count() })
       .from(schema.vacancies)
       .innerJoin(
         schema.organisations,
         eq(schema.vacancies.organisationID, schema.organisations.id),
       )
-      .where(where),
-  ])
-
-  const items = rows.map(toVacancyListItem)
-  return {
-    items,
-    total: totals[0]?.value ?? 0,
-    dataStatus: items.every(item => item.source.status === 'VERIFIED')
-      ? 'VERIFIED'
-      : 'DEMO',
-  }
+      .where(where)
+    const page = rows.slice(0, query.limit)
+    const last = page.at(-1)
+    const items = page.map(toVacancyListItem)
+    return {
+      items,
+      total: totals[0]?.value ?? 0,
+      dataStatus: items.every(item => item.source.status === 'VERIFIED')
+        ? 'VERIFIED'
+        : 'DEMO',
+      nextCursor: rows.length > query.limit && last ? encodeVacancyCursor(query, { id: last.id, date: last.pageDate, salary: last.salaryMax }) : null,
+    }
+  }, { isolationLevel: 'repeatable read', accessMode: 'read only' })
 }
 
 export async function getVacancyBySlug(slug: string): Promise<VacancyListItem | undefined> {
@@ -104,8 +128,7 @@ export async function getVacancyBySlug(slug: string): Promise<VacancyListItem | 
     )
     .where(and(
       eq(schema.vacancies.slug, slug),
-      eq(schema.vacancies.status, 'PUBLISHED'),
-      eq(schema.organisations.status, 'ACTIVE'),
+      publicVacancyConditions(),
     ))
     .limit(1)
 
@@ -113,57 +136,25 @@ export async function getVacancyBySlug(slug: string): Promise<VacancyListItem | 
 }
 
 const vacancySelection = {
-  id: schema.vacancies.id,
-  slug: schema.vacancies.slug,
-  title: schema.vacancies.title,
-  summary: schema.vacancies.summary,
-  description: schema.vacancies.description,
-  companyName: schema.organisations.name,
-  countryCode: schema.vacancies.countryCode,
-  city: schema.vacancies.city,
-  workplaceType: schema.vacancies.workplaceType,
-  employmentType: schema.vacancies.employmentType,
-  seniority: schema.vacancies.seniority,
-  salaryMin: schema.vacancies.salaryMin,
-  salaryMax: schema.vacancies.salaryMax,
-  salaryCurrency: schema.vacancies.salaryCurrency,
-  salaryPeriod: schema.vacancies.salaryPeriod,
-  skills: schema.vacancies.skills,
-  relocationOffered: schema.vacancies.relocationOffered,
-  visaSponsorship: schema.vacancies.visaSponsorship,
-  publishedAt: schema.vacancies.publishedAt,
-  sourceName: schema.vacancies.sourceName,
-  sourceUrl: schema.vacancies.sourceUrl,
+  ...applicationContextSelection,
+  talentbayPublishedAt: schema.vacancies.talentbayPublishedAt,
+  sourcePublishedAt: schema.vacancies.sourcePublishedAt,
+  sourceFetchedAt: schema.vacancies.sourceFetchedAt,
+  lastImportedAt: schema.vacancies.lastImportedAt,
+  reviewedAt: schema.vacancies.reviewedAt,
   reviewStatus: schema.vacancies.reviewStatus,
 }
 
 type VacancyRecord = typeof schema.vacancies.$inferSelect
-type VacancyRow = Pick<
+type VacancyRow = ApplicationContextRow & Pick<
   VacancyRecord,
-  | 'id'
-  | 'slug'
-  | 'title'
-  | 'summary'
-  | 'description'
-  | 'countryCode'
-  | 'city'
-  | 'workplaceType'
-  | 'employmentType'
-  | 'seniority'
-  | 'salaryMin'
-  | 'salaryMax'
-  | 'salaryCurrency'
-  | 'salaryPeriod'
-  | 'skills'
-  | 'relocationOffered'
-  | 'visaSponsorship'
-  | 'publishedAt'
-  | 'sourceName'
-  | 'sourceUrl'
+  | 'talentbayPublishedAt'
+  | 'sourcePublishedAt'
+  | 'sourceFetchedAt'
+  | 'lastImportedAt'
+  | 'reviewedAt'
   | 'reviewStatus'
-> & {
-  companyName: string
-}
+>
 
 function toVacancyListItem(row: VacancyRow): VacancyListItem {
   const sourceStatus: VacancyDataStatus = row.reviewStatus === 'VERIFIED'
@@ -173,6 +164,7 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
 
   return {
     id: row.id,
+    applicationContext: sourceStatus === 'VERIFIED' ? applicationContextRevision(row) : undefined,
     slug: row.slug,
     title: row.title,
     summary: row.summary ?? '',
@@ -203,7 +195,13 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
     skills: row.skills,
     relocationOffered: row.relocationOffered,
     visaSponsorship: row.visaSponsorship,
-    publishedAt: row.publishedAt?.toISOString() ?? new Date(0).toISOString(),
+    publishedAt: row.talentbayPublishedAt?.toISOString() ?? null,
+    provenance: {
+      sourcePublishedAt: row.sourcePublishedAt?.toISOString() ?? null,
+      sourceFetchedAt: row.sourceFetchedAt?.toISOString() ?? null,
+      lastImportedAt: row.lastImportedAt?.toISOString() ?? null,
+      reviewedAt: row.reviewedAt?.toISOString() ?? null,
+    },
     source: {
       name: row.sourceName ?? 'TalentBay',
       url: row.sourceUrl,

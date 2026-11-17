@@ -6,17 +6,19 @@ import type {
   RelocationSource,
   TaxCalculationModel,
 } from '#server/db/schema/relocation'
+import { annualGrossSchema, parseReviewedRelocation, taxModelSchema } from './data-contract'
 
 export type RelocationLocationKey = keyof typeof demoRelocationLocations
 
 export function isRelocationLocationKey(value: string): value is RelocationLocationKey {
-  return value in demoRelocationLocations
+  return Object.hasOwn(demoRelocationLocations, value)
 }
 
 export function calculateRelocationPreview(
   locationKey: RelocationLocationKey,
   annualGross: number,
 ): RelocationPreviewResponse {
+  annualGross = annualGrossSchema.parse(annualGross)
   const location = demoRelocationLocations[locationKey]
   const monthlyGross = annualGross / 12
   const netAfterTax = monthlyGross * location.effectiveNetRate
@@ -38,11 +40,14 @@ export function calculateRelocationPreview(
       disposable: Math.round(disposable),
     },
     oneTimeMove: location.oneTimeMove,
+    details: null,
     dataStatus: 'DEMO',
     disclaimer: 'Illustrative preview only. Tax and cost data has not yet passed TalentBay legal and data review.',
     provenance: {
       effectiveFrom: null,
       reviewedAt: null,
+      validUntil: null,
+      assumptions: null,
       sources: [],
     },
   }
@@ -64,7 +69,12 @@ export type VerifiedRelocationInput = {
 export function calculateVerifiedRelocationPreview(
   location: VerifiedRelocationInput,
   annualGross: number,
+  context: Pick<RelocationPreviewResponse['provenance'], 'assumptions' | 'validUntil'> = { assumptions: null, validUntil: null },
 ): RelocationPreviewResponse {
+  const validated = parseReviewedRelocation(location)
+  if (!validated) throw new RangeError('Unsupported relocation data')
+  location = validated
+  annualGross = annualGrossSchema.parse(annualGross)
   const monthlyGross = annualGross / 12
   const annualTax = calculateAnnualTax(location.taxModel, annualGross)
   const netAfterTax = (annualGross - annualTax) / 12
@@ -88,17 +98,22 @@ export function calculateVerifiedRelocationPreview(
       disposable: Math.round(disposable),
     },
     oneTimeMove: sumValues(location.oneTimeCosts),
+    details: { monthlyCosts: location.monthlyCosts, oneTimeCosts: location.oneTimeCosts, annualTax },
     dataStatus: 'VERIFIED',
     disclaimer: 'Estimate based on reviewed source data. Actual tax and relocation costs depend on personal circumstances.',
     provenance: {
       effectiveFrom: location.effectiveFrom.toISOString(),
       reviewedAt: location.reviewedAt?.toISOString() ?? null,
+      validUntil: context.validUntil,
+      assumptions: context.assumptions,
       sources: location.sources,
     },
   }
 }
 
 export function calculateAnnualTax(model: TaxCalculationModel, annualGross: number): number {
+  model = taxModelSchema.parse(model)
+  annualGross = annualGrossSchema.parse(annualGross)
   if (model.type === 'effective_rate') {
     return annualGross * (model.rateBps / 10_000)
   }

@@ -1,0 +1,67 @@
+<script setup lang="ts">
+import type { AdminApplicationsResponse } from '#shared/types/application-review'
+import { applicationStatuses } from '~/utils/application-status'
+import { handlingLabels } from '~/utils/application-handling'
+
+definePageMeta({ layout: 'admin', middleware: 'auth', authRole: 'ADMIN' })
+useSeoMeta({ title: 'Application review · TalentBay', robots: 'noindex' })
+const route = useRoute()
+const router = useRouter()
+const options = [{ label: 'All statuses', value: 'all' }, ...Object.entries(applicationStatuses).map(([value, item]) => ({ value, label: item.label }))]
+const filter = computed({
+  get: () => String(route.query.status || 'all'),
+  set: (value) => { void router.push({ query: { ...route.query, status: value === 'all' ? undefined : value, before: undefined, review: undefined } }) },
+})
+const query = computed(() => ({ status: filter.value === 'all' ? undefined : filter.value, before: typeof route.query.before === 'string' ? route.query.before : undefined }))
+const stage = computed({ get: () => String(route.query.stage || 'all'), set: value => { void router.push({ query: { ...route.query, stage: value === 'all' ? undefined : value, before: undefined, review: undefined } }) } })
+const mine = computed({ get: () => route.query.assignee === 'mine', set: value => { void router.push({ query: { ...route.query, assignee: value ? 'mine' : undefined, before: undefined, review: undefined } }) } })
+const work = computed({ get: () => String(route.query.work || 'all'), set: value => { void router.push({ query: { ...route.query, work: value === 'all' ? undefined : value, before: undefined, review: undefined } }) } })
+const range = computed(() => Object.fromEntries(['receivedFrom', 'receivedBefore', 'recorded', 'recordedFrom', 'recordedBefore'].map(key => [key, typeof route.query[key] === 'string' ? route.query[key] : undefined])))
+const hasRange = computed(() => Object.values(range.value).some(Boolean))
+const queueQuery = computed(() => ({ ...query.value, ...range.value, stage: stage.value === 'all' ? undefined : stage.value, assignee: mine.value ? 'mine' : undefined, work: work.value === 'all' ? undefined : work.value }))
+const { data, status, error, refresh } = await useAccountResource<AdminApplicationsResponse>('admin-applications', '/api/v1/admin/applications', queueQuery)
+const selected = computed({
+  get: () => /^\d{1,10}$/.test(String(route.query.review)) && Number(route.query.review) > 0 && Number(route.query.review) <= 2147483647 ? Number(route.query.review) : null,
+  set: value => { void router.replace({ query: { ...route.query, review: value ?? undefined }, hash: route.hash }) },
+})
+const open = computed({ get: () => selected.value !== null, set: (value) => { if (!value) selected.value = null } })
+const date = (value: string) => new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(value))
+const rangeLabel = computed(() => range.value.recorded === 'CONTACTED' ? 'Company contact recorded' : range.value.recorded === 'SHARED' ? 'Profile handoff recorded' : 'Applications received')
+function clearRange() { return router.push({ query: { ...route.query, receivedFrom: undefined, receivedBefore: undefined, recorded: undefined, recordedFrom: undefined, recordedBefore: undefined, before: undefined, review: undefined } }) }
+</script>
+
+<template>
+  <section aria-labelledby="application-review-title">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h1 id="application-review-title" class="text-3xl font-bold text-highlighted">Application review</h1>
+      <USelect v-model="filter" :items="options" aria-label="Filter applications by status" class="w-full sm:w-60" />
+    </div>
+    <div class="mt-4 flex flex-wrap items-center gap-4">
+      <USelect v-model="stage" :items="[{ label: 'All handling stages', value: 'all' }, ...Object.entries(handlingLabels).map(([value, label]) => ({ value, label }))]" aria-label="TalentBay handling stage" class="w-full sm:w-64" />
+      <USelect v-model="work" :items="[{ label: 'All work', value: 'all' }, { label: 'Active work', value: 'active' }, { label: 'In progress', value: 'in-progress' }, { label: 'Needs an operator', value: 'needs-owner' }]" aria-label="Application work queue" class="w-full sm:w-52" />
+      <UCheckbox v-model="mine" label="Assigned to me" />
+    </div>
+    <div v-if="hasRange" class="mt-4 flex flex-wrap items-center gap-3 border-y border-default py-3 text-sm">
+      <p class="min-w-0 break-words">{{ rangeLabel }} · {{ range.receivedFrom || range.recordedFrom }} – {{ range.receivedBefore || range.recordedBefore }} UTC</p>
+      <UButton icon="i-lucide-x" label="Clear period" color="neutral" variant="ghost" @click="clearRange" />
+    </div>
+    <div v-if="status === 'pending'" class="mt-6 space-y-3"><USkeleton v-for="n in 4" :key="n" class="h-20 w-full" /></div>
+    <UAlert v-else-if="error" class="mt-6" title="Applications unavailable" color="error" :actions="[{ label: 'Retry', onClick: () => refresh() }]" />
+    <p v-if="data && !error && status !== 'pending'" class="mt-5 text-sm text-muted">{{ data.items.length }} of {{ data.total }} applications · newest first</p>
+    <ul v-if="data?.items.length && !error && status !== 'pending'" class="mt-4 divide-y divide-default border-y border-default" aria-label="Candidate applications">
+      <li v-for="item in data.items" :key="item.id" class="grid min-w-0 gap-3 py-4 text-sm sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_9rem_8rem_7rem] lg:items-center">
+        <p class="min-w-0 break-words font-semibold">{{ item.candidate.name }}</p>
+        <div class="min-w-0 break-words"><p class="font-medium">{{ item.vacancy.title }}</p><p class="mt-1 text-xs text-muted">{{ item.vacancy.companyName }}</p></div>
+        <div class="min-w-0 space-y-2"><UBadge :label="applicationStatuses[item.status].label" :color="applicationStatuses[item.status].color" /><p class="text-xs text-muted">{{ handlingLabels[item.handling.stage] }}</p></div>
+        <time :datetime="item.createdAt" class="text-muted">{{ date(item.createdAt) }}</time>
+        <UButton label="Review" icon="i-lucide-eye" class="min-h-11 w-fit" :aria-label="`Review ${item.candidate.name} for ${item.vacancy.title}`" @click="selected = item.id" />
+      </li>
+    </ul>
+    <UEmpty v-else-if="!error && status !== 'pending'" class="mt-6" icon="i-lucide-inbox" title="No applications in this queue" />
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <UButton v-if="route.query.before" label="Newest" icon="i-lucide-arrow-up" color="neutral" variant="outline" :to="{ query: { ...route.query, before: undefined } }" />
+      <UButton v-if="data?.nextCursor && !error && status !== 'pending'" label="Older applications" trailing-icon="i-lucide-arrow-right" color="neutral" variant="outline" :to="{ query: { ...route.query, before: data.nextCursor } }" />
+    </div>
+    <UModal v-model:open="open" title="Review application" :ui="{ content: 'max-w-2xl', wrapper: 'min-w-0 pe-10' }"><template #body><AdminApplicationReview v-if="selected" :id="selected" :key="selected" @changed="refresh" /></template></UModal>
+  </section>
+</template>

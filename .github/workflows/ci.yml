@@ -2,15 +2,53 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/mvp-integration]
   pull_request:
-    branches: [main]
+    branches: [main, codex/mvp-integration]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
+  scope:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify conservative documentation classification
+        run: node --test tests/tooling/ci-scope.test.mjs
+      - name: Determine complete pull-request scope
+        id: scope
+        run: node scripts/ci/change-scope.mjs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+  build:
+    needs: scope
+    # Keep required check names. A failed classifier must not turn them green by skipping.
+    if: ${{ always() && (needs.scope.result != 'success' || needs.scope.outputs.full != 'false') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Require a successful scope check
+        run: test '${{ needs.scope.result }}' = success
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v4
         with:
@@ -30,22 +68,120 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: CI database safety tests
+        run: node --test tests/tooling/*.test.mjs
+
       - name: Unit tests
         run: pnpm test
 
       - name: Build
         run: pnpm build
         env:
+          # Build fixture only; the local HTTP smoke below has no DB configured.
           DATABASE_URL: postgresql://user:pass@localhost:5432/db
-          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+          NUXT_SESSION_PASSWORD: talentbay_build_secret_probe_session_at_least_32_chars
+          NUXT_TELEGRAM_BOT_TOKEN: talentbay_build_secret_probe_telegram
+          NUXT_OAUTH_GOOGLE_CLIENT_SECRET: talentbay_build_secret_probe_google
+          NUXT_OAUTH_GITHUB_CLIENT_SECRET: talentbay_build_secret_probe_github
+
+      - name: Verify server-only build canaries are absent from public assets
+        run: node scripts/assert-public-output.mjs
 
       - name: Production smoke test
         run: pnpm test:smoke
         env:
           NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
 
+      - name: Install Chromium
+        run: |
+          pnpm exec playwright install --only-shell chromium
+          node scripts/ci/browser.mjs
+
+      - name: Candidate public browser tests
+        run: pnpm test:e2e
+
+      - name: Build and inspect Vercel adapter (no deploy)
+        run: |
+          pnpm build
+          node scripts/assert-vercel-output.mjs
+          node scripts/assert-public-output.mjs .vercel/output/static
+        env:
+          NITRO_PRESET: vercel
+          NUXT_SESSION_PASSWORD: talentbay_build_secret_probe_session_at_least_32_chars
+          NUXT_TELEGRAM_BOT_TOKEN: talentbay_build_secret_probe_telegram
+          NUXT_OAUTH_GOOGLE_CLIENT_SECRET: talentbay_build_secret_probe_google
+          NUXT_OAUTH_GITHUB_CLIENT_SECRET: talentbay_build_secret_probe_github
+
       - name: Cloudflare build
         run: pnpm build:cloudflare
         env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/db
           NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+
+  integration:
+    name: PostgreSQL integration
+    needs: scope
+    if: ${{ always() && (needs.scope.result != 'success' || needs.scope.outputs.full != 'false') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: talentbay_ci
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: talentbay_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U talentbay_ci -d talentbay_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: 'true'
+      TALENTBAY_TEST_DATABASE: disposable
+      # Disposable runner-only credentials, never Neon or production secrets.
+      DATABASE_URL: postgresql://talentbay_ci:ci-only-password@127.0.0.1:5432/talentbay_ci
+      DATABASE_MIGRATION_URL: postgresql://talentbay_ci:ci-only-password@127.0.0.1:5432/talentbay_ci
+      NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+    steps:
+      - name: Require a successful scope check
+        run: test '${{ needs.scope.result }}' = success
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify disposable database target
+        run: node scripts/assert-ci-database.mjs
+
+      - name: Verify legacy upgrade and committed migrations on the disposable database
+        run: node scripts/testing/migration-upgrade.mjs
+
+      - name: Database-backed workflow tests
+        # Use injected runner env, not the developer's ignored .env.integration.
+        run: pnpm exec vitest run --config vitest.integration.config.ts
+
+      - name: Build browser-test runtime
+        run: pnpm build
+
+      - name: Install Chromium
+        run: |
+          pnpm exec playwright install --only-shell chromium
+          node scripts/ci/browser.mjs
+
+      - name: Browser to API to PostgreSQL tests
+        run: pnpm exec playwright test --config playwright.database.config.ts

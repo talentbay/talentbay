@@ -1,18 +1,8 @@
-import { z } from 'zod'
 import { getRelocationPreview } from '#server/repositories/relocation'
-
-const querySchema = z.object({
-  location: z.string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
-    .max(80)
-    .catch('london'),
-  annualGross: z.coerce.number().positive().max(2_000_000).catch(110_000),
-})
+import { relocationPreviewQuery } from '#server/services/relocation/preview-query'
 
 export default defineEventHandler(async (event) => {
-  const query = await getValidatedQuery(event, value => querySchema.parse(value))
+  const query = await getValidatedQuery(event, value => relocationPreviewQuery.parse(value))
 
   const preview = await getRelocationPreview(query.location, query.annualGross)
 

@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { demoRelocationLocations } from '#server/data/demo-catalog'
 import { isDatabaseConfigured, schema, useDatabase } from '#server/db'
 import {
@@ -10,6 +10,29 @@ import type {
   RelocationLocationOption,
   RelocationPreviewResponse,
 } from '#shared/types/vacancies'
+import { parseReviewedRelocation } from '#server/services/relocation/data-contract'
+import { reviewedDatasetSnapshot, sameDatasetValues } from '#server/services/relocation/dataset-values'
+
+const relocationFields = {
+  id: schema.relocationLocations.id, city: schema.relocationLocations.city,
+  countryCode: schema.relocationLocations.countryCode, currency: schema.relocationLocations.currency,
+  monthlyCosts: schema.relocationLocations.monthlyCosts, oneTimeCosts: schema.relocationLocations.oneTimeCosts,
+  taxModel: schema.relocationLocations.taxModel, sources: schema.relocationLocations.sources,
+  effectiveFrom: schema.relocationLocations.effectiveFrom, reviewedAt: schema.relocationLocations.reviewedAt,
+  status: schema.relocationLocations.status, datasetSnapshot: schema.relocationLocations.datasetSnapshot,
+}
+type RelocationRow = Pick<typeof schema.relocationLocations.$inferSelect, keyof typeof relocationFields>
+
+function calculationInput(row: RelocationRow) {
+  const dataset = reviewedDatasetSnapshot(row.datasetSnapshot, new Date().toISOString().slice(0, 10))
+  if (!dataset || !sameDatasetValues(row, dataset.values)) return undefined
+  const input = parseReviewedRelocation({
+    key: `location-${row.id}`, city: row.city, countryCode: row.countryCode, currency: row.currency,
+    monthlyCosts: row.monthlyCosts, oneTimeCosts: row.oneTimeCosts, taxModel: row.taxModel,
+    sources: row.sources, effectiveFrom: row.effectiveFrom, reviewedAt: row.reviewedAt,
+  })
+  return input ? { input, context: { assumptions: dataset.record.assumptions, validUntil: dataset.record.review!.validUntil } } : undefined
+}
 
 export async function listRelocationLocations(): Promise<RelocationLocationOption[]> {
   const demoItems = Object.values(demoRelocationLocations).map(location => ({
@@ -26,58 +49,49 @@ export async function listRelocationLocations(): Promise<RelocationLocationOptio
 
   const db = useDatabase()
   const rows = await db
-    .select({
-      city: schema.relocationLocations.city,
-      countryCode: schema.relocationLocations.countryCode,
-      currency: schema.relocationLocations.currency,
-    })
+    .select(relocationFields)
     .from(schema.relocationLocations)
     .where(eq(schema.relocationLocations.status, 'VERIFIED'))
     .orderBy(asc(schema.relocationLocations.city))
 
-  const verifiedItems = rows.map(row => ({
-    key: toLocationKey(row.city),
+  const valid = rows.flatMap(row => calculationInput(row) ?? [])
+  const verifiedItems = valid.map(({ input: row }) => ({
+    key: row.key,
     city: row.city,
     countryCode: row.countryCode,
     currency: row.currency,
     dataStatus: 'VERIFIED' as const,
   }))
-  const verifiedKeys = new Set(verifiedItems.map(item => item.key))
+  const verifiedCities = new Set(verifiedItems.map(item => `${item.countryCode}:${toLocationKey(item.city)}`))
 
   return [
     ...verifiedItems,
-    ...demoItems.filter(item => !verifiedKeys.has(item.key)),
+    ...demoItems.filter(item => !verifiedCities.has(`${item.countryCode}:${item.key}`)),
   ]
 }
-
 export async function getRelocationPreview(
   locationKey: string,
   annualGross: number,
 ): Promise<RelocationPreviewResponse | undefined> {
   if (isDatabaseConfigured()) {
     const db = useDatabase()
-    const [row] = await db
-      .select()
+    const idMatch = /^location-([1-9]\d*)$/.exec(locationKey)
+    if (idMatch && Number(idMatch[1]) > 2_147_483_647) return undefined
+    const rows = await db
+      .select(relocationFields)
       .from(schema.relocationLocations)
       .where(and(
         eq(schema.relocationLocations.status, 'VERIFIED'),
-        ilike(schema.relocationLocations.city, fromLocationKey(locationKey)),
+        idMatch ? eq(schema.relocationLocations.id, Number(idMatch[1])) : undefined,
       ))
-      .limit(1)
+    const valid = rows.flatMap(row => calculationInput(row) ?? [])
+    const matches = idMatch ? valid : valid.filter(row => toLocationKey(row.input.city) === locationKey)
+    // Legacy city-only links remain valid only when they identify one destination.
+    if (matches.length > 1) return undefined
+    const row = matches[0]
 
     if (row) {
-      return calculateVerifiedRelocationPreview({
-        key: toLocationKey(row.city),
-        city: row.city,
-        countryCode: row.countryCode,
-        currency: row.currency,
-        monthlyCosts: row.monthlyCosts,
-        oneTimeCosts: row.oneTimeCosts,
-        taxModel: row.taxModel,
-        sources: row.sources,
-        effectiveFrom: row.effectiveFrom,
-        reviewedAt: row.reviewedAt,
-      }, annualGross)
+      return calculateVerifiedRelocationPreview(row.input, annualGross, row.context)
     }
   }
 
@@ -94,8 +108,4 @@ export function toLocationKey(city: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
-}
-
-function fromLocationKey(key: string): string {
-  return key.replace(/-/g, ' ')
 }

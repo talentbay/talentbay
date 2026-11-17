@@ -17,7 +17,7 @@ export const users = pgTable(
     id: serial('id').primaryKey(),
     role: userRoleEnum('role').notNull().default('USER'),
     name: text('name').notNull(),
-    email: text('email').notNull().unique(),
+    email: text('email').unique(),
     avatarUrl: text('avatar_url'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
@@ -31,7 +31,8 @@ export const users = pgTable(
   ],
 )
 
-export const oauthProviderEnum = pgEnum('oauth_provider', ['GITHUB', 'GOOGLE'])
+// Retain the deployed table/type names while extending the local identity model.
+export const oauthProviderEnum = pgEnum('oauth_provider', ['GITHUB', 'GOOGLE', 'TELEGRAM'])
 
 export const oauthAccounts = pgTable(
   'oauth_accounts',

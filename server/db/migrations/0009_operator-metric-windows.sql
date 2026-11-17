@@ -1,0 +1,2 @@
+CREATE INDEX "application_events_recorded_idx" ON "application_handling_events" USING btree ("created_at","kind");--> statement-breakpoint
+CREATE INDEX "applications_created_queue_idx" ON "applications" USING btree ("created_at","id");

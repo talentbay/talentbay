@@ -1,0 +1,33 @@
+function pathname(value: string) {
+  try { return new URL(value, 'http://localhost').pathname.toLowerCase().replace(/\/+$/, '') }
+  catch { return '' }
+}
+
+export function isApiRequest(value: string) {
+  const path = pathname(value)
+  return path === '/api' || path.startsWith('/api/')
+}
+
+export function isPrivateApiRequest(value: string) {
+  const path = pathname(value)
+  return path === '/api/_auth/session'
+    || path === '/api/v1/relocation/preview'
+    || path === '/api/v1/profile'
+    || path === '/api/v1/applications' || path.startsWith('/api/v1/applications/')
+    || path === '/api/v1/admin' || path.startsWith('/api/v1/admin/')
+    || path.startsWith('/api/v1/auth/')
+    || /^\/api\/v1\/vacancies\/[^/]+\/applications?$/.test(path)
+}
+
+const messages: Record<number, string> = {
+  400: 'Invalid request', 401: 'Authentication required', 403: 'Forbidden', 404: 'Resource not found',
+  409: 'Request conflicts with current state', 412: 'Review the changed resource', 413: 'JSON request is too large', 415: 'Use uncompressed application/json',
+  422: 'Invalid request data', 429: 'Too many requests', 500: 'Service unavailable', 503: 'Service unavailable',
+}
+
+export function safeApiFailure(error: { statusCode?: unknown }) {
+  const value = error.statusCode
+  const status = typeof value === 'number' && Number.isInteger(value) && value >= 400 && value <= 599 ? value : 500
+  const statusMessage = messages[status] ?? 'Request failed'
+  return { status, body: { error: true, statusCode: status, statusMessage, message: statusMessage } }
+}

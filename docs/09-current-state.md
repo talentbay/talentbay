@@ -1,6 +1,67 @@
 # Current State
 
-Last updated: 2026-07-29
+Last updated: 2026-11-17
+
+## Repository Reconciliation — 17 November
+
+The current review line is `codex/mvp-integration`, combining source-rights43f74aa with
+baseline25 reconciliation5f5f3b5 and main57b03a0. One draft integration-to-main PR replaces
+the cumulative human queue after exact-head ancestry verification; source branches remain.
+Dependabot63 has unique newer security updates and remains a separate release gate.
+Main/provider deployment is not changed by this cleanup. PR24 Cloudflare preparation is
+now in main; its configuration/build check are preserved, not a Worker launch decision.
+The runtime/product table below is the16November snapshot unless separately dated.
+
+## Current MVP Line — 16 November
+
+This checkout is the unmerged MVP stack, not current main. One responsive Nuxt product
+serves desktop/mobile web and Telegram Mini App; the bot is an entry/webhook adapter,
+not a second frontend or separately hosted application.
+
+Installed/locked local runtime verified: Nuxt4.6.2/Vue3.5.44/Nitro2.13.4, TypeScript6.0.3,
+Nuxt UI4.10.0/Tailwind4.3.3/Lucide, Node22.23.1/pnpm10.33.0, Drizzle0.45.2/Postgres.js3.4.9,
+nuxt-auth-utils0.5.32. PostgreSQL/Neon is the data layer; no Cloudflare/D1/ClickHouse/Web3
+runtime is required. No packages were upgraded for the16 November source hardening.
+
+| Part | Where | Actual state |
+| --- | --- | --- |
+| Candidate web/Mini App | app/pages, components, composables; product-host client adapter | Catalogue/detail/search, local Saved, profile, managed Apply, progress/withdrawal and relocation UI implemented; native sign-in/Profile/Applications owner-confirmed28Oct, not re-certified today |
+| API/domain | server/api/v1, server/services, shared/types | Auth/local identities, vacancies, profiles, applications, manual operator handling, source runner, relocation and counters implemented |
+| Operator | /ktulhu/v1; server/services/admin | CSV/JSON dry-run/import, review/publish/archive, source controls, application queue/handling/export and operational metrics; not a complete redesigned admin product |
+| Persistence | server/db/schema, server/db/migrations | PostgreSQL/Drizzle, migrations0000..0009; restricted review-runtime role previously configured; no shared SQL changes this checkpoint |
+| Ingestion | server/services/sources | Lever connector/runner implemented;16Nov hardening b7e00be/draft64 is facts-only, mandatory explicit rights record; live registry empty/schedule off, Greenhouse/Workday not implemented |
+| Hosting/process | Vercel review project; GitHub Actions | Review alias deployed15b8ca3, not16Nov code. Consolidated integration-to-main review uses existing CI filters; old stacked PR checks are historical |
+
+Fresh anonymous HTTPS16Nov: review/jobs200/noindex, Telegram capability true, Google/GitHub
+false, profile401/admin403. First catalogue request500, one repeat200 with5explicit DEMO rows.
+Neon preview compute observed active; runtime logs show generic500 then200, not a proven
+root cause/cold-start fix. Main talentbay.org still404/DEPLOYMENT_NOT_FOUND. No provider,
+schema/data, domain, paid-plan or rollout operation made in this check.
+
+Not an accepted production MVP: approved vacancy sources, reviewed city/tax data,
+privacy/terms/retention/operator acceptance, consolidated main/CI release and full human
+candidate→TalentBay-operator walkthrough remain. Demo Apply stays disabled. CV upload,
+employer self-service, proactive notifications, token/ICO/payments/custody are not this MVP.
+Exact current tests/review/PR and continuation: [execution log](14-mvp-execution.md).
+
+## Historical Snapshots
+
+The October/July sections below describe their dated branch/environment, not this MVP line.
+
+## October reconciliation
+
+July backend and partial UI exist in current main. Candidate v1.0 is frozen design, not a
+complete implementation. Telegram-only auth/new identities/explicit linking are absent;
+current OAuth auto-links verified provider email. No new auth capability is claimed.
+
+PR #25 remains unmerged; deployed commits are older than main and PR #25. Neon branch IDs
+have been discovered, but archived metadata is not SQL/runtime/schema/data readiness.
+Vercel metadata access is partial, not wholly absent; Node 24.x differs from Node 22 CI.
+Baseline OAuth 0.5.29, changed re-import exposure and delayed admin revocation were recorded
+risks. Separate M2.1 patch status/evidence is in the execution log, not a deployed fix.
+See `docs/14-mvp-execution.md` for dated sources/SHA and `docs/roadmap.md` for delivery order.
+
+The sections below preserve the **2026-07-29 snapshot**, not fresh October verification.
 
 ## Product Status
 
@@ -40,7 +101,8 @@ Implemented:
 Not yet verified end to end:
 
 - OAuth callbacks on a deployed origin.
-- Profile/application/admin workflows against the real database.
+- Authenticated browser profile/application/admin workflows against the real database
+  (July service-level integration passed; that is not a browser journey).
 - Real vacancy ingestion from approved providers.
 - Verified relocation data and tax models.
 - `talentbay.org` domain binding.
@@ -102,7 +164,7 @@ Passed on 2026-07-29:
   profile/apply/list pass against Neon; post-run cleanup leaves zero test
   records.
 
-## Next Release Path
+## Historical July Release Path
 
 1. Configure the Google callback and verify Google/GitHub OAuth.
 2. Promote an explicitly approved user to admin and verify candidate/admin
@@ -114,3 +176,6 @@ Passed on 2026-07-29:
 
 The current Vercel Production target is a technical MVP deployment, not approval
 for a commercial launch.
+
+The active path is now baseline/CI -> M2.1 -> early M4.1 -> unified auth -> Candidate ->
+minimal content workflow -> verified beta; see `docs/roadmap.md`.

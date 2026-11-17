@@ -1,118 +1,73 @@
-# Auth and Roles
+# Authentication and Roles
 
-Last updated: 2026-06-09
+Updated: 2026-10-26. Implementation on the unified identities branch; see the execution
+log for tests, PR and deployment status. Real-provider browser acceptance is still pending.
 
-## Decision
+## Accounts
 
-TalentBay DMCC MVP uses OAuth-first authentication.
+TalentBay keeps a permanent `users.id`, separate candidate profile and provider identities
+in the existing `oauth_accounts` table. Providers are GOOGLE, GITHUB and TELEGRAM. The
+stable provider subject has a unique index; provider email/name/username are not account IDs.
+User email is nullable for Telegram-only users. Existing OAuth users/IDs and their related
+profiles/applications are preserved by migration 0002. No local passwords are introduced.
 
-Local password-based auth is not part of the first MVP unless a specific product requirement appears.
+Existing Google/GitHub subjects continue signing into their original accounts. A new
+provider subject matching an existing email returns 409 and asks the user to sign in with
+the existing method, then connect the new method. Email matching alone never adds a new
+identity. A linked provider's email is displayed separately and does not overwrite the
+primary user email. No automatic account merging or disconnect endpoint exists.
 
-## Why OAuth-First
+## HTTP Flows
 
-OAuth reduces the need to implement:
+- `GET /api/v1/auth/google` and `/github`: provider login/callback. Verified provider email
+  is required. The installed 0.5.32 library and a state-presence guard protect callbacks.
+- `POST /api/v1/auth/link`: same-origin, authenticated initiation with GOOGLE/GITHUB.
+  A five-minute server-only sealed intent binds the provider and current account.
+  The callback proves the new provider and consumes the intent by replacing the session.
+- `POST /api/v1/auth/telegram`: raw initData + login/link mode. Validates signature, age
+  and payload on the server. Link mode requires a current account; login mode cannot
+  silently attach another Telegram identity or switch an existing web account.
+- `GET /api/v1/auth/identities`: authenticated, no-store list of connected methods, provider
+  emails and connection dates. No provider subjects, tokens or raw initData are returned.
+- `GET /api/v1/auth/capabilities`: no-store boolean availability flags, no credentials.
+- `/api/_auth/session`: nuxt-auth-utils sealed session read/logout. Server-only secure
+  session fields are not included in the public session response.
 
-- Password storage.
-- Password reset.
-- Email verification.
-- Brute-force protection for password login.
-- MFA flows.
+OAuth popups close after successful authentication; ordinary navigation returns to the
+existing profile route. Candidate v1 supplies the canonical /profile and Settings flows.
+The browser and Telegram WebView may hold different cookies while resolving the same user.
 
-OAuth does not remove the need for TalentBay DMCC authorization.
+## Telegram
 
-TalentBay DMCC still owns:
+`NUXT_TELEGRAM_BOT_TOKEN` is private runtime configuration. The client sends raw
+`Telegram.WebApp.initData`; initDataUnsafe is never an identity proof. Validation uses
+Telegram's HMAC-SHA-256 construction with constant-time comparison, unique query keys,
+bounded payload, strict user ID/name fields, five-minute age and 30-second future tolerance.
+This login creates a normal TalentBay session; it does not grant bot notification consent.
 
-- Local user record.
-- Roles.
-- Profiles.
-- Company membership.
-- Resource ownership.
-- Admin permissions.
+Provider identity creation/linking is transactional. Advisory locks serialize the same
+provider subject, and database uniqueness remains the final concurrency boundary.
 
-## Current Code
+## Authorization
 
-OAuth handlers:
+Actual user roles are USER and ADMIN. Candidate is product terminology for a normal user;
+company membership roles live separately in `organisation_members`. Employer self-service
+has not been shipped. Public browsing is anonymous; profile/application endpoints use the
+current session user ID, never a client-supplied owner ID. Admin endpoints are protected by
+server middleware; client route guards only improve navigation.
 
-- `server/api/v1/auth/google.get.ts`
-- `server/api/v1/auth/github.get.ts`
+Each admin handler checks the server guard; middleware also protects the namespace.
+The guard verifies the current database role/account on every request and caches only
+within that request. Revocation/deletion takes effect despite an old ADMIN session.
+New accounts default USER. A newly granted administrator refreshes their login/session.
 
-Session utility:
+## Verification and Release
 
-- `nuxt-auth-utils`
+Regression tests execute the installed OAuth runtime and real routes/session writer with
+provider transport mocked. Telegram route tests exercise signature/origin/session boundaries;
+database tests check existing accounts, conflicts, linking and simultaneous first logins.
+These do not replace real Google/GitHub/Telegram checks on a configured stable HTTPS origin.
 
-User registration helper:
-
-- `server/utils/registered.ts`
-
-Client middleware:
-
-- `app/middleware/auth.ts`
-
-Admin server middleware:
-
-- `server/middleware/admin.ts`
-
-## Target Flow
-
-```text
-OAuth login
-  -> provider returns identity
-  -> TalentBay DMCC finds or creates local user in Postgres
-  -> TalentBay DMCC stores provider account link
-  -> user completes onboarding
-  -> TalentBay DMCC assigns role/profile
-  -> API checks session and permissions server-side
-```
-
-## Roles
-
-Current enum:
-
-```text
-USER
-MEMBER
-ORG
-ADMIN
-```
-
-Recommended MVP naming:
-
-```text
-CANDIDATE
-COMPANY
-ADMIN
-```
-
-Migration can be done later, but docs and product language should stay consistent.
-
-## Authorization Rules
-
-Server-side checks are mandatory.
-
-Frontend checks are only UX hints and must not be treated as security.
-
-Examples:
-
-- Candidate can edit only own profile.
-- Company can edit only own organization and vacancies.
-- Admin can manage users/vacancies/statuses.
-- Public visitors can read published vacancies.
-
-## Account Linking
-
-The MVP should avoid duplicate users when the same person signs in with different providers.
-
-Open questions:
-
-- Is email the primary account-linking key?
-- What happens if GitHub does not return a public email?
-- Can one user have multiple OAuth providers?
-- Can a company account have multiple users?
-
-## Production Risks
-
-- `server/api/v1/auth/test.post.ts` should not be enabled in production.
-- New user creation helper should be verified because insert path currently appears to return the original empty lookup result.
-- Session payload should be minimal.
-- Roles must be fetched/validated server-side before sensitive actions.
-
+See [ADR 0007](adr/0007-local-provider-identities.md), [execution log](14-mvp-execution.md)
+and [deployment runbook](11-deployment-runbook.md). Migration 0002 must be reviewed/applied
+separately to the chosen shared environment; builds never migrate databases.

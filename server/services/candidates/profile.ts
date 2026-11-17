@@ -4,7 +4,7 @@ import { schema, useDatabase } from '#server/db'
 import type { CandidateProfileResponse } from '#shared/types/candidates'
 
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional()
-const optionalUrl = z.union([z.url(), z.literal('')])
+const optionalUrl = z.union([z.url({ protocol: /^https?$/ }).max(2048), z.literal('')])
   .transform(value => value || null)
   .nullable()
   .optional()
@@ -12,7 +12,7 @@ const optionalUrl = z.union([z.url(), z.literal('')])
 export const candidateProfileInputSchema = z.object({
   headline: optionalText(160),
   about: optionalText(5_000),
-  countryCode: z.union([z.string().trim().length(2), z.literal('')])
+  countryCode: z.union([z.string().trim().regex(/^[a-z]{2}$/i), z.literal('')])
     .transform(value => value ? value.toUpperCase() : null)
     .nullable()
     .optional(),
@@ -21,7 +21,7 @@ export const candidateProfileInputSchema = z.object({
   telegram: optionalText(80),
   githubUrl: optionalUrl,
   linkedinUrl: optionalUrl,
-})
+}).strict()
 
 export type CandidateProfileInput = z.infer<typeof candidateProfileInputSchema>
 
@@ -36,6 +36,7 @@ export async function getCandidateProfile(userID: number): Promise<CandidateProf
         avatarUrl: schema.users.avatarUrl,
       },
       profile: {
+        userID: schema.candidateProfiles.userID,
         headline: schema.candidateProfiles.headline,
         about: schema.candidateProfiles.about,
         countryCode: schema.candidateProfiles.countryCode,
@@ -63,12 +64,16 @@ export async function getCandidateProfile(userID: number): Promise<CandidateProf
 
   return {
     user: row.user,
-    profile: row.profile?.headline !== null
-      || row.profile?.about !== null
-      || row.profile?.countryCode !== null
-      || row.profile?.city !== null
-      ? row.profile
-      : null,
+    profile: row.profile ? {
+      headline: row.profile.headline,
+      about: row.profile.about,
+      countryCode: row.profile.countryCode,
+      city: row.profile.city,
+      phone: row.profile.phone,
+      telegram: row.profile.telegram,
+      githubUrl: row.profile.githubUrl,
+      linkedinUrl: row.profile.linkedinUrl,
+    } : null,
   }
 }
 

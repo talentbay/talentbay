@@ -1,138 +1,80 @@
 <script setup lang="ts">
-import type { VacancyListItem } from '#shared/types/vacancies'
+import type {
+  RelocationLocationsResponse,
+  VacancyListItem,
+} from '#shared/types/vacancies'
+import {
+  annualSalaryMidpoint,
+  formatVacancySalary,
+} from '~/utils/vacancy-salary'
 
-definePageMeta({
-  layout: 'product',
-})
-
+definePageMeta({ layout: 'product', key: (route) => String(route.params.slug) })
 const route = useRoute()
-const { loggedIn } = useUserSession()
-const { isSaved, toggleSaved } = useSavedVacancies()
-const slug = computed(() => String(route.params.slug))
-const applicationOpen = ref(false)
-const coverLetter = ref('')
-const applying = ref(false)
-const applicationError = ref('')
-const applicationCreated = ref(false)
-
-const { data: vacancy, error } = await useFetch<VacancyListItem>(
-  () => `/api/v1/vacancies/${slug.value}`,
+const slug = String(route.params.slug)
+const { data: vacancy, error, refresh, status } = await useFetch<VacancyListItem>(
+  `/api/v1/vacancies/${slug}`,
 )
-
-if (error.value || !vacancy.value) {
+if (error.value || !vacancy.value)
   throw createError({
     statusCode: error.value?.statusCode || 404,
     statusMessage: 'Vacancy not found',
   })
-}
-
 useSeoMeta({
-  title: () => `${vacancy.value?.title} at ${vacancy.value?.company.name} · TalentBay`,
+  title: () =>
+    `${vacancy.value?.title} at ${vacancy.value?.company.name} · TalentBay`,
   description: () => vacancy.value?.summary,
 })
-
-const salary = computed(() => {
-  if (!vacancy.value?.salary) {
-    return 'Salary not disclosed'
-  }
-
-  const formatter = new Intl.NumberFormat('en', {
-    style: 'currency',
-    currency: vacancy.value.salary.currency,
-    notation: 'compact',
-    maximumFractionDigits: 0,
-  })
-
-  return `${formatter.format(vacancy.value.salary.min)}–${formatter.format(vacancy.value.salary.max)} / year`
-})
-
-const location = computed(() => {
-  if (!vacancy.value) {
-    return ''
-  }
-
-  const workplace = vacancy.value.workplaceType.charAt(0)
-    + vacancy.value.workplaceType.slice(1).toLowerCase()
-
-  return [
-    vacancy.value.location.city,
-    vacancy.value.location.countryName,
-    workplace,
-  ].filter(Boolean).join(' · ')
-})
-
-const relocationLocation = computed(() => {
-  return vacancy.value?.location.city
-    ?.normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    || 'london'
-})
-
-const relocationSalary = computed(() => {
-  const vacancySalary = vacancy.value?.salary
-  return vacancySalary
-    ? Math.round((vacancySalary.min + vacancySalary.max) / 2)
-    : 110_000
-})
-
-const signInUrl = computed(() => ({
-  path: '/user/login',
-  query: { redirect: route.fullPath },
-}))
-
-async function applyToVacancy() {
-  if (!vacancy.value) {
-    return
-  }
-
-  applying.value = true
-  applicationError.value = ''
-
-  try {
-    await $fetch(`/api/v1/vacancies/${vacancy.value.id}/applications`, {
-      method: 'POST',
-      body: {
-        coverLetter: coverLetter.value || null,
-      },
-    })
-    applicationCreated.value = true
-    applicationOpen.value = false
-  }
-  catch (error: unknown) {
-    const statusCode = typeof error === 'object'
-      && error
-      && 'statusCode' in error
-      ? Number(error.statusCode)
-      : 0
-
-    applicationError.value = statusCode === 409
-      ? 'You have already applied to this vacancy.'
-      : 'Your application could not be submitted. Please try again.'
-  }
-  finally {
-    applying.value = false
-  }
+const { data: locations } = await useFetch<RelocationLocationsResponse>('/api/v1/relocation/locations', { key: 'relocation-locations' })
+const relocationLocation = computed(() =>
+  locations.value?.destinations.find(
+    (item) =>
+      item.countryCode === vacancy.value?.location.countryCode &&
+      item.city.toLocaleLowerCase('en') ===
+        vacancy.value?.location.city?.toLocaleLowerCase('en'),
+  ),
+)
+const relocationSalary = computed(() =>
+  vacancy.value?.salary?.currency === relocationLocation.value?.currency
+    ? annualSalaryMidpoint(vacancy.value?.salary || null)
+    : null,
+)
+const sourceUrl = computed(() => safeHttpUrl(vacancy.value?.source.url))
+const location = computed(() =>
+  [
+    vacancy.value?.location.city,
+    vacancy.value?.location.countryName,
+    vacancy.value?.workplaceType.toLowerCase(),
+  ]
+    .filter(Boolean)
+    .join(' · '),
+)
+const relocationOpen = ref(false)
+const { ready, goBack } = useCandidateBack()
+async function refreshListing() {
+  await refresh()
+  if (error.value || !vacancy.value) showError({ statusCode: error.value?.statusCode || 404, statusMessage: 'Vacancy not found' })
 }
 </script>
 
 <template>
-  <UContainer v-if="vacancy" class="py-8 sm:py-10">
-    <NuxtLink
-      to="/jobs"
-      class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-highlighted"
+  <div
+    v-if="vacancy"
+    class="product-container py-5 lg:py-10"
+  >
+    <UButton
+      label="Back to jobs"
+      :disabled="!ready"
+      icon="i-lucide-arrow-left"
+      variant="link"
+      class="hidden px-0 lg:inline-flex"
+      @click="goBack"
+    />
+    <div
+      class="grid items-start gap-6 lg:mt-5 lg:grid-cols-[minmax(0,1fr)_21rem]"
     >
-      <UIcon name="i-lucide-arrow-left" class="size-4" />
-      All jobs
-    </NuxtLink>
-
-    <div class="mt-6 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
-      <article>
-        <header class="border-b border-default pb-7">
-          <div class="flex items-start gap-4">
+      <article class="min-w-0">
+        <header class="border-b border-default pb-6">
+          <div class="flex items-center gap-3">
             <UAvatar
               :text="vacancy.company.initials"
               :alt="vacancy.company.name"
@@ -140,16 +82,28 @@ async function applyToVacancy() {
               class="shrink-0"
             />
             <div class="min-w-0">
-              <p class="text-sm font-semibold text-primary">{{ vacancy.company.name }}</p>
-              <h1 class="mt-1 text-3xl font-bold text-highlighted sm:text-4xl">
-                {{ vacancy.title }}
-              </h1>
-              <p class="mt-3 text-sm text-muted sm:text-base">{{ location }}</p>
+              <p class="break-words text-sm font-semibold text-primary">
+                {{ vacancy.company.name }}
+              </p>
+              <p class="mt-1 text-xs text-muted">
+                {{ location }}
+              </p>
             </div>
           </div>
-
-          <div class="mt-6 flex flex-wrap items-center gap-2">
-            <UBadge :label="vacancy.seniority" color="neutral" variant="soft" />
+          <h1
+            class="mt-4 break-words text-[32px] leading-10 font-bold text-highlighted"
+          >
+            {{ vacancy.title }}
+          </h1>
+          <p class="mt-3 text-2xl font-semibold text-highlighted">
+            {{ formatVacancySalary(vacancy.salary) }}
+          </p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <UBadge
+              :label="vacancy.seniority"
+              color="neutral"
+              variant="soft"
+            />
             <UBadge
               v-for="skill in vacancy.skills"
               :key="skill"
@@ -160,7 +114,6 @@ async function applyToVacancy() {
             <UBadge
               v-if="vacancy.relocationOffered"
               label="Relocation"
-              color="primary"
               variant="soft"
             />
             <UBadge
@@ -171,111 +124,118 @@ async function applyToVacancy() {
             />
           </div>
         </header>
-
-        <section class="py-7" aria-labelledby="role-overview">
-          <h2 id="role-overview" class="text-xl font-semibold text-highlighted">Role overview</h2>
-          <p class="mt-3 max-w-3xl text-base leading-7 text-default">{{ vacancy.description }}</p>
-          <p class="mt-4 max-w-3xl text-base leading-7 text-default">{{ vacancy.summary }}</p>
-        </section>
-
-        <UAlert
-          v-if="vacancy.source.status === 'DEMO'"
-          color="warning"
-          variant="soft"
-          icon="i-lucide-flask-conical"
-          title="Preview vacancy"
-          description="This fictional vacancy validates the product workflow. It is not an active job offer."
+        <UButton
+          v-if="relocationLocation"
+          :disabled="!ready"
+          label="Relocation estimate"
+          icon="i-lucide-calculator"
+          trailing-icon="i-lucide-chevron-right"
+          color="neutral"
+          variant="outline"
+          block
+          class="mt-4 min-h-12 justify-between lg:hidden"
+          @click="relocationOpen = true"
         />
-
-      </article>
-
-      <aside class="space-y-5 lg:sticky lg:top-24">
-        <section class="rounded-lg border border-default bg-elevated p-5">
-          <p class="text-sm text-muted">Salary range</p>
-          <p class="mt-1 text-xl font-bold text-highlighted">{{ salary }}</p>
-          <UButton
-            v-if="vacancy.source.status === 'DEMO'"
-            label="Preview only"
-            icon="i-lucide-flask-conical"
-            block
-            size="lg"
-            disabled
-            class="mt-5"
-          />
-          <UButton
-            v-else-if="!loggedIn"
-            :to="signInUrl"
-            label="Sign in to apply"
-            icon="i-lucide-send"
-            block
-            size="lg"
-            class="mt-5"
-          />
-          <UButton
-            v-else
-            label="Apply"
-            icon="i-lucide-send"
-            block
-            size="lg"
-            class="mt-5"
-            @click="applicationOpen = !applicationOpen"
-          />
-
-          <form
-            v-if="applicationOpen"
-            class="mt-4"
-            @submit.prevent="applyToVacancy"
+        <section
+          class="py-6"
+          aria-labelledby="role-overview"
+        >
+          <h2
+            id="role-overview"
+            class="text-2xl font-semibold text-highlighted"
           >
-            <UFormField label="Cover note" hint="Optional">
-              <UTextarea
-                v-model="coverLetter"
-                :rows="5"
-                maxlength="5000"
-                placeholder="Briefly explain why this role fits."
-                class="w-full"
-              />
-            </UFormField>
-            <UButton
-              type="submit"
-              label="Submit application"
-              block
-              :loading="applying"
-              class="mt-3"
-            />
-          </form>
-
-          <UAlert
-            v-if="applicationCreated"
-            class="mt-4"
-            color="success"
+            About the role
+          </h2>
+          <p
+            class="mt-3 whitespace-pre-line break-words text-base leading-7 text-default"
+          >
+            {{ vacancy.description }}
+          </p>
+        </section>
+        <section
+          class="border-t border-default py-5"
+          aria-label="Vacancy source"
+        >
+          <UBadge
+            :label="
+              vacancy.source.status === 'DEMO'
+                ? 'Preview vacancy'
+                : 'Reviewed listing'
+            "
+            :color="vacancy.source.status === 'DEMO' ? 'warning' : 'success'"
             variant="soft"
-            title="Application submitted"
           />
-          <UAlert
-            v-if="applicationError"
+          <p
+            v-if="vacancy.source.status === 'DEMO'"
+            class="mt-3 text-sm text-muted"
+          >
+            This fictional vacancy is not an active job offer.
+          </p>
+          <p class="mt-3 text-sm text-muted">
+            Source:
+            <a
+              v-if="sourceUrl"
+              :href="sourceUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary underline"
+            >
+              {{ vacancy.source.name }}
+            </a>
+            <span v-else>{{ vacancy.source.name }}</span>
+          </p>
+          <VacanciesProvenanceDates
+            v-if="vacancy.provenance"
             class="mt-4"
-            color="error"
-            variant="soft"
-            title="Application failed"
-            :description="applicationError"
-          />
-          <UButton
-            :label="isSaved(vacancy.slug) ? 'Saved' : 'Save vacancy'"
-            :icon="isSaved(vacancy.slug) ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
-            color="neutral"
-            variant="outline"
-            block
-            class="mt-3"
-            @click="toggleSaved(vacancy.slug)"
+            :dates="[
+              { label: 'Published on TalentBay', value: vacancy.publishedAt },
+              { label: 'Source publication', value: vacancy.provenance.sourcePublishedAt },
+              { label: 'Source fetched', value: vacancy.provenance.sourceFetchedAt },
+              { label: 'Last imported', value: vacancy.provenance.lastImportedAt },
+              { label: 'Content checked', value: vacancy.provenance.reviewedAt },
+            ]"
           />
         </section>
-
-        <RelocationPreview
-          v-if="vacancy.relocationOffered"
-          :initial-location="relocationLocation"
-          :initial-annual-gross="relocationSalary"
-        />
+        <p
+          v-if="!relocationLocation"
+          class="border-t border-default py-4 text-sm text-muted"
+        >
+          A relocation estimate for this destination is not available yet.
+        </p>
+      </article>
+      <aside
+        class="space-y-5 lg:sticky lg:top-24"
+        aria-label="Vacancy actions and estimate"
+      >
+        <VacanciesVacancyActions :key="vacancy.id" :vacancy="vacancy" :refreshing="status === 'pending'" @refresh="refreshListing" />
+        <div
+          v-if="relocationLocation"
+          class="hidden lg:block"
+        >
+          <RelocationPreview
+            :context-key="vacancy.slug"
+            :context-label="`${vacancy.title} · ${vacancy.company.name}`"
+            :initial-location="relocationLocation.key"
+            :initial-annual-gross="relocationSalary"
+          />
+        </div>
       </aside>
     </div>
-  </UContainer>
+    <UModal
+      v-model:open="relocationOpen"
+      title="Relocation estimate"
+      :description="`${vacancy.title} · ${vacancy.company.name}`"
+      :ui="{ header: 'shrink-0 items-start', wrapper: 'min-w-0 pe-10', title: 'break-words', description: 'break-words', body: 'min-h-0' }"
+    >
+      <template #body>
+        <RelocationPreview
+          v-if="relocationLocation"
+          embedded
+          :context-key="vacancy.slug"
+          :initial-location="relocationLocation.key"
+          :initial-annual-gross="relocationSalary"
+        />
+      </template>
+    </UModal>
+  </div>
 </template>

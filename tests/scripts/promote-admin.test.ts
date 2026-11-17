@@ -14,12 +14,20 @@ describe('parsePromotionArgs', () => {
     expect(parsePromotionArgs(['--', 'admin@example.com', '--apply']).apply)
       .toBe(true)
   })
+  it('accepts a permanent local ID for Telegram-only users without email', () => {
+    expect(parsePromotionArgs(['--', '--user-id', '42'])).toEqual({ help: false, userId: 42, apply: false })
+    expect(parsePromotionArgs(['--apply', '--user-id=42'])).toEqual({ help: false, userId: 42, apply: true })
+  })
 
   it.each([
     [],
     ['first@example.com', 'second@example.com'],
     ['not-an-email'],
     ['admin@example.com', '--force'],
+    ['--user-id', '42', 'admin@example.com'],
+    ['--user-id', '0'], ['--user-id', '-1'], ['--user-id', '1.5'], ['--user-id', '1e3'],
+    ['--user-id', '2147483648'], ['--user-id'],
+    ['--user-id', '42', '--user-id', '43'], ['admin@example.com', '--apply', '--apply'],
   ])('rejects unsafe arguments: %j', (args) => {
     expect(() => parsePromotionArgs(args)).toThrow()
   })
