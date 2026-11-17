@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=22.22.3 <23"
+    "node": ">=22.23.5 <23"
   },
   "scripts": {
     "build": "nuxt build",
@@ -19,6 +19,7 @@
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "audit:dependencies": "node scripts/ci/dependency-audit.mjs",
     "test": "vitest run",
     "test:integration": "node scripts/testing/integration.mjs",
     "test:smoke": "node scripts/smoke-production.mjs",
@@ -42,7 +43,7 @@
     "csv-parse": "^7.0.3",
     "drizzle-orm": "^0.45.2",
     "html-to-text": "^10.0.1",
-    "nuxt": "^4.6.2",
+    "nuxt": "^4.6.4",
     "nuxt-auth-utils": "0.5.32",
     "pinia": "^3.0.4",
     "postgres": "^3.4.9",

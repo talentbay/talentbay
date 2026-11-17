@@ -10,7 +10,7 @@ provider-settings read by the agent. The accessible Alex projects have `link:nul
 does not establish whether the separate primary project is connected. Do not repeat that
 inference or treat a missing GitHub Vercel check as proof that no external deploy ran.
 
-Fresh HTTPS apex/www requests returned404/DEPLOYMENT_NOT_FOUND. Primary project/domain
+Earlier17November HTTPS apex/www requests returned404/DEPLOYMENT_NOT_FOUND. Primary project/domain
 management and its actual latest build logs remain inaccessible to the current connection.
 The exact missing-target/build cause is not proven; a Nuxt code error or Hobby restriction
 must not be asserted as the cause without the relevant evidence. Inspect the actual primary
@@ -22,6 +22,25 @@ domain changes, database migrations or billing. A main merge may trigger the own
 production integration, so it remains an explicit release decision.
 
 ## Latest readiness
+
+Recovery verified17November11:18–11:19UTC: main99b2f0c (external Dependabot63 merge) has
+GitHub Production7851282427/Vercel SUCCESS at11:00UTC. talentbay.org/302→/jobs, /jobs200,
+health200/runtimevercel and public catalogueDEMO now respond. The previous404 is historical,
+not the current diagnosis. Full MVP PR65 is still open; do not confuse this main deployment
+with new integration/security source. No agent production operation caused this recovery;
+visibility/reconnect/newcommit changed externally and exact original cause was not isolated.
+
+17 November owner screenshots confirm primary Hobby, Git connected to talentbay/talentbay,
+Production main and Preview all unassigned branches. Team invitation is unavailable without
+Pro; do not buy a plan or request the owner's account/token. Fresh GitHub API now reports
+this repository PUBLIC, not the earlier private snapshot; the agent did not change visibility.
+The documented Hobby restriction on private organisation repositories does not explain this
+current public configuration. Remote codex/mvp-integration exists at57441af; missing Vercel
+checks/comments do not prove failed Git sync. Obtain the actual branch-selection error or
+first build failure from the owner. A bounded owner-driven Preview attempt can target that
+branch via Deployments/Create Deployment without changing Production or main. Neither the
+screenshots nor a successful local Vercel build establish the root cause of the primary404.
+[Vercel Git deployments and Hobby rules](https://vercel.com/docs/git).
 
 Use [release readiness](20-release-readiness.md) for the current verified checklist.
 The owner-approved separate internal test project now serves

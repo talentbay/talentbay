@@ -4,6 +4,16 @@ Last updated: 2026-11-17
 
 ## Repository Reconciliation — 17 November
 
+Later17November: security topic codex/mvp-dependency-security updates Nuxt4.6.4/Nitro2.13.6/
+schema4.6.4 and Nodefloor22.23.5. Final local206unit/44tooling/95SQL/20public+46DB-browser,
+types/lint/builds/smoke/recovery PASS;4reviewed tooling audit findings remain,0high/critical.
+See docs14/16 for the reproduced raw-path fix and independent review, not zero-risk claims.
+Externally merged Dependabot63 is now main99b2f0c. Fresh GitHub Vercel deploymentSUCCESS
+and primary /jobs200/health200/DEMOcatalogue verified11:18–11:19UTC; prior404 no longer
+reproduces. Repo PUBLIC/Hobby screenshots replace the earlier private/unknown-plan snapshot.
+Agent did not merge main or publish a deployment. Full MVP PR65 remains open/non-draft;
+the old test alias/runtime below is separate. New topic publication/CI: docs14.
+
 The current review line is `codex/mvp-integration`, combining source-rights43f74aa with
 baseline25 reconciliation5f5f3b5 and main57b03a0. One draft integration-to-main PR replaces
 the cumulative human queue after exact-head ancestry verification; source branches remain.
