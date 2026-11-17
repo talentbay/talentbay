@@ -58,6 +58,12 @@ jobs:
         env:
           NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
 
+      - name: Cloudflare build
+        run: pnpm build:cloudflare
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          NUXT_SESSION_PASSWORD: ci-placeholder-session-password-32chars
+
   integration:
     name: PostgreSQL integration
     runs-on: ubuntu-latest

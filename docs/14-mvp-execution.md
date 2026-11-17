@@ -1,5 +1,22 @@
 # MVP Execution Log
 
+## PR25 conflict reconciliation — 2026-11-17
+
+Main now includes PR24 as squash commit57b03a0. The earlier statements below that PR24
+is unmerged describe the October checkpoint, not current main. This merge into the PR25
+branch preserves both the existing Cloudflare build check and isolated PostgreSQL job.
+Health combines no-store/liveness semantics with main's runtime/timestamp metadata;
+compiled smoke now checks those fields. This does not activate a Worker deployment,
+change the Vercel/Neon MVP decision or merge/release the later MVP stack.
+Actual local verification on Node22.23.1/pnpm10.33.0 with no developer dotenv: frozen
+install, Nuxt typecheck, lint,28unit tests,13CI database safety tests, Node build and
+compiled HTTP smoke PASS. Cloudflare build PASS; migrations and2integration tests PASS
+on a new local PostgreSQL18 cluster, stopped afterwards. Parsed YAML assertions preserve
+both jobs and the disposable database guard. Independent read-only review of the four
+resolution files reported no findings; it did not rerun these tests. No lockfile or
+dependency version change. Source changes will update PR25 only, not merge into main;
+GitHub CI and deployment results are separate from these local checks.
+
 Updated: 2026-10-06
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Work branch: `feat/mvp-vercel-baseline`; PR: https://github.com/talentbay/talentbay/pull/25

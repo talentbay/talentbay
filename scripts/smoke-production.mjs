@@ -101,6 +101,12 @@ try {
     if (body.status !== 'ok' || body.service !== 'talentbay') {
       throw new Error('/api/health did not return the liveness contract')
     }
+    if (!['node', 'vercel', 'cloudflare'].includes(body.runtime)) {
+      throw new Error('/api/health did not return a supported runtime')
+    }
+    if (typeof body.timestamp !== 'string' || !Number.isFinite(Date.parse(body.timestamp))) {
+      throw new Error('/api/health did not return a valid timestamp')
+    }
     if (response.headers.get('cache-control') !== 'no-store') {
       throw new Error('/api/health must not be cached')
     }
