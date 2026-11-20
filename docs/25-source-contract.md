@@ -14,6 +14,11 @@ automated imports are facts-only**. Do not scrape through login or use LinkedIn/
 Public ATS endpoints and facts-only selection still require documented source-use permission.
 No new live source is approved by this change. See [compliance boundaries](08-compliance-guardrails.md).
 
+20 November: the CEO confirmed fictional content suffices for a product demo now.
+There is no named real source. Future external listings must also have a direct
+employer contact for the posting. The current adapter's source link is **not** such
+a contact; see the [two separate eligibility checks](19-content-operations.md#pick-a-source-before-entering-any-jobs).
+
 ## Source Register
 
 For the first employer decision, see [pilot source options](19-content-operations.md#pick-a-source-before-entering-any-jobs): a named employer board or an employer-supplied export for managed applications, versus an attributed, link-only RSS selection. The latter has no ingestion or application-routing implementation and is not an approved source.

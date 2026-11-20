@@ -5,6 +5,22 @@ Implementation/design contract: [18-admin-import-contract.md](18-admin-import-co
 
 ## Pick a source before entering any jobs
 
+**Decision, 20 November: show the product first.** A client is not required for the
+demo. Use [the isolated fictional catalogue and operator walkthrough](21-local-product-review.md#walkthrough).
+The demo exercises a real application receipt and operator queue without contacting
+employers. It is not a catalogue of live openings.
+
+For a later external feed, filter twice: (1) the source terms cover this use and
+the structured facts we display; (2) the posting identifies a direct employer
+recruiting channel for this vacancy, or a permitted employer feed explicitly maps
+the channel to that posting. A generic homepage, ATS Apply button or guessed inbox
+does not qualify. Skip missing/ambiguous matches; don't fill gaps using AI. Keep
+contact evidence private for the operator, not in the public description. Contacting
+the employer and transferring a candidate profile remain separate steps. **The Lever
+normalizer does not establish this contact today.** Keep live sources disabled until
+a named feed and a tested filter support both checks. Own TalentBay vacancies are a
+separate future source, not proof of an outside client or an open role today.
+
 Prefer a feed or export supplied by the employer. A person reviews the batch and releases
 it; nobody should retype the advertisements. Source availability and the candidate handoff
 are separate decisions:
@@ -92,6 +108,8 @@ review, including siblings outside this file. Do not invent source IDs on each r
 > - **Publication permission:** Who owns the content? Give the dated permission reference,
 >   applicable terms, and where and for how long TalentBay may display this listing and its
 >   text. Identify who will tell us about corrections, closure or withdrawal of permission.
+> - **Direct contact:** Identify a current employer recruiting channel tied to this role
+>   privately. A posting URL alone is insufficient for real third-party listings.
 > - **Applications (separate decision):** May TalentBay contact the employer and manually
 >   forward an application for this role with the candidate's permission? If yes, identify
 >   the approved recipient and channel privately; if not agreed, say so. Publishing the
@@ -112,7 +130,10 @@ review, including siblings outside this file. Do not invent source IDs on each r
   (0 withdrawals). Stop on any mismatch; do not change the source ID to force a create.
 - [ ] Select **Confirm import**. Find the row in the review queue as `DRAFT` / `UNREVIEWED`;
   it must not appear in public Jobs yet. Compare the facts, text and source against the
-  permission, acknowledge the review, then select **Verify & publish**.
+  permission. For an external role also confirm its direct recruiting channel. If the
+  channel or right to display the facts is absent, leave it unpublished. Otherwise
+  acknowledge the review and select **Verify & publish**. Never infer permission to
+  send a candidate's information from approval to publish.
 - [ ] In the same preview, find the role in public Jobs and open its detail page. Match the
   employer, title and original source link to the approved row. The public count should rise
   by one if nothing else changed; a count alone does not verify the listing.
@@ -138,7 +159,8 @@ there is no background import, XLSX mapper, automatic scraping or durable import
 
 Open the queue and **Review** a record. Check company, original source, full description,
 location, salary period/currency, skills and support claims. The publish action requires
-an operator acknowledgement; it is not a substitute for source permission.
+an operator acknowledgement; it is not a substitute for source permission or a direct
+contact for a real external vacancy.
 
 **Verify & publish** makes an eligible record public; **Flag** withdraws it for correction;
 **Archive** keeps it and its applications but hides it. Correct content through the source

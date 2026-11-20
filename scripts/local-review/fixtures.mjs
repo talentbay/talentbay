@@ -2,31 +2,34 @@ import { readFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 
 const roles = [
-  ['senior-backend-engineer-london', 'Senior Backend Engineer', 'Atlas Video', 'atlas-video', 'GB', 'London', 'GBP', 95000, 125000, ['TypeScript', 'PostgreSQL', 'Node.js']],
-  ['senior-frontend-engineer-amsterdam', 'Senior Frontend Engineer', 'Northstar Canvas', 'northstar-canvas', 'NL', 'Amsterdam', 'EUR', 90000, 120000, ['Vue', 'TypeScript', 'Accessibility']],
-  ['platform-engineer-berlin', 'Platform Engineer', 'Relay Systems', 'relay-systems', 'DE', 'Berlin', 'EUR', 78000, 102000, ['Kubernetes', 'Go', 'Observability']],
-  ['product-engineer-lisbon', 'Product Engineer', 'Harbor Finance', 'harbor-finance', 'PT', 'Lisbon', 'EUR', 55000, 72000, ['TypeScript', 'Vue', 'PostgreSQL']],
-  ['staff-fullstack-engineer-remote-emea', 'Staff Fullstack Engineer', 'Common Thread', 'common-thread', 'DE', 'Berlin', 'EUR', 105000, 140000, ['TypeScript', 'Vue', 'Node.js']],
-  ['data-engineer-amsterdam', 'Data Engineer', 'Northstar Canvas', 'northstar-canvas', 'NL', 'Amsterdam', 'EUR', 80000, 100000, ['Python', 'SQL', 'dbt']],
-  ['quality-engineer-tallinn', 'Quality Engineer', 'Clear Signal', 'clear-signal', 'EE', 'Tallinn', 'EUR', 52000, 68000, ['Playwright', 'TypeScript', 'Accessibility']],
+  { slug: 'senior-backend-engineer-london', title: 'Senior Backend Engineer', name: 'Atlas Video', companySlug: 'atlas-video', countryCode: 'GB', city: 'London', currency: 'GBP', min: 95000, max: 125000, skills: ['TypeScript', 'PostgreSQL', 'Node.js'], project: 'Design the processing queue for video uploads and make failed transcodes safe to retry.', relocationOffered: true, visaSponsorship: true },
+  { slug: 'senior-frontend-engineer-amsterdam', title: 'Senior Frontend Engineer', name: 'Northstar Canvas', companySlug: 'northstar-canvas', countryCode: 'NL', city: 'Amsterdam', currency: 'EUR', min: 90000, max: 120000, skills: ['Vue', 'TypeScript', 'Accessibility'], project: 'Make a collaborative drawing editor usable with a keyboard and fast on large shared canvases.', relocationOffered: true, visaSponsorship: true },
+  { slug: 'platform-engineer-berlin', title: 'Platform Engineer', name: 'Relay Systems', companySlug: 'relay-systems', countryCode: 'DE', city: 'Berlin', currency: 'EUR', min: 78000, max: 102000, skills: ['Kubernetes', 'Go', 'Observability'], project: 'Help product teams release services safely and trace failures from deployment back to the affected request.', relocationOffered: true, visaSponsorship: true },
+  { slug: 'product-engineer-lisbon', title: 'Product Engineer', name: 'Harbor Finance', companySlug: 'harbor-finance', countryCode: 'PT', city: 'Lisbon', currency: 'EUR', min: 55000, max: 72000, skills: ['TypeScript', 'Vue', 'PostgreSQL'], project: 'Build a reconciliation screen where small businesses can match invoices to incoming payments.', relocationOffered: true, visaSponsorship: false },
+  { slug: 'staff-fullstack-engineer-remote-emea', title: 'Staff Fullstack Engineer', name: 'Common Thread', companySlug: 'common-thread', countryCode: 'DE', city: 'Berlin', currency: 'EUR', min: 105000, max: 140000, skills: ['TypeScript', 'Vue', 'Node.js'], project: 'Design shared editing and conflict recovery for a distributed team working on the same documents.', remote: true, relocationOffered: false, visaSponsorship: false },
+  { slug: 'data-engineer-amsterdam', title: 'Data Engineer', name: 'Northstar Canvas', companySlug: 'northstar-canvas', countryCode: 'NL', city: 'Amsterdam', currency: 'EUR', min: 80000, max: 100000, skills: ['Python', 'SQL', 'dbt'], project: 'Turn editor events into reliable daily metrics and build checks for missing or late batches.', relocationOffered: true, visaSponsorship: true },
+  { slug: 'quality-engineer-tallinn', title: 'Quality Engineer', name: 'Clear Signal', companySlug: 'clear-signal', countryCode: 'EE', city: 'Tallinn', currency: 'EUR', min: 52000, max: 68000, skills: ['Playwright', 'TypeScript', 'Accessibility'], project: 'Build browser checks for an incident dashboard that remains usable by keyboard during live updates.', relocationOffered: true, visaSponsorship: true },
 ]
 
-export const reviewVacancies = roles.map(([slug, title, name, companySlug, countryCode, city, currency, min, max, skills], index) => ({
+export const reviewVacancies = roles.map(({ slug, title, name, companySlug, countryCode, city, currency, min, max, skills, project, remote, relocationOffered, visaSponsorship }) => ({
   source: { name: 'Local review fixture (fictional)', url: `https://example.invalid/jobs/${slug}`, externalId: slug },
   company: { name, slug: companySlug },
   vacancy: {
-    slug, title, countryCode, city, skills, seniority: index === 4 ? 'Staff' : 'Senior',
-    summary: `Join ${name}'s product team in ${city}. Own delivery, collaborate with engineers and shape the next stage of the platform.`,
-    description: `LOCAL TEST VACANCY. This company and role are fictional. Applications remain in your local database.\n\nThe role\nJoin a cross-functional team building a collaboration platform used by distributed teams. You will own a product area from discovery through delivery, with time reserved for reliability and improving the developer experience.\n\nWhat you will do\n• Design and deliver features using ${skills.join(', ')}.\n• Work with product and design to turn user problems into small, testable releases.\n• Review changes, improve automated tests and monitor services after release.\n• Share decisions and mentor colleagues through pairing and code review.\n\nWhat you bring\nExperience shipping production software, clear written communication and a pragmatic approach to trade-offs. You can explain your decisions and ask for help when the requirements are unclear.\n\nLocation and support\n${index === 4 ? 'Remote within EMEA, with optional team meetups.' : `Hybrid in ${city}, with two office days per week. The fictional package includes visa assistance and an initial relocation allowance.`}\n\nInterview process\nIntroductory call, a technical conversation about previous work, and a team discussion. This is illustrative content for reviewing the product, not a real hiring process.`,
-    employmentType: 'FULL_TIME', workplaceType: index === 4 ? 'REMOTE' : 'HYBRID',
-    salary: { min, max, currency, period: 'YEAR' },
-    relocationOffered: index !== 4, visaSponsorship: index !== 3 && index !== 4,
+    slug, title, countryCode, city, skills, seniority: title.startsWith('Staff ') ? 'Staff' : 'Senior',
+    summary: `Demo vacancy. ${project}`,
+    description: [
+      'Demo vacancy. This employer and role are fictional. No application is sent to an employer.',
+      `The role\n${project} Work with ${skills.join(', ')}.`,
+      `Working arrangement\n${remote ? 'Remote within EMEA; Berlin is the team base.' : `Hybrid in ${city}, with two office days per week.`}`,
+      `Moving support\n${relocationOffered ? 'Relocation allowance included.' : 'No relocation allowance.'} ${visaSponsorship ? 'Visa sponsorship included.' : 'No visa sponsorship.'}`,
+    ].join('\n\n'),
+    employmentType: 'FULL_TIME', workplaceType: remote ? 'REMOTE' : 'HYBRID',
+    salary: { min, max, currency, period: 'YEAR' }, relocationOffered, visaSponsorship,
   },
 }))
 
-export function reviewCsv() {
+export function reviewCsv(item = reviewVacancies[5]) {
   const columns = readFileSync(new URL('../../public/templates/vacancies.csv', import.meta.url), 'utf8').trim().split(',')
-  const item = reviewVacancies[5]
   const row = {
     source_name: item.source.name, source_url: item.source.url, source_external_id: item.source.externalId,
     company_name: item.company.name, company_slug: item.company.slug, vacancy_slug: item.vacancy.slug,
@@ -34,8 +37,8 @@ export function reviewCsv() {
     employment_type: item.vacancy.employmentType, workplace_type: item.vacancy.workplaceType,
     seniority: item.vacancy.seniority, country_code: item.vacancy.countryCode, city: item.vacancy.city,
     salary_min: item.vacancy.salary.min, salary_max: item.vacancy.salary.max,
-    salary_currency: item.vacancy.salary.currency, salary_period: 'YEAR', skills: item.vacancy.skills.join('|'),
-    relocation_offered: true, visa_sponsorship: true,
+    salary_currency: item.vacancy.salary.currency, salary_period: item.vacancy.salary.period, skills: item.vacancy.skills.join('|'),
+    relocation_offered: item.vacancy.relocationOffered, visa_sponsorship: item.vacancy.visaSponsorship,
   }
   return `${columns.join(',')}\n${columns.map(key => `"${String(row[key] ?? '').replaceAll('"', '""')}"`).join(',')}\n`
 }

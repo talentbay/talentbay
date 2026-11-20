@@ -6,6 +6,15 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Demonstrate without a live job source (20 November)
+
+The isolated local demo starts with six fictional listings; the operator imports
+a seventh using the sample CSV. Both list and detail identify demo content. Cards
+describe distinct roles; details and flags agree on relocation and visa support.
+Checked the six cards and the Lisbon detail at 390px and 1280px against disposable
+PostgreSQL. Fixture/CSV tests and lint passed. This does not enable a live provider.
+For real third-party openings, see the [direct-contact and source-use criteria](19-content-operations.md#pick-a-source-before-entering-any-jobs).
+
 ## London: distinguish rent, travel and a refundable deposit (20 November)
 
 The [review sheet](examples/london-2026-27-review.md#housing-and-commute-two-costs-not-a-total-budget)
