@@ -6,6 +6,23 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Pilot follow-up: salary transport and data coverage (20 November)
+
+- Candidate estimates now send a same-origin JSON POST after hydration, including retries
+  and vacancy-prefilled income. No salary in the request URL, no database write. GET
+  remains for compatibility; provider-wide log privacy is not implied.
+- Tested on Node 22.23.5 from a clean frozen installation: typecheck, lint, Node build,
+  compiled HTTP smoke, 239 unit tests, 100 disposable PostgreSQL integration tests plus
+  legacy upgrade/replay, and 35 public + 49 database-backed Chromium cases (no retries).
+  An independent read-only review found two issues: respecting an adapter's declared body
+  length, and waiting for the superseded browser request before asserting the stable result.
+  Both fixes were reviewed again and are included in these runs.
+- The eleven public pilot destinations split into three DEMO and eight UNAVAILABLE, none
+  REVIEWED. [London evidence packet](26-relocation-data-contract.md#london-first-evidence-packet-not-a-reviewed-estimate-20-november-2026)
+  identifies an automatically readable rent series, not a complete dataset. No real
+  records imported. Main bot sign-in still failed in the owner's native check; no live
+  failure reason or subsequent successful native test has been provided.
+
 ## Candidate pilot and source decision: 20 November
 
 - Release reconciliation `129234a` was published to PR #67. GitHub reported it mergeable;

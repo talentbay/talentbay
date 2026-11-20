@@ -75,7 +75,11 @@ other high-nominal salaries. Review the approved pilot/reference cases before ch
 never truncate, rescale or convert those salaries silently. Inputs outside the bound are
 rejected, not calculated as a smaller salary. All calculations remain estimates, not advice.
 
-`GET /api/v1/relocation/preview` now requires explicit `location` and `annualGross`.
+The candidate UI uses `POST /api/v1/relocation/preview` with a same-origin, uncompressed
+JSON body and no query string. The handler checks 1 KiB on streamed/supplied bytes or
+declared length. If a host supplies only a parsed object and no length, only its JSON
+representation can be bounded here, not the original HTTP message. The anonymous calculation has no side
+effects. The compatible GET and the new POST require explicit `location` and `annualGross`.
 This deliberately removes the historical hidden London/110000 defaults. Decimal query
 strings allow at most2 fraction digits; blank, null, arrays, booleans, exponent/hex and
 nonfinite values are not money. Zero is accepted explicitly. Standalone UI starts with no
@@ -107,6 +111,22 @@ expense scope, transfer origin/dates and one-time assumptions. Record access dat
 and gaps, then compare hand-worked boundary cases before a dated review/validUntil.
 The founder historically reported a legal partner; current availability/qualifications/
 specific approval have not been independently verified. These remain D04/D06 gates.
+
+### London: first evidence packet, not a reviewed estimate (20 November 2026)
+
+The public locations response showed London, Berlin and Lisbon as DEMO, the other eight
+pilot destinations as UNAVAILABLE, and zero as REVIEWED. Amsterdam was also DEMO but
+is outside the eleven. This says nothing about private drafts.
+
+| Component | Reproducible input | Decision still needed |
+| --- | --- | --- |
+| Rent | [ONS monthly rent workbook](https://www.ons.gov.uk/economy/inflationandpriceindices/datasets/priceindexofprivaterentsukmonthlypricestatistics), 18 November edition, Table 1. Filter area code `E12000007` (London); select the one-bedroom **rental price**, GBP/month, not the index, growth rate or all-property average. Machine-read 142 distinct monthly observations through October 2026. | Approve the one-bedroom regional mean as the pilot housing assumption. It covers existing and new tenancies, not an asking-price quote. Credit ONS and check edition-specific exceptions under its [reuse terms](https://www.ons.gov.uk/help/terms-conditions). |
+| Earnings deductions | [HMRC payroll tables](https://www.gov.uk/guidance/rates-and-thresholds-for-employers-2026-to-2027) separate England PAYE, employee NI and employer NI. | Specify residency, tax year, pay period and included deductions. Verify that the model can represent them before accepting a result. |
+| Local travel | [TfL fare lookup](https://tfl.gov.uk/how-to-pay/check-travel-costs) supports a route or zonal fare reference. | Specify route, mode and commuting frequency. A cap is not a monthly bill; bulk reuse rights have not been established. |
+
+Still missing: evidence for other recurring costs and the one-time move (departure city,
+itinerary, deposit, temporary housing and fees), a reviewer and a validity period. Keep
+London DEMO. No data was ingested and no employer, source or reviewer was contacted.
 
 ## Local Engineer Import (D03)
 

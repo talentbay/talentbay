@@ -10,6 +10,15 @@ const slug = `relocation-outcome-${randomUUID()}`
 const reviewedAt = new Date().toISOString()
 let companyID: number, locationID: number
 const userIDs: number[] = []
+const estimatePath = '/api/v1/relocation/preview'
+test.beforeEach(async ({ page }) => {
+  page.on('request', req => {
+    const url = new URL(req.url())
+    if (url.pathname !== estimatePath) return
+    expect.soft(url.search).toBe('')
+    expect.soft(req.method()).toBe('POST')
+  })
+})
 test.beforeAll(async () => {
   const record = { ...structuredClone(example.records[0]!), status: 'VERIFIED', review: { at: reviewedAt, by: `${marker} private reviewer`, reference: `${marker} private review reference`, validUntil: '2099-12-31' } }
   const sources = record.sources.map(({ covers: _covers, ...source }) => source)
@@ -102,7 +111,7 @@ test('signing out resets an earlier account estimate before its vacancy is reope
 test('known pilot destination without data stays in vacancy context without a fabricated calculation', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   let calls = 0
-  page.on('request', request => { if (request.url().includes('/relocation/preview?')) calls++ })
+  page.on('request', req => { if (new URL(req.url()).pathname === estimatePath) calls++ })
   await page.goto(`/jobs/${slug}-dubai`)
   await page.getByRole('button', { name: 'Relocation estimate', exact: true }).click()
   const dialog = page.getByRole('dialog')

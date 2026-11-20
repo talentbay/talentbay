@@ -16,6 +16,9 @@ are separate decisions:
 | [We Work Remotely programming RSS](https://weworkremotely.com/remote-job-rss-feed) | The documented public feed returned HTTP 200; items exposed title, GUID, source link, region, category and publication date. There is **no RSS adapter** or source-only Apply mode in TalentBay. | The feed page permits feed use with attribution and links to WWR. It does not establish employer consent to forward profiles. Before enabling, review the [current terms](https://weworkremotely.com/terms-and-conditions) for the intended use. For an agreed link-only selection, use facts and attributed links, not descriptions, logos or internal Apply. Remote location is not a relocation/visa offer. |
 
 This was a read-only feasibility check, not legal clearance, ingestion or publication.
+WWR's October 2026 terms reserve uploaded content rights to its owners and grant a
+limited right of access; the specific RSS instructions do not appoint TalentBay as a
+recruiter. A first-party employer feed is the better fit for the internal Apply pilot.
 Do not build a substitute feed from logged-in pages or infer permissions from a successful
 GET. For a product demo without a cleared source use the isolated, labelled synthetic
 review data, never the public catalogue.

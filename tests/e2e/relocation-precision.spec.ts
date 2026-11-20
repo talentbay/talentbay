@@ -1,13 +1,14 @@
 import { expect, test } from '@playwright/test'
+import type { Request } from '@playwright/test'
 
 test('salary precision and range are field errors, not failed estimate requests', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 850 })
   const start = Date.now()
   await page.clock.install({ time: start })
-  const requested: string[] = []
+  const requested: Request[] = []
   page.on('request', req => {
     const url = new URL(req.url())
-    if (url.pathname === '/api/v1/relocation/preview') requested.push(url.searchParams.get('annualGross') ?? '')
+    if (url.pathname === '/api/v1/relocation/preview') requested.push(req)
   })
   await page.goto('/jobs')
   const tool = page.getByRole('complementary', { name: 'Relocation preview' })
@@ -38,9 +39,15 @@ test('salary precision and range are field errors, not failed estimate requests'
   await input.fill('')
   await page.clock.runFor(debounceMs + 100)
   await expect(result).toHaveCount(0)
-  expect(requested).toEqual(['60000.01'])
+  expect(requested).toHaveLength(1)
   await input.fill('0')
   await page.clock.runFor(debounceMs + 100)
   await expect(result).toContainText('Monthly shortfall')
-  expect(requested).toEqual(['60000.01', '0'])
+  expect(requested.map(req => req.postDataJSON())).toEqual([
+    { location: 'london', annualGross: 60000.01 }, { location: 'london', annualGross: 0 },
+  ])
+  for (const req of requested) {
+    expect(req.method()).toBe('POST')
+    expect(new URL(req.url()).search).toBe('')
+  }
 })

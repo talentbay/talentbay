@@ -38,10 +38,13 @@ export function useRelocationEstimate(props: EstimateProps, locations: Ref<Reloc
   const incomeError = computed(() => annualGrossInputError(annualGross.value))
   const valid = computed(() => supported.value && typeof annualGross.value === 'number' && !incomeError.value)
   const debouncedGross = refDebounced(annualGross, 300)
-  const query = computed(() => ({ location: selected.value?.calculationKey, annualGross: debouncedGross.value }))
+  const body = computed(() => ({ location: selected.value?.calculationKey, annualGross: debouncedGross.value }))
   const settled = computed(() => valid.value && debouncedGross.value === annualGross.value)
   const resource = useFetch<RelocationPreviewResponse>('/api/v1/relocation/preview', {
-    key: `relocation-estimate:${props.contextKey}`, query, enabled: settled, watch: [settled], timeout: 15_000,
+    key: `relocation-estimate:${props.contextKey}`,
+    // Even a vacancy-prefilled estimate is a same-origin browser POST, never an SSR subrequest.
+    server: false, method: 'POST', body, headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+    enabled: settled, watch: [settled], timeout: 15_000,
   })
   const currentResult = computed(() => resource.data.value && settled.value
     && resource.data.value.location.key === selected.value?.calculationKey
@@ -49,6 +52,6 @@ export function useRelocationEstimate(props: EstimateProps, locations: Ref<Reloc
     && resource.data.value.annualGross === annualGross.value ? resource.data.value : null)
   // Both responsive presentations share Nuxt's request/deduplication boundary.
   watch(settled, (value) => { if (!value) resource.clear() }, { flush: 'sync' })
-  const updating = computed(() => valid.value && (resource.status.value === 'pending' || !settled.value))
+  const updating = computed(() => valid.value && (resource.status.value === 'idle' || resource.status.value === 'pending' || !settled.value))
   return { location, annualGross, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource }
 }

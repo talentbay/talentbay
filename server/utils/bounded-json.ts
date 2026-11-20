@@ -8,17 +8,20 @@ export async function readBoundedJson(event: H3Event, limit = 2 * 1024 * 1024): 
     throw createError({ statusCode: 415, statusMessage: 'Use uncompressed application/json' })
   }
   try {
+    const length = getHeader(event, 'content-length')
     const request = event.node.req as typeof event.node.req & { rawBody?: unknown, body?: unknown }
     const supplied = request.rawBody ?? request.body
     let buffer: Buffer
     if (supplied !== undefined && supplied !== null) {
+      // Pre-parsing can discard whitespace. Keep the original length check when supplied.
+      if (length !== undefined && Number(length) > limit) throw Object.assign(new Error('limit'), { type: 'entity.too.large' })
       const value = typeof supplied === 'string' || supplied instanceof Uint8Array ? supplied : JSON.stringify(supplied)
       const bytes = typeof value === 'string' ? Buffer.byteLength(value) : value.byteLength
       if (bytes > limit) throw Object.assign(new Error('limit'), { type: 'entity.too.large' })
       buffer = Buffer.from(value)
     }
     else {
-      const options = { limit, length: getHeader(event, 'content-length') }
+      const options = { limit, length }
       const webBody = event.web?.request?.body
       buffer = webBody
         ? await getRawBodyWeb(webBody, options)
