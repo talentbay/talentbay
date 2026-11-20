@@ -6,6 +6,10 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Compare the salary bounds on a vacancy (20 November)
+
+The relocation estimate can use either end of a posted salary range, its midpoint or a manually entered amount. A fixed offer has one listed value. Local verification: 307 unit tests, typecheck, lint and Node build passed. Against disposable PostgreSQL, five Chromium scenarios passed, including vacancy refresh and manual input; the guest salary-range scenario also passed in mobile WebKit over HTTPS. These checks did not exercise the native production Telegram client or verify real city costs. The [previous head's CI](https://github.com/talentbay/talentbay/actions/runs/44774184165) was green; this is not a deployment.
+
 ## Prepare review-site demo content without seeding a shared database (20 November)
 
 `pnpm --silent demo:vacancies:csv` exports seven marked, fictional roles offline. The five historical source keys are unchanged. The retired seed now stops without loading credentials or writing SQL. Operators validate the CSV, confirm the import into drafts and explicitly publish. Review-site examples have no application context or external source link; the local rehearsal uses separate fixtures to exercise submissions. The reserved sources cannot be mixed with other sources or imported on an unapproved database. [Target and operator steps](11-deployment-runbook.md#postgresql).

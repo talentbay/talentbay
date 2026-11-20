@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { RelocationLocationsResponse } from '#shared/types/vacancies'
-import { maxAnnualGross } from '#shared/utils/relocation-income'
+import { annualGrossInputError, maxAnnualGross } from '#shared/utils/relocation-income'
 import { relocationMoney } from '~/utils/relocation-presentation'
-import { vacancyEstimateSource } from '~/utils/relocation-draft'
+import { vacancyEstimateSource, type SalaryPoint } from '~/utils/relocation-draft'
 
 const props = withDefaults(defineProps<{
   estimate?: ReturnType<typeof useRelocationEstimate>
@@ -13,7 +13,7 @@ const titleID = useId()
 const interactive = ref(false)
 onMounted(() => { interactive.value = true })
 const {
-  location, annualGross, markIncomeEdited, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource, locationsError, refreshLocations,
+  location, annualGross, markIncomeEdited, offeredRange, selectedPoint, choosePoint, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource, locationsError, refreshLocations,
 } = props.estimate ?? useRelocationEstimate(
   'standalone', () => vacancyEstimateSource({ key: 'london', currency: 'GBP' }, null),
   await useFetch<RelocationLocationsResponse>('/api/v1/relocation/locations', { key: 'relocation-locations' }),
@@ -24,6 +24,10 @@ const locationItems = computed(() => destinations.value.map(item => ({
   value: item.key, disabled: item.availability === 'UNAVAILABLE',
 })))
 const badge = computed(() => selected.value?.availability === 'REVIEWED' ? 'Reviewed data' : selected.value?.availability === 'DEMO' ? 'Demo data' : 'Unavailable')
+const rangeChoices: { point: SalaryPoint; label: string }[] = [
+  { point: 'low', label: 'Low' }, { point: 'midpoint', label: 'Midpoint' }, { point: 'high', label: 'High' },
+]
+const choices = computed(() => offeredRange.value?.low === offeredRange.value?.high ? [{ point: 'midpoint' as const, label: 'Listed salary' }] : rangeChoices)
 const retainedPercent = computed(() => currentResult.value && currentResult.value.monthly.gross > 0
   ? Math.min(100, Math.max(0, Math.round(currentResult.value.monthly.disposable / currentResult.value.monthly.gross * 100))) : 0)
 </script>
@@ -47,6 +51,20 @@ const retainedPercent = computed(() => currentResult.value && currentResult.valu
       <UFormField v-if="supported" label="Annual gross salary" :hint="selected?.currency" :error="incomeError">
         <UInput v-model.number="annualGross" :disabled="!interactive" type="number" min="0" :max="maxAnnualGross" step="0.01" inputmode="decimal" class="w-full" @input="markIncomeEdited" />
       </UFormField>
+      <fieldset v-if="offeredRange && selected" class="min-w-0">
+        <legend class="mb-2 text-xs text-muted">
+          Listed pay per year: {{ relocationMoney(offeredRange.low, selected.currency) }}<template v-if="offeredRange.high !== offeredRange.low"> to {{ relocationMoney(offeredRange.high, selected.currency) }}</template>
+        </legend>
+        <div class="flex flex-wrap gap-1">
+          <UButton
+            v-for="choice in choices" :key="choice.point" type="button" size="sm"
+            :label="choice.label" :aria-pressed="selectedPoint === choice.point"
+            :color="selectedPoint === choice.point ? 'primary' : 'neutral'"
+            :variant="selectedPoint === choice.point ? 'soft' : 'outline'"
+            :disabled="!interactive || Boolean(annualGrossInputError(offeredRange[choice.point]))"
+            @click="choosePoint(choice.point)" />
+        </div>
+      </fieldset>
     </div>
     <p v-if="notice" class="mt-3 text-xs text-muted" role="status">{{ notice }}</p>
     <UAlert v-if="!supported && !locationsError" class="mt-5" color="neutral" variant="soft" title="Estimate unavailable" :description="selected ? `No reviewed estimate for ${selected.city} is available.` : 'Destination data is unavailable.'" />

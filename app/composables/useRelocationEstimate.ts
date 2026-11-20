@@ -3,7 +3,7 @@ import type { Ref } from 'vue'
 import type { RelocationLocationsResponse, RelocationPreviewResponse } from '#shared/types/vacancies'
 import { relocationDestinations } from '#shared/utils/relocation-destinations'
 import { annualGrossInputError } from '#shared/utils/relocation-income'
-import { reconcileEstimateDraft, type EstimateSource } from '~/utils/relocation-draft'
+import { reconcileEstimateDraft, type EstimateSource, type SalaryPoint } from '~/utils/relocation-draft'
 
 type LocationsResource = {
   data: Ref<RelocationLocationsResponse | undefined>
@@ -21,7 +21,7 @@ export function useRelocationEstimate(scope: string, source: () => EstimateSourc
     resetting = false
   }, { immediate: true, flush: 'sync' })
   const location = computed({ get: () => inputs.value.location, set: value => { inputs.value.location = value } })
-  const markIncomeEdited = () => { inputs.value.manualGross = true }
+  const markIncomeEdited = () => { inputs.value.basis = 'manual' }
   const annualGross = computed({
     get: () => inputs.value.annualGross,
     set: (value) => { markIncomeEdited(); inputs.value.annualGross = value },
@@ -29,7 +29,7 @@ export function useRelocationEstimate(scope: string, source: () => EstimateSourc
   const notice = computed(() => inputs.value.notice)
   function clearIncome(message: string) {
     inputs.value.annualGross = null
-    inputs.value.manualGross = false
+    inputs.value.basis = null
     inputs.value.notice = message
   }
   const destinations = computed(() => locations.data.value?.destinations ?? relocationDestinations(locations.data.value?.items ?? []))
@@ -39,6 +39,19 @@ export function useRelocationEstimate(scope: string, source: () => EstimateSourc
   }, { immediate: true })
   const selected = computed(() => destinations.value.find(item => item.key === location.value))
   const supported = computed(() => Boolean(selected.value?.calculationKey))
+  const offeredRange = computed(() => supported.value && location.value === inputs.value.source.location
+    && selected.value?.currency === inputs.value.source.currency ? inputs.value.source.range : null)
+  const selectedPoint = computed(() => offeredRange.value ? inputs.value.basis : null)
+  function choosePoint(point: SalaryPoint) {
+    const value = offeredRange.value?.[point]
+    if (value == null || annualGrossInputError(value)) return
+    inputs.value = { ...inputs.value, annualGross: value, basis: point, notice: '' }
+  }
+  watch(location, (next, previous) => {
+    if (!resetting && previous === inputs.value.source.location && next !== previous && inputs.value.basis) {
+      markIncomeEdited()
+    }
+  }, { flush: 'sync' })
   watch(() => selected.value?.currency, (currency, previous) => {
     if (!resetting && currency && previous && currency !== previous) {
       clearIncome(`Enter an annual amount in ${currency}.`)
@@ -67,5 +80,5 @@ export function useRelocationEstimate(scope: string, source: () => EstimateSourc
   // Both responsive presentations share Nuxt's request/deduplication boundary.
   watch(settled, (value) => { if (!value) resource.clear() }, { flush: 'sync' })
   const updating = computed(() => valid.value && (resource.status.value === 'idle' || resource.status.value === 'pending' || !settled.value))
-  return { location, annualGross, markIncomeEdited, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource, locationsError: locations.error, refreshLocations: locations.refresh }
+  return { location, annualGross, markIncomeEdited, offeredRange, selectedPoint, choosePoint, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource, locationsError: locations.error, refreshLocations: locations.refresh }
 }

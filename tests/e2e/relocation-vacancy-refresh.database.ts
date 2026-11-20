@@ -1,6 +1,6 @@
 import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test as base } from '@playwright/test'
-import type { Response } from '@playwright/test'
+import type { Page, Response } from '@playwright/test'
 import postgres from 'postgres'
 import { relocationMoney } from '../../app/utils/relocation-presentation'
 import { setFixtureProfile } from './support/application'
@@ -10,9 +10,8 @@ const origin = 'http://127.0.0.1:3129'
 const preview = '/api/v1/relocation/preview'
 const manual = '93641.27'
 const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
-const test = base.extend<{ listing: { id: number; slug: string } }>({
-  listing: async ({ context }, use) => {
-    const slug = `refresh-pay-${randomUUID()}`
+const test = base.extend<{ listing: { id: number; slug: string }; candidatePage: Page }>({
+  candidatePage: async ({ context, page }, use) => {
     let owner: number | undefined
     try {
       const login = await context.request.post('/api/v1/auth/telegram', {
@@ -22,12 +21,19 @@ const test = base.extend<{ listing: { id: number; slug: string } }>({
       const { user } = await login.json()
       owner = user.id
       await setFixtureProfile(context.request, user.id, { telegram: '@refresh_fixture' })
+      await use(page)
+    } finally {
+      if (owner) await sql`delete from users where id=${owner}`
+    }
+  },
+  listing: async ({ browserName }, use) => {
+    const slug = `refresh-pay-${browserName}-${randomUUID()}`
+    try {
       const [company] = await sql`insert into organisations(name,slug,status) values('Fictional Refresh Company',${slug},'ACTIVE') returning id`
       const [row] = await sql`insert into vacancies(organisation_id,slug,title,description,status,review_status,employment_type,workplace_type,country_code,city,salary_min,salary_max,salary_currency,salary_period)
         values(${company!.id},${slug},'Fictional Refresh Engineer','Synthetic original duties','PUBLISHED','VERIFIED','FULL_TIME','ONSITE','GB','London',60000,80000,'GBP','YEAR') returning id`
       await use({ id: row!.id, slug })
     } finally {
-      if (owner) await sql`delete from users where id=${owner}`
       await sql`delete from vacancies where slug=${slug}`
       await sql`delete from organisations where slug=${slug}`
     }
@@ -35,8 +41,41 @@ const test = base.extend<{ listing: { id: number; slug: string } }>({
 })
 test.afterAll(() => sql.end())
 
+test('candidate can compare both ends of the listed pay range without changing vacancy or promising moving support @mobile-pilot', async ({ page, listing }, testInfo) => {
+  const mobile = testInfo.project.name === 'mobile-webkit'
+  await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 })
+  await page.goto(`/jobs/${listing.slug}`)
+  if (mobile) await page.getByRole('button', { name: 'Relocation estimate', exact: true }).click()
+  const container = mobile ? page.getByRole('dialog') : page
+  const tool = container.getByRole('complementary', { name: 'Relocation preview' })
+  const range = tool.getByRole('group', { name: /Listed pay per year/ })
+  const income = tool.getByRole('spinbutton', { name: 'Annual gross salary' })
+  const result = tool.getByRole('region', { name: 'Disposable income' })
+  await expect(range).toContainText('£60,000 to £80,000')
+  await expect(range).toBeInViewport()
+  await expect(range.getByRole('button', { name: 'Midpoint' })).toHaveAttribute('aria-pressed', 'true')
+  for (const [label, value] of [['Low', 60000], ['High', 80000]] as const) {
+    const next = page.waitForResponse(res => new URL(res.url()).pathname === preview && res.request().postDataJSON()?.annualGross === value)
+    await range.getByRole('button', { name: label }).click()
+    const response = await next
+    expect(response.ok()).toBe(true)
+    expect(new URL(response.url()).search).toBe('')
+    await expect(income).toHaveValue(String(value))
+    await expect(result).toContainText(relocationMoney((await response.json()).monthly.disposable, 'GBP'))
+    await expect(range.getByRole('button', { name: label })).toHaveAttribute('aria-pressed', 'true')
+  }
+  await income.fill('75000')
+  await expect(range.getByRole('button', { pressed: true })).toHaveCount(0)
+  const move = tool.getByRole('region', { name: 'Initial moving budget' })
+  await expect(move).toContainText('does not calculate employer reimbursements')
+  await range.scrollIntoViewIfNeeded()
+  expect(await tool.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('salary-range.png'), animations: 'disabled' })
+  await expect(page).toHaveURL(new RegExp(`/jobs/${listing.slug}$`))
+})
+
 for (const scenario of ['currency mismatch', 'updated GBP range', 'manual GBP draft', 'reopened mobile sheet'] as const) {
-  test(`in-place listing reload reconciles the relocation estimate: ${scenario}`, async ({ page, listing }, testInfo) => {
+  test(`in-place listing reload reconciles the relocation estimate: ${scenario}`, async ({ candidatePage: page, listing }, testInfo) => {
     const mobile = scenario === 'reopened mobile sheet'
     const updatedRange = scenario === 'updated GBP range' || mobile
     const path = `/jobs/${listing.slug}`

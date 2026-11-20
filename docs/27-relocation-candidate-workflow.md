@@ -30,6 +30,15 @@ clear it immediately, without FX/old results under new currency labels. MONTH mi
 is annualized; HOUR/missing/mismatched salary stays blank. No household/rent slider or
 hours/tax-residence inference. A different destination is a scenario, not an employer offer.
 
+For a vacancy with disclosed pay in the destination currency, the annual salary input
+starts at the midpoint of the posted range. Low, Midpoint and High let the candidate
+compare the same role without retyping its salary. A fixed salary has just one choice;
+hourly, undisclosed or currency-mismatched pay has none. Unsupported high values are
+not capped into fictional offers. An explicit edit deselects every range choice, and
+the vacancy's pay choices are not shown for a different destination. Switching ends
+does not submit an application. The one-time moving budget is separate from monthly
+spending and does not calculate an employer's contribution.
+
 An open job can be refreshed in place, including after a rejected Apply. The
 calculator's suggested salary must then come from the current posting. A newly
 different currency, hourly pay, or removed salary cannot leave the old suggested

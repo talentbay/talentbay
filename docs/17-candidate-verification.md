@@ -1,5 +1,11 @@
 # Candidate Browser Verification
 
+**Salary range in context (20 November).** The existing Candidate v1 estimate sheet
+and desktop panel now name the annualized advertised range and the active salary
+point. Manual amounts remain available. Moving costs are explicitly separate from the
+monthly result; a relocation badge is not a monetary reimbursement commitment. This is
+an implementation iteration, not a new Figma freeze or a reviewed city price dataset.
+
 **Reviewing changed contact details.** The Apply dialog binds acknowledgment to the
 displayed account, profile and vacancy. When the same candidate edits their contacts
 in another tab, they can review the new details without retyping the note. A different

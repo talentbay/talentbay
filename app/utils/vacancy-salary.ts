@@ -8,8 +8,13 @@ export function formatVacancySalary(salary: VacancySalary | null) {
   return `${formatter.format(salary.min)}–${formatter.format(salary.max)} / ${period}`
 }
 
-export function annualSalaryMidpoint(salary: VacancySalary | null): number | null {
+export function annualSalaryRange(salary: VacancySalary | null) {
   if (!salary || salary.period === 'HOUR') return null
-  const midpoint = (salary.min + salary.max) / 2
-  return Math.round(salary.period === 'MONTH' ? midpoint * 12 : midpoint)
+  const multiplier = salary.period === 'MONTH' ? 12 : 1
+  const low = salary.min * multiplier, high = salary.max * multiplier
+  return { low, midpoint: (low + high) / 2, high }
+}
+
+export function annualSalaryMidpoint(salary: VacancySalary | null): number | null {
+  return annualSalaryRange(salary)?.midpoint ?? null
 }
