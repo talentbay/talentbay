@@ -21,6 +21,12 @@ No application, production configuration or real bot was changed. Native main-bo
 sign-in remains unverified; use the [runtime triage](28-telegram-entry-bot.md#main-bot-distinguish-launch-sign-in-and-session-20-november-2026)
 for a fresh failed attempt on the serving deployment.
 
+The [initial Linux run](https://github.com/talentbay/talentbay/actions/runs/44761045951)
+passed all 73 Chromium cases but all seven WebKit cases failed over plain HTTP.
+WebKit now uses a loopback HTTPS server; the signed-launch case also checks that
+the browser kept a Secure, HttpOnly session cookie without printing its value.
+This is a test-transport change, not a diagnosis of the main bot.
+
 ## Keep a relocation estimate attached to the current offer (20 November)
 
 - Reproduced on the previous build: an open London listing changed its offered pay

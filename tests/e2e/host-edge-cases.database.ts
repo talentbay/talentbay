@@ -160,7 +160,7 @@ test('a cached forged launch is only a loading hint, never a signed identity', a
   expect((await (await page.request.get('/api/_auth/session')).json()).user).toBeUndefined()
 })
 
-test('an encoded launch authenticates before router normalization and clears its unchanged carrier', { tag: '@mobile-pilot' }, async ({ page }) => {
+test('an encoded launch authenticates before router normalization and clears its unchanged carrier', { tag: '@mobile-pilot' }, async ({ page, context, baseURL }) => {
   const initData = signedLaunch(subject+6, 'Encoded Launch Candidate')
   await page.addInitScript(({ initData }) => { window.Telegram = { WebApp: { initData, ready: () => {} } } }, { initData })
   const response = page.waitForResponse(response => response.url().endsWith('/api/v1/auth/telegram'))
@@ -169,6 +169,10 @@ test('an encoded launch authenticates before router normalization and clears its
   expect(auth.request().postDataJSON().initData).toBe(initData)
   expect(auth.status()).toBe(200)
   await expect(page.getByRole('heading', { name: 'Encoded Launch Candidate', exact: true })).toBeVisible()
+  if (baseURL?.startsWith('https:')) {
+    const cookie = (await context.cookies(baseURL)).find(item => item.name === 'nuxt-session')
+    expect({ secure: cookie?.secure, httpOnly: cookie?.httpOnly }).toEqual({ secure: true, httpOnly: true })
+  }
   await expect(page).toHaveURL(/\/profile$/)
 })
 

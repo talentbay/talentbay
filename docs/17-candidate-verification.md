@@ -342,6 +342,9 @@ pnpm exec playwright test --config playwright.database.config.ts
 The config executes the target guard before any fixture writes. It supplies a fake local
 bot credential and normal signed initData; there is no production test-login backdoor.
 The real HTTP boundary, sealed session, Drizzle and PostgreSQL remain in the loop.
+The WebKit project opens the compiled app over loopback HTTPS on port 3138. Its
+launcher requires OpenSSL and generates a temporary self-signed certificate. Only
+the test client accepts it; the OS trust store and app cookie settings are unchanged.
 GitHub Actions supplies a disposable Postgres service; it needs no provider secrets.
 
 Artifacts are gitignored under separate `test-results/public` and `test-results/database`

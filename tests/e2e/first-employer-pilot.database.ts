@@ -6,7 +6,6 @@ import { vacancyCsvColumns } from '../../shared/types/vacancy-import'
 import type { VacancyCsvColumn } from '../../shared/types/vacancy-import'
 import { signedLaunch } from './support/telegram'
 
-const origin = 'http://127.0.0.1:3129'
 const key = randomUUID().slice(0, 8)
 const slug = `pilot-role-${key}`, companySlug = `pilot-works-${key}`
 const company = `Pilot Works ${key}`, title = `Pilot Engineer ${key}`
@@ -28,7 +27,7 @@ function vacancyFile() {
   return { name: 'pilot.csv', mimeType: 'text/csv', buffer: Buffer.from(`${vacancyCsvColumns.join(',')}\n${line}\n`) }
 }
 
-async function signIn(context: BrowserContext, subject: number, name: string) {
+async function signIn(context: BrowserContext, origin: string, subject: number, name: string) {
   const response = await context.request.post('/api/v1/auth/telegram', { headers: { origin }, data: { initData: signedLaunch(subject, name) } })
   expect(response.status()).toBe(200)
   const { user } = await response.json()
@@ -46,20 +45,21 @@ test.afterAll(async () => {
   } finally { await sql.end() }
 })
 
-test('first employer pilot: reviewed CSV to candidate receipt and recorded company contact', { tag: '@mobile-pilot' }, async ({ browser, context, page: candidate }) => {
+test('first employer pilot: reviewed CSV to candidate receipt and recorded company contact', { tag: '@mobile-pilot' }, async ({ browser, context, page: candidate, baseURL, ignoreHTTPSErrors }) => {
   test.slow()
-  const operatorContext = await browser.newContext({ baseURL: origin })
+  const origin = baseURL!
+  const operatorContext = await browser.newContext({ baseURL: origin, ignoreHTTPSErrors })
   try {
     // Deny off-site browser traffic; no local request is intercepted or fulfilled.
     for (const actor of [context, operatorContext]) {
       await actor.route(url => /^https?:$/.test(url.protocol) && url.origin !== origin, route => route.abort('blockedbyclient'))
     }
     const subject = randomInt(1e9, 1e12)
-    await signIn(context, subject, candidateName)
+    await signIn(context, origin, subject, candidateName)
     const operatorName = `Pilot Operator ${key}`
-    const operatorID = await signIn(operatorContext, subject + 1, operatorName)
+    const operatorID = await signIn(operatorContext, origin, subject + 1, operatorName)
     await sql`update users set role='ADMIN' where id=${operatorID}`
-    await signIn(operatorContext, subject + 1, operatorName)
+    await signIn(operatorContext, origin, subject + 1, operatorName)
     const operator = await operatorContext.newPage()
     await candidate.setViewportSize({ width: 390, height: 844 })
     const search = async () => {
