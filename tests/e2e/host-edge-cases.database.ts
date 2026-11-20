@@ -8,8 +8,18 @@ const subject = randomInt(1_000_000_000, 1_000_000_000_000)
 const origin = 'http://127.0.0.1:3129'
 const signInFailure = 'Telegram sign-in did not complete. Close this Mini App and open TalentBay again from the bot.'
 test.afterAll(async () => {
-  await sql`delete from users where id in (select user_id from oauth_accounts where provider='TELEGRAM' and provider_account_id in ${sql(Array.from({ length: 15 }, (_, index) => String(subject+index)))})`
+  await sql`delete from users where id in (select user_id from oauth_accounts where provider='TELEGRAM' and provider_account_id in ${sql(Array.from({ length: 16 }, (_, index) => String(subject+index)))})`
   await sql.end()
+})
+
+test('Telegram profile opens without waiting for browser idle time @mobile-pilot', async ({ page }) => {
+  const name = 'Busy Browser Candidate'
+  await page.addInitScript(initData => {
+    window.requestIdleCallback = () => 1
+    window.Telegram = { WebApp: { initData, ready: () => {} } }
+  }, signedLaunch(subject + 15, name))
+  await page.goto('/profile')
+  await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
 })
 
 test('an SDK-shaped object without signed launch data is still a guest browser', async ({ page }) => {

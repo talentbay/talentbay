@@ -139,7 +139,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
   }
 
-  onNuxtReady(() => { void initialize() })
+  // Wait for hydration, not an idle callback: sign-in is needed to use the profile.
+  const startHost = () => { void initialize() }
+  if (nuxtApp.isHydrating) nuxtApp.hooks.hookOnce('app:suspense:resolve', startHost)
+  else startHost()
   nuxtApp.vueApp.onUnmount(() => {
     optional(() => host?.BackButton?.offClick(back))
     optional(() => host?.SettingsButton?.offClick(settings))

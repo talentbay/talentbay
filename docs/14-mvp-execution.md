@@ -6,6 +6,20 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Start Mini App sign-in without waiting for browser idle time (20 November)
+
+On the previous pilot head, [CI](https://github.com/talentbay/talentbay/actions/runs/44780951025)
+timed out waiting for an auth response; the server logged the expected rejection at the
+test deadline. That timing alone does not establish a cause. Independently, a valid
+synthetic launch could not open Profile in the old build when the browser never scheduled
+idle work. Start the host adapter once hydration finishes instead. Server verification,
+launch freshness and session handling are unchanged.
+
+On the patched Node build: the same valid-launch case passed in Chromium and mobile
+WebKit. Full local suites: 88 database browser scenarios, 41 guest browser scenarios
+and 311 unit tests passed, as did typecheck, lint, build and HTTP smoke. No production
+token or shared database was used. Real-device main-bot acceptance remains open.
+
 ## Filter by an exact company in Jobs and the operator queue (20 November)
 
 The public picker searches only employers with publicly visible vacancies. Candidate
