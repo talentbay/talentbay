@@ -70,6 +70,7 @@ export async function listVacancies(input: VacancySearch): Promise<VacancySearch
     sql<boolean>`to_tsvector('simple', array_to_string(${schema.vacancies.skills}, ' ')) @@ websearch_to_tsquery('simple', ${query.q})`)!)
   }
 
+  if (query.company) conditions.push(eq(schema.organisations.slug, query.company))
   if (query.countryCode) {
     conditions.push(eq(schema.vacancies.countryCode, query.countryCode))
   }
@@ -147,6 +148,7 @@ export async function getVacancyBySlug(slug: string): Promise<VacancyListItem | 
 
 const vacancySelection = {
   ...applicationContextSelection,
+  companySlug: schema.organisations.slug,
   talentbayPublishedAt: schema.vacancies.talentbayPublishedAt,
   sourcePublishedAt: schema.vacancies.sourcePublishedAt,
   sourceFetchedAt: schema.vacancies.sourceFetchedAt,
@@ -156,7 +158,7 @@ const vacancySelection = {
 }
 
 type VacancyRecord = typeof schema.vacancies.$inferSelect
-type VacancyRow = ApplicationContextRow & Pick<
+type VacancyRow = ApplicationContextRow & { companySlug: string } & Pick<
   VacancyRecord,
   | 'talentbayPublishedAt'
   | 'sourcePublishedAt'
@@ -181,6 +183,7 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
     description: row.description,
     company: {
       name: row.companyName,
+      slug: row.companySlug,
       initials: getInitials(row.companyName),
     },
     location: {

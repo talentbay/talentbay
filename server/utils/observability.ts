@@ -51,7 +51,7 @@ function getPathname(requestUrl: string) {
 
 const staticPaths = new Set([
   '/api/health', '/api/_auth/session',
-  '/api/v1/vacancies', '/api/v1/vacancies/resolve', '/api/v1/profile', '/api/v1/applications',
+  '/api/v1/vacancies', '/api/v1/vacancies/resolve', '/api/v1/job-filters/companies', '/api/v1/profile', '/api/v1/applications',
   '/api/v1/relocation/locations', '/api/v1/relocation/preview', '/api/v1/bot/telegram',
   '/api/v1/auth/google', '/api/v1/auth/github', '/api/v1/auth/telegram', '/api/v1/auth/link', '/api/v1/auth/identities', '/api/v1/auth/capabilities',
   '/api/v1/admin/dashboard', '/api/v1/admin/users', '/api/v1/admin/applications',

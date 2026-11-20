@@ -41,6 +41,15 @@ describe('searchVacancies', () => {
     expect(result.items.map(item => item.id)).toEqual([4])
   })
 
+  it('filters the demo by its exact company key and binds it to the cursor', () => {
+    expect(searchVacancies({ ...baseQuery, company: 'atlas-video' }).items.map(item => item.id)).toEqual([1])
+    expect(searchVacancies({ ...baseQuery, company: 'atlas' }).total).toBe(0)
+    expect(searchVacancies({ ...baseQuery, company: 'atlas-video', countryCode: 'DE' }).total).toBe(0)
+    expect(() => searchVacancies({ ...baseQuery, company: 'Atlas Video' })).toThrow()
+    const first = searchVacancies({ ...baseQuery, limit: 1 })
+    expect(() => searchVacancies({ ...baseQuery, limit: 1, company: 'atlas-video', before: first.nextCursor! })).toThrow()
+  })
+
   it('sorts salary only within one currency/period and respects the result limit', () => {
     const result = searchVacancies({
       ...baseQuery,

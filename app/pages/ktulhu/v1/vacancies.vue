@@ -5,6 +5,7 @@ type AdminVacancy = {
   slug: string
   title: string
   companyName: string
+  companySlug: string
   city: string | null
   countryCode: string
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
@@ -67,6 +68,7 @@ const query = computed(() => ({
   status: statusFilter.value === 'all' ? undefined : statusFilter.value,
   reviewStatus: reviewFilter.value === 'all' ? undefined : reviewFilter.value,
   q: typeof route.query.q === 'string' ? route.query.q : undefined,
+  company: typeof route.query.company === 'string' ? route.query.company : undefined,
   before: typeof route.query.before === 'string' ? route.query.before : undefined,
   publicOnly: publicOnly.value ? 'true' : undefined,
 }))
@@ -77,6 +79,10 @@ const { data, status, error, refresh } = await useAccountResource<AdminVacancyRe
   query,
 )
 
+const companyLabel = computed(() => data.value?.items.find(item => item.companySlug === query.value.company)?.companyName || query.value.company)
+function filterCompany(company?: string) {
+  return router.push({ query: { ...route.query, company, before: undefined, review: undefined } })
+}
 async function reviewed() {
   activeVacancyId.value = null
   await refresh()
@@ -114,6 +120,7 @@ async function reviewed() {
         class="w-52"
       />
     </form>
+    <UButton v-if="query.company" class="mt-3 max-w-full" :label="companyLabel" aria-label="Remove company filter" trailing-icon="i-lucide-x" color="neutral" variant="soft" @click="filterCompany()" />
 
     <div v-if="status === 'pending' && !data" class="mt-6 space-y-3">
       <USkeleton v-for="index in 5" :key="index" class="h-24 w-full rounded-lg" />
@@ -145,7 +152,12 @@ async function reviewed() {
           <tr v-for="vacancy in data.items" :key="vacancy.id">
             <td class="px-4 py-4">
               <p class="font-semibold text-highlighted">{{ vacancy.title }}</p>
-              <p class="mt-1 text-xs text-muted">{{ vacancy.companyName }}</p>
+              <div class="flex items-center gap-1 text-xs text-muted">
+                <span>{{ vacancy.companyName }}</span>
+                <UTooltip v-if="query.company !== vacancy.companySlug" text="Filter queue by company">
+                  <UButton :aria-label="`Filter queue by ${vacancy.companyName}`" icon="i-lucide-list-filter" variant="ghost" color="neutral" size="xs" @click="filterCompany(vacancy.companySlug)" />
+                </UTooltip>
+              </div>
             </td>
             <td class="px-4 py-4 text-default">
               {{ [vacancy.city, vacancy.countryCode].filter(Boolean).join(', ') }}

@@ -1,13 +1,13 @@
 import type { VacancyListItem } from '#shared/types/vacancies'
 
-export const demoVacancies: VacancyListItem[] = [
+export const demoVacancies: (VacancyListItem & { company: { slug: string } })[] = [
   {
     id: 1,
     slug: 'senior-backend-engineer-london',
     title: 'Senior Backend Engineer',
     summary: 'Build high-scale TypeScript services for AI-enabled product workflows.',
     description: 'Own backend services, data contracts and reliability work for a distributed product engineering team.',
-    company: { name: 'Atlas Video', initials: 'AV' },
+    company: { name: 'Atlas Video', initials: 'AV', slug: 'atlas-video' },
     location: {
       city: 'London',
       countryCode: 'GB',
@@ -29,7 +29,7 @@ export const demoVacancies: VacancyListItem[] = [
     title: 'Senior Frontend Engineer',
     summary: 'Shape collaborative product experiences with Vue and TypeScript.',
     description: 'Lead frontend architecture, accessibility and performance for a real-time collaboration product.',
-    company: { name: 'Northstar Canvas', initials: 'NC' },
+    company: { name: 'Northstar Canvas', initials: 'NC', slug: 'northstar-canvas' },
     location: {
       city: 'Amsterdam',
       countryCode: 'NL',
@@ -51,7 +51,7 @@ export const demoVacancies: VacancyListItem[] = [
     title: 'Staff Fullstack Engineer',
     summary: 'Own end-to-end platform capabilities for distributed engineering teams.',
     description: 'Design shared platform capabilities across frontend, backend and developer infrastructure.',
-    company: { name: 'Common Thread', initials: 'CT' },
+    company: { name: 'Common Thread', initials: 'CT', slug: 'common-thread' },
     location: {
       city: null,
       countryCode: 'EU',
@@ -73,7 +73,7 @@ export const demoVacancies: VacancyListItem[] = [
     title: 'Platform Engineer',
     summary: 'Improve deployment safety, observability and developer experience.',
     description: 'Build the platform used by product teams to ship services safely across multiple regions.',
-    company: { name: 'Relay Systems', initials: 'RS' },
+    company: { name: 'Relay Systems', initials: 'RS', slug: 'relay-systems' },
     location: {
       city: 'Berlin',
       countryCode: 'DE',
@@ -95,7 +95,7 @@ export const demoVacancies: VacancyListItem[] = [
     title: 'Product Engineer',
     summary: 'Ship customer-facing workflows across a modern TypeScript stack.',
     description: 'Work in a small product squad from discovery through delivery and production support.',
-    company: { name: 'Harbor Finance', initials: 'HF' },
+    company: { name: 'Harbor Finance', initials: 'HF', slug: 'harbor-finance' },
     location: {
       city: 'Lisbon',
       countryCode: 'PT',

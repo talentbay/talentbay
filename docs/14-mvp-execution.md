@@ -6,6 +6,24 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Filter by an exact company in Jobs and the operator queue (20 November)
+
+The public picker searches only employers with publicly visible vacancies. Candidate
+and operator result counts and cursors use the exact company key. Companies with the
+same display name remain separate. No new account, employer page, schema or index.
+
+Local verification: 311 unit, 111 disposable PostgreSQL tests including upgrade/replay,
+typecheck, lint, Node build and HTTP smoke. Four Chromium and two mobile WebKit scenarios
+passed: company selection/paging and the synthetic candidate-to-operator pilot on both,
+plus the admin editor and previous public navigation regression on Chromium. The
+operator contact event is a local record, not an actual delivery to an employer.
+
+GitHub's latest successful Production deployment record still points at `a34d59a`
+(deployment 7939151536). #67 requires review; #69 is a draft. Neither the local
+walkthrough nor a preview build verifies the main bot's login. The next release
+checks are the native launch in the [bot runbook](28-telegram-entry-bot.md) and
+reconciliation/review of the pilot against the security release, not a new job parser.
+
 ## Operator single-vacancy editor (20 November)
 
 Queue → Create vacancy / Edit uses the same import schema and content transaction

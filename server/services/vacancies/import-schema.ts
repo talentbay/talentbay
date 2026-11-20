@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { editorialSourceName } from '#shared/types/vacancy-import'
+import { companyKeySchema } from './company-filter'
 import type { ImportIssue } from '#shared/types/vacancy-import'
 
 const slugSchema = z.string().trim().min(2).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
@@ -31,7 +32,7 @@ export const vacancyImportItemSchema = z.object({
     if (!source.url && source.name !== editorialSourceName)
       ctx.addIssue({ code: 'custom', path: ['url'], message: 'An original URL is required for external vacancies.' })
   }),
-  company: z.object({ name: text(160, 2), slug: slugSchema, websiteUrl: httpUrl.optional() }),
+  company: z.object({ name: text(160, 2), slug: z.string().trim().pipe(companyKeySchema), websiteUrl: httpUrl.optional() }),
   vacancy: z.object({
     slug: slugSchema, title: text(180, 2), summary: text(500).optional(),
     description: text(50_000, 20),

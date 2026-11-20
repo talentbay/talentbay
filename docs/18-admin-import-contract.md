@@ -60,12 +60,17 @@ public employer profile exists. An original source URL is not a company profile.
 | --- | --- | --- |
 | Create and correct a vacancy | Queue → Create vacancy or Edit. Both the single-record editor and batch importer validate the same item and save through the same transaction service. | Keep the vacancy ID and submitted applications. Changed published content returns to review; other listings at the company are not affected by an editor save. |
 | Read and retire | Public list/detail; admin queue, review and archive. | Archive withdraws public visibility without deleting candidate history; no hard-delete shortcut. |
-| Identify a company | Import resolves the unique company slug to an internal organisation; no partner account is required. Text search includes company names. | An exact company filter groups its jobs even if another company has a similar name; do not link to a nonexistent company page. |
+| Identify a company | Import resolves a stable company key without a partner account. Candidates select a company under Filters; operators can narrow the queue from a vacancy row. Both lists use exact key equality alongside text and other filters. | Changing companies resets paging. Names alone never merge employers and do not link to company profiles. |
 | Partner authorship | Not a self-service flow today. | Keep the content format. Enforce separately verified membership and company scope on the server for both single and bulk writes; a supplied name, slug or source ID never grants access. |
 
 This is a scope clarification, not an instruction to expose generic CRUD for users,
-profiles, application history or every database table. Single-record authoring and
-company filtering come before building a partner dashboard.
+profiles, application history or every database table. Neither single-record authoring
+nor company filtering requires a partner dashboard.
+
+Public company suggestions are bounded to 25 per search, return name and key only,
+and exclude companies with no publicly visible vacancies. An operator can still group
+draft or archived vacancies inside the authorized queue. Company choice lives in the
+current search URL, not the candidate's saved preferences.
 
 ### Single-record operator workflow
 

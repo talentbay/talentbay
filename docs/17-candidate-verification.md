@@ -1,5 +1,11 @@
 # Candidate Browser Verification
 
+**Exact company filter (20 November).** Jobs → Filters → Company searches company
+labels with published roles. Each suggestion shows the name and unique key to
+distinguish employers with the same name. The applied filter survives reload and
+paging, can be removed independently, and does not navigate to an employer profile.
+This extends the existing Candidate v1 filter sheet, not the Figma baseline.
+
 **Salary range in context (20 November).** The existing Candidate v1 estimate sheet
 and desktop panel now name the annualized advertised range and the active salary
 point. Manual amounts remain available. Moving costs are explicitly separate from the

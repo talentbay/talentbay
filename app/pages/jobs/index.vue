@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VacancySearchResponse } from '#shared/types/vacancies'
+import type { VacancyCompanyOption, VacancySearchResponse } from '#shared/types/vacancies'
 
 definePageMeta({ layout: 'product' })
 useSeoMeta({
@@ -14,6 +14,12 @@ const { data, status, error, refresh } = await useFetch<VacancySearchResponse>(
   { query },
 )
 const filtersOpen = ref(false)
+const pickedCompany = ref<VacancyCompanyOption | null>(null)
+const companyName = computed(() => {
+  const slug = filters.value.company
+  const first = data.value?.items[0]?.company
+  return first?.slug === slug ? first.name : pickedCompany.value?.slug === slug ? pickedCompany.value.name : slug
+})
 const interactive = ref(false)
 onMounted(() => {
   interactive.value = true
@@ -24,11 +30,14 @@ const draft = reactive({
   salaryDisclosed: false,
 })
 watch(filtersOpen, (value) => {
-  if (value) Object.assign(draft, filters.value)
+  if (value) {
+    Object.assign(draft, filters.value)
+    pickedCompany.value = filters.value.company ? { slug: filters.value.company, name: companyName.value } : null
+  }
 })
 const count = computed(
   () =>
-    Number(filters.value.countryCode !== 'all') +
+    Number(Boolean(filters.value.company)) + Number(filters.value.countryCode !== 'all') +
     Number(filters.value.visaSponsorship) +
     Number(filters.value.salaryDisclosed),
 )
@@ -42,7 +51,7 @@ const countryName = computed(() =>
       ),
 )
 async function applyFilters() {
-  await update(draft)
+  await update({ ...draft, company: pickedCompany.value?.slug })
   filtersOpen.value = false
 }
 async function submit() {
@@ -109,6 +118,11 @@ async function submit() {
       class="mt-3 flex flex-wrap items-center gap-2"
       aria-label="Active filters"
     >
+      <UButton
+        v-if="filters.company" :label="companyName" trailing-icon="i-lucide-x"
+        :aria-label="`Remove company filter: ${companyName}`" variant="soft" size="xs"
+        class="min-h-11 max-w-full" @click="update({ ...filters, company: undefined })"
+      />
       <UButton
         v-if="countryName"
         :label="countryName"
@@ -275,6 +289,7 @@ async function submit() {
           class="space-y-5"
           @submit.prevent="applyFilters"
         >
+          <UFormField label="Company"><VacanciesCompanyPicker v-model="pickedCompany" /></UFormField>
           <UFormField label="Location">
             <USelect
               v-model="draft.countryCode"
@@ -300,6 +315,7 @@ async function submit() {
             color="neutral"
             variant="ghost"
             @click="
+              pickedCompany = null;
               Object.assign(draft, {
                 countryCode: 'all',
                 visaSponsorship: false,
