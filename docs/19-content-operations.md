@@ -16,6 +16,12 @@ are separate decisions:
 | [We Work Remotely programming RSS](https://weworkremotely.com/remote-job-rss-feed) | The documented public feed returned HTTP 200; items exposed title, GUID, source link, region, category and publication date. There is **no RSS adapter** or source-only Apply mode in TalentBay. | The feed page permits feed use with attribution and links to WWR. It does not establish employer consent to forward profiles. Before enabling, review the [current terms](https://weworkremotely.com/terms-and-conditions) for the intended use. For an agreed link-only selection, use facts and attributed links, not descriptions, logos or internal Apply. Remote location is not a relocation/visa offer. |
 
 This was a read-only feasibility check, not legal clearance, ingestion or publication.
+Lever's [Postings API introduction](https://github.com/lever/postings-api#introduction)
+explicitly discusses third-party collection of published postings. Its JSON API can
+return the role, location, original link and optional salary range without logging in.
+That documents a way to read the facts, not the terms for TalentBay to display a
+particular employer's listing or send them a candidate. Record those decisions
+separately before a pilot; no new adapter or manual data entry is needed for Lever.
 WWR's October 2026 terms reserve uploaded content rights to its owners and grant a
 limited right of access; the specific RSS instructions do not appoint TalentBay as a
 recruiter. A first-party employer feed is the better fit for the internal Apply pilot.
