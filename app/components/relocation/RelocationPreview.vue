@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RelocationLocationsResponse } from '#shared/types/vacancies'
+import { maxAnnualGross } from '#shared/utils/relocation-income'
 import { relocationMoney } from '~/utils/relocation-presentation'
 
 const props = withDefaults(defineProps<{
@@ -16,7 +17,7 @@ const { data: locations, error: locationsError, refresh: refreshLocations } = aw
   '/api/v1/relocation/locations', { key: 'relocation-locations' },
 )
 const {
-  location, annualGross, destinations, selected, supported, valid, notice, currentResult, updating, resource,
+  location, annualGross, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource,
 } = useRelocationEstimate(props, locations)
 const { error, execute } = await resource
 const locationItems = computed(() => destinations.value.map(item => ({
@@ -44,13 +45,13 @@ const retainedPercent = computed(() => currentResult.value && currentResult.valu
       <UFormField label="Destination">
         <USelect v-model="location" :disabled="!interactive" :items="locationItems" value-key="value" class="w-full" />
       </UFormField>
-      <UFormField v-if="supported" label="Annual gross salary" :hint="selected?.currency">
-        <UInput v-model.number="annualGross" :disabled="!interactive" type="number" min="0" max="2000000" step="0.01" inputmode="decimal" class="w-full" />
+      <UFormField v-if="supported" label="Annual gross salary" :hint="selected?.currency" :error="incomeError">
+        <UInput v-model.number="annualGross" :disabled="!interactive" type="number" min="0" :max="maxAnnualGross" step="0.01" inputmode="decimal" class="w-full" />
       </UFormField>
     </div>
     <p v-if="notice" class="mt-3 text-xs text-muted" role="status">{{ notice }}</p>
     <UAlert v-if="!supported && !locationsError" class="mt-5" color="neutral" variant="soft" title="Estimate unavailable" :description="selected ? `No reviewed estimate for ${selected.city} is available.` : 'Destination data is unavailable.'" />
-    <p v-else-if="!valid && !locationsError" class="mt-4 text-sm text-muted">Choose a destination and enter a yearly income in its currency to see an estimate.</p>
+    <p v-else-if="!valid && !incomeError && !locationsError" class="mt-4 text-sm text-muted">Choose a destination and enter a yearly income in its currency to see an estimate.</p>
 
     <div v-if="updating" class="mt-5 space-y-3" role="status" aria-label="Updating estimate">
       <USkeleton class="h-22 w-full rounded-lg" /><USkeleton class="h-2 w-full" /><USkeleton class="h-28 w-full" />

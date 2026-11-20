@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {
-  CandidateApplicationItem,
+  CandidateApplicationHistoryItem,
   CandidateApplicationsResponse,
 } from '#shared/types/candidates'
 import { applicationStatuses, candidateApplicationBadge } from '~/utils/application-status'
@@ -36,7 +36,20 @@ const tabs = computed(() => [
   { label: `Closed · ${counts.value.closed}`, value: 'closed' },
 ])
 const items = computed(() => data.value?.items || [])
-const selected = ref<CandidateApplicationItem | null>(null)
+const selected = ref<CandidateApplicationHistoryItem | null>(null)
+let receiptOpener: HTMLButtonElement | null = null
+function openReceipt(item: CandidateApplicationHistoryItem, event: MouseEvent) {
+  receiptOpener = event.currentTarget instanceof HTMLButtonElement ? event.currentTarget : null
+  selected.value = item
+}
+function restoreReceiptFocus(event: Event) {
+  event.preventDefault()
+  if (selected.value) return
+  if (receiptOpener?.isConnected) receiptOpener.focus({ preventScroll: true })
+  receiptOpener = null
+}
+onBeforeUnmount(() => { receiptOpener = null })
+const receiptTitle = (item: CandidateApplicationHistoryItem) => item.vacancy?.title ?? `Application #${item.id}`
 const detailsOpen = computed({
   get: () => Boolean(selected.value),
   set: (value) => {
@@ -48,6 +61,7 @@ async function withdrawn() {
   await refresh()
 }
 watch(() => user.value?.id, () => {
+  receiptOpener = null
   selected.value = null
 })
 const date = (value: string) =>
@@ -106,9 +120,9 @@ const date = (value: string) =>
                 <h2
                   class="break-words text-sm font-semibold text-highlighted lg:text-base"
                 >
-                  {{ item.vacancy.title }}
+                  {{ receiptTitle(item) }}
                 </h2>
-                <p class="mt-1 break-words text-xs text-muted">
+                <p v-if="item.vacancy" class="mt-1 break-words text-xs text-muted">
                   {{ item.vacancy.companyName }}
                 </p>
               </div>
@@ -120,7 +134,7 @@ const date = (value: string) =>
               />
             </div>
             <p v-if="item.status !== 'NEW' && item.handling.stage !== 'RECEIVED'" class="mt-2 text-xs text-muted">{{ handlingLabels[item.handling.stage] }}</p>
-            <p class="mt-3 text-xs text-muted">
+            <p v-if="item.vacancy" class="mt-3 text-xs text-muted">
               {{
                 [item.vacancy.city, item.vacancy.countryCode]
                   .filter(Boolean)
@@ -138,9 +152,9 @@ const date = (value: string) =>
                 label="View"
                 trailing-icon="i-lucide-arrow-right"
                 variant="link"
-                :aria-label="`View application for ${item.vacancy.title}`"
+                :aria-label="item.vacancy ? `View application for ${item.vacancy.title}` : `View application #${item.id}`"
                 class="min-h-11"
-                @click="selected = item"
+                @click="openReceipt(item, $event)"
               />
             </div>
           </article>
@@ -164,7 +178,8 @@ const date = (value: string) =>
       </nav>
       <UModal
         v-model:open="detailsOpen"
-        :title="selected?.vacancy.title || 'Application'"
+        :content="{ onCloseAutoFocus: restoreReceiptFocus }"
+        :title="selected ? receiptTitle(selected) : 'Application'"
         :description="selected?.status === 'NEW'
           ? 'Your application is with TalentBay. Our team handles company outreach and follow-up.'
           : 'Your application and current status.'"
@@ -176,7 +191,7 @@ const date = (value: string) =>
             class="space-y-5"
           >
             <div>
-              <p class="font-semibold text-highlighted">
+              <p v-if="selected.vacancy" class="font-semibold text-highlighted">
                 {{ selected.vacancy.companyName }}
               </p>
               <p class="mt-1 text-sm text-muted">
@@ -198,13 +213,14 @@ const date = (value: string) =>
               </p>
             </div>
             <UButton
-              :to="`/jobs/${selected.vacancy.slug}`"
+              v-if="selected.publicVacancySlug"
+              :to="`/jobs/${encodeURIComponent(selected.publicVacancySlug)}`"
               label="Open vacancy"
               trailing-icon="i-lucide-arrow-up-right"
               color="neutral"
               variant="outline"
-              @click="selected = null"
             />
+            <p v-else class="text-sm text-muted">This vacancy is no longer public.</p>
             <CandidatesApplicationWithdrawal
               v-if="!applicationStatuses[selected.status].closed"
               :id="selected.id"

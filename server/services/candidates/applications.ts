@@ -6,7 +6,6 @@ import { captureApplicationSnapshot } from './application-snapshot'
 import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
 import { applicationDisclosureVersion } from '#shared/types/application-handling'
 import type {
-  CandidateApplicationItem,
   CandidateApplicationsResponse,
 } from '#shared/types/candidates'
 
@@ -127,11 +126,7 @@ export async function listCandidateApplications(
       createdAt: schema.applications.createdAt,
       snapshot: schema.applications.submissionSnapshot,
       handling: { stage: schema.applications.handlingStage },
-      slug: schema.vacancies.slug,
-      title: schema.vacancies.title,
-      companyName: schema.organisations.name,
-      city: schema.vacancies.city,
-      countryCode: schema.vacancies.countryCode,
+      publicVacancySlug: sql<string | null>`case when ${publicVacancyConditions()} then ${schema.vacancies.slug} end`,
     })
     .from(schema.applications)
     .innerJoin(
@@ -145,22 +140,17 @@ export async function listCandidateApplications(
     .where(and(...conditions))
     .orderBy(desc(schema.applications.id)).limit(26)
 
-  const items: CandidateApplicationItem[] = rows.slice(0, 25).map(row => ({
+  const items: CandidateApplicationsResponse['items'] = rows.slice(0, 25).map(row => ({
     id: row.id,
     status: row.status,
     coverLetter: row.coverLetter,
     createdAt: row.createdAt.toISOString(),
     handling: row.handling,
+    publicVacancySlug: row.publicVacancySlug,
     vacancy: row.snapshot ? {
       slug: row.snapshot.vacancy.slug, title: row.snapshot.vacancy.title, companyName: row.snapshot.recipient.name,
       city: row.snapshot.vacancy.city, countryCode: row.snapshot.vacancy.countryCode,
-    } : {
-      slug: row.slug,
-      title: row.title,
-      companyName: row.companyName,
-      city: row.city,
-      countryCode: row.countryCode,
-    },
+    } : null,
   }))
 
   return {

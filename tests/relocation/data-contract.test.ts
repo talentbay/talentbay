@@ -14,18 +14,29 @@ const input = {
 const now = new Date('2026-10-27T12:00:00Z')
 
 describe('relocation input and mathematical boundaries', () => {
-  it('accepts zero and the supported maximum, not nonfinite/negative/out-of-range amounts', () => {
-    for (const value of [0, 0.01, 2_000_000]) expect(annualGrossSchema.safeParse(value).success).toBe(true)
-    for (const value of [-1, NaN, Infinity, -Infinity, 2_000_000.01]) {
+  it('accepts zero and income up to the supported maximum in whole units or cents', () => {
+    for (const value of [0, 0.01, 0.29, 60_000.01, 1_999_999.99, 2_000_000]) {
+      expect(annualGrossSchema.parse(value)).toBe(value)
+      for (const annualGross of [value, String(value), value.toFixed(2)]) {
+        expect(relocationPreviewQuery.parse({ location: 'london', annualGross }).annualGross).toBe(value)
+      }
+    }
+  })
+  it('rejects excess precision, nonfinite, negative and out-of-range income on both entry paths', () => {
+    for (const value of [60_000.001, 0.001, -0.01, 2_000_000.01, NaN, Infinity, -Infinity]) {
       expect(annualGrossSchema.safeParse(value).success).toBe(false)
+      for (const annualGross of [value, String(value)]) {
+        expect(relocationPreviewQuery.safeParse({ location: 'london', annualGross }).success).toBe(false)
+      }
       expect(() => calculateRelocationPreview('london', value)).toThrow()
+      expect(() => calculateVerifiedRelocationPreview(input, value)).toThrow()
       expect(() => calculateAnnualTax(input.taxModel, value)).toThrow()
     }
   })
   it('parses explicit decimal query amounts, never coerces blank/null/boolean/hex/arrays to money', () => {
     expect(relocationPreviewQuery.parse({ location: 'london', annualGross: '0' }).annualGross).toBe(0)
     expect(relocationPreviewQuery.parse({ location: 'london', annualGross: '123.45' }).annualGross).toBe(123.45)
-    for (const value of ['', ' ', null, false, [], ['12'], '0xFF', '1e6', '1,000', '12.345']) expect(relocationPreviewQuery.safeParse({ location: 'london', annualGross: value }).success).toBe(false)
+    for (const value of ['', ' ', null, false, [], ['12'], '0xFF', '1e6', '1,000', '12.345', '0.000', '123.450', '012']) expect(relocationPreviewQuery.safeParse({ location: 'london', annualGross: value }).success).toBe(false)
     expect(relocationPreviewQuery.safeParse({ location: 'london' }).success).toBe(false)
     expect(relocationPreviewQuery.safeParse({ annualGross: 1000 }).success).toBe(false)
   })
@@ -39,6 +50,14 @@ describe('relocation input and mathematical boundaries', () => {
     expect(taxModelSchema.safeParse({ type: 'effective_rate', rateBps: -1 }).success).toBe(false)
     expect(taxModelSchema.safeParse({ type: 'effective_rate', rateBps: 1.5 }).success).toBe(false)
     for (const [gross, tax] of [[0, 0], [10_000, 0], [10_001, 0.2], [50_000, 8000], [50_001, 8000.4], [2_000_000, 788_000]]) expect(calculateAnnualTax(model, gross!)).toBeCloseTo(tax!, 8)
+  })
+  it('does not apply the income precision limit to dataset costs or tax thresholds', () => {
+    expect(parseReviewedRelocation({
+      ...input,
+      monthlyCosts: { ...input.monthlyCosts, rent: 1000.125 },
+      oneTimeCosts: { ...input.oneTimeCosts, deposit: 900.375 },
+      taxModel: { type: 'progressive', personalAllowance: 5000.125, brackets: [{ upTo: 10_000.125, rateBps: 2000 }, { upTo: null, rateBps: 4000 }] },
+    }, now)).toBeDefined()
   })
   it('refuses malformed cost, source, review and effective dates even on a typed VERIFIED row', () => {
     expect(parseReviewedRelocation(input, now)).toBeDefined()

@@ -16,10 +16,13 @@ export type TelegramWebApp = {
   openLink?: (url: string) => void
 }
 
+export type TelegramSupportStage = 'TG-SDK' | 'TG-LAUNCH' | 'TG-SIGNIN' | 'TG-SESSION'
+
 export type ProductHostState = {
   kind: 'web' | 'telegram'
   status: 'ready' | 'connecting' | 'error' | 'conflict'
   message: string
+  supportReference?: TelegramSupportStage | `TG-SIGNIN-${number}`
   haptics: boolean
   theme: 'light' | 'dark'
 }

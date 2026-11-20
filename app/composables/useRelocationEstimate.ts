@@ -2,6 +2,7 @@ import { refDebounced } from '@vueuse/core'
 import type { Ref } from 'vue'
 import type { RelocationLocationsResponse, RelocationPreviewResponse } from '#shared/types/vacancies'
 import { relocationDestinations } from '#shared/utils/relocation-destinations'
+import { annualGrossInputError } from '#shared/utils/relocation-income'
 
 type EstimateProps = { contextKey: string; initialLocation: string; initialAnnualGross: number | null }
 export function useRelocationEstimate(props: EstimateProps, locations: Ref<RelocationLocationsResponse | undefined>) {
@@ -34,7 +35,8 @@ export function useRelocationEstimate(props: EstimateProps, locations: Ref<Reloc
     }
   }, { flush: 'sync' })
   watch(owner, () => { resetting = true; inputs.value = initial(); notice.value = ''; resetting = false }, { flush: 'sync' })
-  const valid = computed(() => supported.value && typeof annualGross.value === 'number' && Number.isFinite(annualGross.value) && annualGross.value >= 0 && annualGross.value <= 2_000_000)
+  const incomeError = computed(() => annualGrossInputError(annualGross.value))
+  const valid = computed(() => supported.value && typeof annualGross.value === 'number' && !incomeError.value)
   const debouncedGross = refDebounced(annualGross, 300)
   const query = computed(() => ({ location: selected.value?.calculationKey, annualGross: debouncedGross.value }))
   const settled = computed(() => valid.value && debouncedGross.value === annualGross.value)
@@ -48,5 +50,5 @@ export function useRelocationEstimate(props: EstimateProps, locations: Ref<Reloc
   // Both responsive presentations share Nuxt's request/deduplication boundary.
   watch(settled, (value) => { if (!value) resource.clear() }, { flush: 'sync' })
   const updating = computed(() => valid.value && (resource.status.value === 'pending' || !settled.value))
-  return { location, annualGross, destinations, selected, supported, valid, notice, currentResult, updating, resource }
+  return { location, annualGross, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource }
 }

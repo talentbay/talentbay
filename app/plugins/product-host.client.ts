@@ -1,4 +1,4 @@
-import type { ProductHostController, ProductHostState, TelegramWebApp } from '~/types/telegram'
+import type { ProductHostController, ProductHostState, TelegramSupportStage, TelegramWebApp } from '~/types/telegram'
 import { hasCachedTelegramLaunch } from '~/utils/telegram-launch'
 
 // Capture at client-module evaluation, before the router can normalize or remove the hash.
@@ -57,6 +57,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     let navigationStarted = false
     const stopTrackingNavigation = router.beforeEach(() => { navigationStarted = true })
     state.value.status = 'connecting'
+    let stage: TelegramSupportStage | undefined = 'TG-SDK'
     try {
       if (!window.Telegram?.WebApp) {
         await new Promise<void>((resolve, reject) => {
@@ -70,9 +71,11 @@ export default defineNuxtPlugin((nuxtApp) => {
         })
       }
       host = window.Telegram?.WebApp
+      if (!host) throw new Error('Host unavailable')
+      stage = 'TG-LAUNCH'
       // Navigation can remove the hash before the asynchronous SDK reads it.
-      const initData = launchInitData || host?.initData
-      if (!host || !initData) throw new Error('Launch data unavailable')
+      const initData = launchInitData || host.initData
+      if (!initData) throw new Error('Launch data unavailable')
       telegramInitData = initData
       state.value.kind = 'telegram'
       state.value.haptics = Boolean(host.HapticFeedback)
@@ -85,16 +88,27 @@ export default defineNuxtPlugin((nuxtApp) => {
       controller.setBackAction(backAction)
       for (const event of ['safeAreaChanged', 'contentSafeAreaChanged', 'themeChanged']) optional(() => host?.onEvent?.(event, updateHost))
 
+      stage = 'TG-SIGNIN'
       await $fetch('/api/v1/auth/telegram', { method: 'POST', body: { initData }, timeout: 10_000 })
+      stage = 'TG-SESSION'
       await session.fetch()
+      // The session composable resolves signed out when its refresh request fails.
+      if (!session.loggedIn.value) throw new Error('Session unavailable')
+      stage = undefined
       const start = new URLSearchParams(initData).get('start_param') || ''
       const job = start.length <= 124 ? /^job_([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(start) : null
       if (job && !navigationStarted && ['/', '/jobs'].includes(router.currentRoute.value.path)) await router.replace(`/jobs/${job[1]}`)
       state.value.status = 'ready'
     }
     catch (error) {
-      const status = (error as { statusCode?: number, status?: number }).statusCode ?? (error as { status?: number }).status
+      const failure = error as { statusCode?: unknown, status?: unknown } | null
+      const status = failure?.statusCode ?? failure?.status
       state.value.status = status === 409 ? 'conflict' : 'error'
+      if (status !== 409) {
+        state.value.supportReference = stage === 'TG-SIGNIN'
+          && typeof status === 'number' && Number.isInteger(status) && status >= 400 && status <= 599
+          ? `TG-SIGNIN-${status}` : stage
+      }
       state.value.message = status === 409
         ? 'This browser is signed in to another account. Manage your sign-in methods in Settings.'
         : 'Telegram sign-in is unavailable. You can still browse jobs or use another sign-in method.'

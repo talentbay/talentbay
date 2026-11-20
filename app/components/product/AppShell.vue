@@ -25,6 +25,7 @@ const { state: host } = useProductHost()
     >
       <UAlert
         :title="host.message"
+        :description="host.status === 'error' && host.supportReference ? `Reference: ${host.supportReference}` : undefined"
         color="warning"
         variant="soft"
         :actions="[{ label: 'Settings', to: '/settings' }]"

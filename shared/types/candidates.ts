@@ -36,8 +36,13 @@ export type CandidateApplicationItem = {
   }
 }
 
+export type CandidateApplicationHistoryItem = Omit<CandidateApplicationItem, 'vacancy'> & {
+  vacancy: CandidateApplicationItem['vacancy'] | null
+  publicVacancySlug: string | null
+}
+
 export type CandidateApplicationsResponse = {
-  items: CandidateApplicationItem[]
+  items: CandidateApplicationHistoryItem[]
   total: number
   nextCursor: number | null
   counts: { all: number; active: number; closed: number }
