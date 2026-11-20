@@ -75,6 +75,10 @@ privacy reviewer and coverage/retention policy (G05/H04). No owner is invented h
 1. Approved source connector feeds draft/review/publish, not straight to public pages.
    Source registry is intentionally empty and cron off until exact permission exists.
    Source failure is not proof every vacancy disappeared; never delete linked applications.
+   After a successful fetch, check **Excluded posting IDs** before the next run.
+   Open each queue link, match the source, and withdraw a previously public role
+   that lost its direct contact. A new excluded role has no imported row. A positive
+   contact match does not authorize forwarding a candidate's profile.
 2. CSV fallback: use the fixed template and Import CSV page. Preview first, fix every row
    error, inspect the summary/revision, import, review individual records and explicitly
    publish. Changed imports remove public eligibility; unchanged replays keep IDs/history.

@@ -189,22 +189,30 @@ test('source endpoints are default-off and enforce current role, strict bounded 
   expect((await context.request.get('/api/v1/admin/sources')).status()).toBe(403)
 })
 
-test('source operator UI previews a fixed fixture and recovers a lost committed response (mock transport only)', async ({ context, page }, testInfo) => {
+test('source operator UI retains contact exclusions when recovering a mixed import (mock transport only)', async ({ context, page }, testInfo) => {
   await signIn(context, subject + 3)
   const sourceKey = 'Lever:global:fictional-ui-fixture'
-  let progress: object | null = null
+  const excludedId = '00000000-0000-4000-8000-000000000002'
+  const report = { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 2, created: 0, updated: 0, unchanged: 0, failure: null, issues: [] }
+  const checkpoint = { sourceKey, nextOffset: 0, expiresAt: '2099-01-01T00:00:00Z', retryAfterAt: null }
+  // Older reports have no contactSkippedIds; rejected records are not contact exclusions.
+  let progress: object = { ...checkpoint, runID: randomUUID(), state: 'FAILED', report: { ...report, failure: 'INVALID_RECORDS', issues: [{ index: 1, id: null, code: 'INVALID_RECORD' }] } }
   let imported = 0
+  async function expectCounts(processed: number, excluded: number) {
+    for (const text of ['Scanned: 2', `Processed: ${processed}`, `Excluded by contact rule: ${excluded}`])
+      await expect(page.getByText(text, { exact: true })).toBeVisible()
+  }
   await page.route('**/api/v1/admin/sources', route => route.fulfill({ json: { items: [{ key: sourceKey, company: 'Fictional UI Fixture', approval: {} }] } }))
   await page.route('**/api/v1/admin/sources/progress?*', route => route.fulfill({ json: { progress } }))
   await page.route('**/api/v1/admin/sources/run', async (route) => {
     const command = route.request().postDataJSON()
     if (command.action === 'FETCH') {
-      progress = { sourceKey, runID: command.runID, state: 'READY', nextOffset: 0, expiresAt: '2099-01-01T00:00:00Z', retryAfterAt: null, report: { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 1, created: 0, updated: 0, unchanged: 0, failure: null, issues: [] } }
+      progress = { ...checkpoint, runID: command.runID, state: 'READY', report: { ...report, contactSkippedIds: [excludedId] } }
       return route.fulfill({ json: { progress } })
     }
     if (command.action === 'PREVIEW') return route.fulfill({ json: { progress, offset: 0, preview: { valid: true, rowCount: 1, issues: [], summary: { created: 1, updated: 0, unchanged: 0, withdrawnPublished: 0 }, revision: 'a'.repeat(64), rows: [{ row: 2, title: 'Fictional Source Engineer', company: 'Fictional UI Fixture', operation: 'CREATED' }] } } })
     imported++
-    progress = { ...(progress as object), state: 'IMPORTED', nextOffset: 1, report: { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 1, created: 1, updated: 0, unchanged: 0, failure: null, issues: [] } }
+    progress = { ...progress, state: 'IMPORTED', nextOffset: 1, report: { ...report, contactSkippedIds: [excludedId], created: 1 } }
     await route.abort('failed')
   })
   const errors: string[] = []
@@ -213,8 +221,13 @@ test('source operator UI previews a fixed fixture and recovers a lost committed 
   await page.goto('/ktulhu/v1/sources')
   await page.getByRole('combobox').click()
   await page.getByRole('option', { name: 'Fictional UI Fixture' }).click()
+  await expect(page.getByRole('heading', { name: 'FAILED', exact: true })).toBeVisible()
+  await expectCounts(0, 0)
   await page.getByRole('button', { name: 'Fetch source', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'READY', exact: true })).toBeVisible()
+  await expectCounts(0, 1)
+  await page.getByText('Excluded posting IDs', { exact: true }).press('Enter')
+  await expect(page.getByRole('link', { name: excludedId })).toHaveAttribute('href', `/ktulhu/v1/vacancies?q=${excludedId}`)
   await page.getByRole('button', { name: 'Preview next batch', exact: true }).click()
   await expect(page.getByText('Fictional Source Engineer', { exact: false })).toBeVisible()
   for (const width of [320, 390, 1440]) {
@@ -224,6 +237,8 @@ test('source operator UI previews a fixed fixture and recovers a lost committed 
   }
   await page.getByRole('button', { name: 'Confirm batch import', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'IMPORTED', exact: true })).toBeVisible()
+  await expectCounts(1, 1)
+  await expect(page.getByText(excludedId, { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Confirm batch import', exact: true })).toHaveCount(0)
   await expect(page.getByText('Operation not confirmed', { exact: true })).toHaveCount(0)
   expect(imported).toBe(1)

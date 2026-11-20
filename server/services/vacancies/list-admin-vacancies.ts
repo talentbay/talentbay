@@ -25,7 +25,7 @@ export async function listAdminVacancies(input: AdminVacancyFilters) {
   }
   if (filters.q) {
     const search = containsText(filters.q)
-    conditions.push(or(ilike(schema.vacancies.title, search), ilike(schema.organisations.name, search), ilike(schema.vacancies.sourceName, search))!)
+    conditions.push(or(eq(schema.vacancies.sourceExternalID, filters.q), ilike(schema.vacancies.title, search), ilike(schema.organisations.name, search), ilike(schema.vacancies.sourceName, search))!)
   }
   const before = cursor ? or(
     sql`${schema.vacancies.updatedAt} < ${cursor.date}::timestamptz`,

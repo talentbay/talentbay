@@ -47,7 +47,7 @@ export async function fetchSourceRun(input: ApprovedSource, runID: string, actor
     const row = requireRun(await lockSource(tx, key), source, runID)
     const now = new Date()
     if (row.state !== 'FETCHING' || row.expiresAt <= now) throw createError({ statusCode: 409, statusMessage: 'Source lease expired. Start a new run.' })
-    const report = { ...emptyReport(), failure, fetchedAt: result?.fetchedAt ?? null, pageCount: result?.pageCount ?? 0, recordCount: result?.recordCount ?? 0, issues: result?.issues ?? [] }
+    const report = { ...emptyReport(), failure, fetchedAt: result?.fetchedAt ?? null, pageCount: result?.pageCount ?? 0, recordCount: result?.recordCount ?? 0, contactSkippedIds: result?.contactSkippedIds ?? [], issues: result?.issues ?? [] }
     const [updated] = await tx.update(schema.sourceImports).set({
       state: failure ? 'FAILED' : result!.items.length ? 'READY' : 'IMPORTED',
       items: failure || !result!.items.length ? null : result!.items,

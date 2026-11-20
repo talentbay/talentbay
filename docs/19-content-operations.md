@@ -16,9 +16,11 @@ recruiting channel for this vacancy, or a permitted employer feed explicitly map
 the channel to that posting. A generic homepage, ATS Apply button or guessed inbox
 does not qualify. Skip missing/ambiguous matches; don't fill gaps using AI. Keep
 contact evidence private for the operator, not in the public description. Contacting
-the employer and transferring a candidate profile remain separate steps. **The Lever
-normalizer does not establish this contact today.** Keep live sources disabled until
-a named feed and a tested filter support both checks. Own TalentBay vacancies are a
+the employer and transferring a candidate profile remain separate steps. The Lever
+adapter now checks one agreed contact section per posting, not the application URL.
+**No real mailbox, board or right to reuse has been verified.** Keep live sources
+disabled until the actual feed passes both checks and an operator owns rechecks.
+Own TalentBay vacancies are a
 separate future source, not proof of an outside client or an open role today.
 
 Prefer a feed or export supplied by the employer. A person reviews the batch and releases

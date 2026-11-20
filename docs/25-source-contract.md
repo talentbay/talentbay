@@ -16,8 +16,8 @@ No new live source is approved by this change. See [compliance boundaries](08-co
 
 20 November: the CEO confirmed fictional content suffices for a product demo now.
 There is no named real source. Future external listings must also have a direct
-employer contact for the posting. The current adapter's source link is **not** such
-a contact; see the [two separate eligibility checks](19-content-operations.md#pick-a-source-before-entering-any-jobs).
+employer contact for the posting. An ATS link is **not** such a contact; see the
+[two separate eligibility checks](19-content-operations.md#pick-a-source-before-entering-any-jobs).
 
 ## Source Register
 
@@ -62,13 +62,41 @@ Public access/API availability alone is not a blanket copyright/contract/privacy
   `accessMethod: PUBLIC_ATS_API` and `allowedUse: FACTS_ONLY`; no default acceptance of old
   generic records. Schema checks the record, not its truth/legal sufficiency. Review the
   exact employer/board, applicable terms, permission scope, volume and stop/removal procedure.
-- The run fingerprint includes `facts-only-v1` and the complete approval record. Old-policy
+- The run fingerprint includes `facts-only-posting-contact-v2`, the exact contact rule and the complete approval record. Old-policy
   or changed-permission snapshots cannot be resumed/imported. This does not erase historical
   payloads or withdraw old listings automatically; approved operators must review those if
   any exist. No real source had been enabled in the known registry at this checkpoint.
 - Output uses the existing import schema and separates valid items/issues/counts/provenance.
   It does not import or publish. Any issues require review before a runner is allowed to
   commit a batch; raw responses are not error messages/logs.
+
+### Posting contact rule
+
+Lever documents `lists[]` as named sections with HTML list elements, not as a
+standardized recruiter field. Configure a source only if the employer uses one
+explicit recruiting-contact section per eligible posting. Agree its heading and a
+functional mailbox for this purpose. Keep the actual address and verification in
+the private operator register. Server config holds the heading and SHA-256 of the
+mailbox (UTF-8, no newline, case-preserved local part, lowercase domain); a hash
+is a comparison value, **not** anonymization or evidence of rights.
+
+Only a single matching section containing exactly `<li>mailbox</li>` qualifies.
+Surrounding whitespace and heading case are ignored. Other markup, multiple matches,
+unapproved addresses, a generic Apply URL, a mention in prose, or a different format
+do not qualify. Titles containing an at-sign require correction rather than exposing
+a possible address. No LLM, HTML crawler, email delivery or cross-site lookup occurs.
+
+Only eligible items enter the import snapshot. Total scanned, processed and excluded
+counts are separate. A completely excluded feed imports zero. ID, page and fact
+validation still applies to the full input: a structural failure does not yield a
+partial import. Excluded posting IDs (no contact text) are available in the admin
+report. On a successful fetch, open the excluded ID in the vacancy queue, confirm
+the source and flag/archive any previously public role that no longer qualifies.
+Fetch does not itself withdraw a listing or refresh its observation timestamp.
+Reconcile the latest report before starting another run; it is not a permanent ledger.
+An ID that disappears from the board entirely is not a contact exclusion: use the
+separate closure/withdrawal procedure, not this report, to reconcile missing postings.
+Don't enable live polling without a named operator and an agreed removal process.
 
 ## Runner (TB-C07)
 

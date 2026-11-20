@@ -6,6 +6,21 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Filter external postings by their own direct recruiting contact (20 November)
+
+For an approved Lever board the importer now requires an explicit, pre-agreed
+mailbox in a named section of the specific posting. It never stores that section
+or publishes the mailbox. The operator can distinguish scanned, committed and
+excluded records and open an excluded ID in the review queue. A previously public
+role needs an operator recheck; neither exclusion nor a missing posting archives it.
+No board is enabled and no real applicant or employer was contacted.
+
+Local: 298 unit and 106 disposable PostgreSQL cases, including changing the rule
+between fetch and commit, mixed/all-excluded batches, and preserving observation
+dates. Typecheck, lint, Node build, HTTP smoke and the focused Chromium operator
+flow passed. Inspected the 320px report; the active board in the browser test is
+intercepted, while the service and database exercise the real importer offline.
+
 ## Demonstrate without a live job source (20 November)
 
 The isolated local demo starts with six fictional listings; the operator imports
