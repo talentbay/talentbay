@@ -48,6 +48,25 @@ must be retryable without duplicate records or automatic publication.
 
 ## File and API contract
 
+### Company labels and write access (20 November)
+
+Use one vacancy format for the team and, later, partners. An operator or an agent
+can prepare multiple records for the existing CSV/JSON import. The company name
+and stable company key group vacancies; they are not proof of a partnership or a
+right to manage that company. A label is plain text for candidates while no
+public employer profile exists. An original source URL is not a company profile.
+
+| Operation | Available now | Next acceptance |
+| --- | --- | --- |
+| Create and correct a vacancy | Admin batch import; a single row is also valid. A changed import returns to review. | One operator form uses the same item validation and review rules as the batch; editing a record preserves its ID and submitted applications. |
+| Read and retire | Public list/detail; admin queue, review and archive. | Archive withdraws public visibility without deleting candidate history; no hard-delete shortcut. |
+| Identify a company | Import resolves the unique company slug to an internal organisation; no partner account is required. Text search includes company names. | An exact company filter groups its jobs even if another company has a similar name; do not link to a nonexistent company page. |
+| Partner authorship | Not a self-service flow today. | Keep the content format. Enforce separately verified membership and company scope on the server for both single and bulk writes; a supplied name, slug or source ID never grants access. |
+
+This is a scope clarification, not an instruction to expose generic CRUD for users,
+profiles, application history or every database table. Single-record authoring and
+company filtering come before building a partner dashboard.
+
 - UTF-8 comma-delimited CSV, optional UTF-8 BOM, quoted commas/newlines supported by
   `csv-parse/sync`; no custom CSV parser, XLSX, ZIP, formula evaluation or URL fetching.
 - Maximum file text 512 KiB, 50 data records; bounded HTTP body and parser record buffer.
