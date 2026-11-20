@@ -12,6 +12,11 @@ passed using synthetic responses, including narrow (320/390 px) and wide (1024 p
 layouts; the empty-catalogue screenshots were inspected at 390/1280 px.
 These changes are implementation refinements, not a new approved Figma baseline.
 
+The complete compiled pilot suites then passed without retries: 33 public and 47
+database-backed Chromium cases. This includes the application receipt, keyboard focus
+return, simulated Telegram host, salary precision/debounce, and operator workflow.
+The production Telegram client and external employers are not test fixtures.
+
 ## Reviewed Apply Context - 2026-10-27
 
 R02 adds a required shown-context precondition, not a new product route/Figma freeze. A

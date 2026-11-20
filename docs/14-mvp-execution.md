@@ -23,6 +23,14 @@ environments. See [current handoff](09-current-state.md) for the verified scope.
 - No approved real source. [Source options and automation](19-content-operations.md#pick-a-source-before-entering-any-jobs)
   distinguishes a permitted feed display from an employer handoff. No real import,
   forwarding, manual deployment or production database write was performed.
+- Candidate pilot [PR #69](https://github.com/talentbay/talentbay/pull/69), code through
+  `f5d1d89`, checked with Node 22.23.5 and a frozen lockfile: typecheck, lint, 238 unit
+  checks, 100 integration checks with migration upgrade/replay, Node build, 33 public
+  and 47 database-backed Chromium scenarios without retries. The first concurrent runs
+  hit startup/browser timeouts; both full browser suites passed sequentially on the
+  final code. Recovery passed on two disposable clusters (12 tables, 52 synthetic rows,
+  matching rows/sequences/indexes, no lost application history). These numbers are not
+  a hosted load test or proof of external employer delivery.
 
 ## Release build and dependency reconciliation: 20 November
 
