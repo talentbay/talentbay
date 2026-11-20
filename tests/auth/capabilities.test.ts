@@ -11,6 +11,7 @@ const runtime = {
   telegramWebhookSecret: 'private-fixture-value',
 }
 const telegramOnly = { google: false, github: false, telegram: true }
+const entryRuntime = { ...runtime, telegramWebhookSecret: 'synthetic_webhook_fixture_for_entry_only', telegramAppOrigin: 'https://talentbay.example' }
 
 async function get(config: Record<string, unknown>) {
   vi.stubGlobal('useRuntimeConfig', () => config)
@@ -26,6 +27,20 @@ it.each(['Fixture_Bot', ' @Fixture_Bot '])('returns only flags and the public li
   expect(await get({ ...runtime, telegramBotUsername: username })).toEqual({
     ...telegramOnly, telegramBotUrl: 'https://t.me/Fixture_Bot',
   })
+})
+
+it('advertises vacancy entry only for the configured guest bot and a consistent entry configuration', async () => {
+  const guest = { ...telegramOnly, telegramBotUrl: 'https://t.me/Fixture_Bot' }
+  expect(await get(entryRuntime)).toEqual({ ...guest, telegramVacancyEntry: true })
+  for (const change of [
+    { telegramBotID: '' }, { telegramBotID: '654321' }, { telegramBotToken: 'opaque-fixture' },
+    { telegramBotToken: '123456:' }, { telegramWebhookSecret: 'short' }, { telegramAppOrigin: 'http://talentbay.example' },
+    { telegramBotUsername: '@Fixture_Bot' },
+  ]) expect(await get({ ...entryRuntime, ...change })).toEqual(guest)
+  expect(await get({ ...entryRuntime, telegramBotUsername: 'no_bot_suffix' })).toEqual(telegramOnly)
+  expect(await get({ ...entryRuntime, oauth: { google: { clientId: 'id', clientSecret: 'fixture' } } })).toEqual({ ...telegramOnly, google: true })
+  configured.mockReturnValueOnce(false)
+  expect(await get(entryRuntime)).toEqual({ ...telegramOnly, telegram: false })
 })
 
 it.each([

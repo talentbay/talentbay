@@ -6,6 +6,7 @@ import { signedLaunch } from './support/telegram'
 const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
 const subject = randomInt(1_000_000_000, 1_000_000_000_000)
 const origin = 'http://127.0.0.1:3129'
+const signInFailure = 'Telegram sign-in did not complete. Close this Mini App and open TalentBay again from the bot.'
 test.afterAll(async () => {
   await sql`delete from users where id in (select user_id from oauth_accounts where provider='TELEGRAM' and provider_account_id in ${sql(Array.from({ length: 15 }, (_, index) => String(subject+index)))})`
   await sql.end()
@@ -34,7 +35,12 @@ for (const failure of ['expired', 'tampered'] as const) {
     const auth = await response
     expect(auth.status()).toBe(401)
     expect(auth.headers()['cache-control']).toContain('no-store')
-    await expect(page.getByText('Telegram sign-in is unavailable. You can still browse jobs or use another sign-in method.')).toBeVisible()
+    const requestId = await auth.headerValue('x-request-id')
+    expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
+    const alert = page.getByRole('alert').filter({ hasText: signInFailure })
+    await expect(alert.getByText('Reference: TG-SIGNIN-401', { exact: true })).toBeVisible()
+    await expect(alert.getByText(`Request ID: ${requestId}`, { exact: true })).toBeVisible()
+    await expect(alert.getByRole('link', { name: 'Settings', exact: true })).toHaveCount(0)
     await expect(page).toHaveURL(/\/jobs$/)
     await page.getByRole('navigation', { name: 'Candidate navigation' }).filter({ visible: true }).getByRole('link', { name: 'Saved', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Saved jobs', exact: true })).toBeVisible()
@@ -46,10 +52,12 @@ for (const failure of ['expired', 'tampered'] as const) {
 test('failed SDK loading leaves a usable browser fallback and no launch fragment', async ({ page }) => {
   await page.route('https://telegram.org/js/telegram-web-app.js', route => route.abort())
   await page.goto('/jobs#tgWebAppData=synthetic-unavailable-host')
-  await expect(page.getByText('Telegram sign-in is unavailable. You can still browse jobs or use another sign-in method.')).toBeVisible()
+  const alert = page.getByRole('alert').filter({ hasText: signInFailure })
+  await expect(alert).toBeVisible()
+  await expect(alert.getByRole('link', { name: 'Settings', exact: true })).toHaveCount(0)
   await expect(page).toHaveURL(/\/jobs$/)
-  await page.getByRole('link', { name: 'Settings', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
+  await page.getByRole('navigation', { name: 'Candidate navigation' }).filter({ visible: true }).getByRole('link', { name: 'Saved', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Saved jobs', exact: true })).toBeVisible()
 })
 
 for (const [offset, sdk] of [[12, 'aborted'], [13, 'loaded without WebApp']] as const) {
@@ -280,6 +288,7 @@ test('separate browser stores do not share sessions and a conflicting host canno
     await page.addInitScript(({ initData }) => { window.Telegram = { WebApp: { initData, ready: () => {} } } }, { initData: signedLaunch(subject+4, 'Different Host Candidate') })
     await page.goto('/profile')
     await expect(page.getByText('This browser is signed in to another account. Manage your sign-in methods in Settings.')).toBeVisible()
+    await expect(page.getByRole('alert').getByRole('link', { name: 'Settings', exact: true })).toHaveAttribute('href', '/settings')
     await expect(page.getByRole('heading', { name: 'Existing Browser Candidate', exact: true })).toBeVisible()
     expect((await (await context.request.get('/api/_auth/session')).json()).user.id).toBe(owner)
     const offline = await context.newPage()

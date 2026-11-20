@@ -23,6 +23,7 @@ export type ProductHostState = {
   status: 'ready' | 'connecting' | 'error' | 'conflict'
   message: string
   supportReference?: TelegramSupportStage | `TG-SIGNIN-${number}`
+  supportRequestId?: string
   haptics: boolean
   theme: 'light' | 'dark'
 }

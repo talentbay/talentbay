@@ -23,9 +23,11 @@ const { state: host } = useProductHost()
       v-else-if="host.status === 'error' || host.status === 'conflict'"
       class="product-container pt-3"
     >
+      <AuthTelegramFailureAlert v-if="host.status === 'error'" />
       <UAlert
+        v-else
+        role="alert"
         :title="host.message"
-        :description="host.status === 'error' && host.supportReference ? `Reference: ${host.supportReference}` : undefined"
         color="warning"
         variant="soft"
         :actions="[{ label: 'Settings', to: '/settings' }]"

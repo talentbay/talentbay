@@ -7,19 +7,35 @@ import {
   annualSalaryMidpoint,
   formatVacancySalary,
 } from '~/utils/vacancy-salary'
+import { parseVacancyStart } from '#shared/utils/telegram-vacancy-entry'
 
-definePageMeta({ layout: 'product', key: (route) => String(route.params.slug) })
+definePageMeta({
+  layout: 'product',
+  key: route => {
+    const entry = route.query.entry
+    const variant = entry === undefined ? 'canonical' : parseVacancyStart(entry) ? entry : 'invalid'
+    return JSON.stringify([route.params.slug, variant])
+  },
+})
 const route = useRoute()
 const slug = String(route.params.slug)
+const entry = route.query.entry
+if (entry !== undefined) {
+  if (import.meta.server) useResponseHeader('Cache-Control').value = 'no-store'
+  if (typeof entry !== 'string' || !parseVacancyStart(entry)) throw createError({ statusCode: 404, statusMessage: 'Vacancy not found', fatal: true })
+}
 const { data: vacancy, error, refresh, status } = await useFetch<VacancyListItem>(
   `/api/v1/vacancies/${slug}`,
+  { query: typeof entry === 'string' ? { entry } : undefined },
 )
 if (error.value || !vacancy.value)
   throw createError({
     statusCode: error.value?.statusCode || 404,
     statusMessage: 'Vacancy not found',
+    fatal: true,
   })
 useSeoMeta({
+  robots: entry === undefined ? undefined : 'noindex',
   title: () =>
     `${vacancy.value?.title} at ${vacancy.value?.company.name} · TalentBay`,
   description: () => vacancy.value?.summary,

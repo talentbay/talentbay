@@ -1,12 +1,14 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import type { ProductHostState } from '../../app/types/telegram'
+import { telegramBotEntry } from '../../app/utils/telegram-bot-entry'
 
 vi.mock('~/utils/telegram-launch', async () => import('../../app/utils/telegram-launch'))
 
 const post = vi.fn()
 const refresh = vi.fn()
 const loggedIn = { value: true }
-const generic = 'Telegram sign-in is unavailable. You can still browse jobs or use another sign-in method.'
+const generic = 'Telegram sign-in did not complete. Close this Mini App and open TalentBay again from the bot.'
+const requestId = '12345678-abcd-4abc-9def-1234567890ab'
 let state: ProductHostState
 
 beforeEach(() => {
@@ -39,6 +41,24 @@ async function initialize() {
   await import('../../app/plugins/product-host.client')
   await vi.waitFor(() => expect(state.status).not.toBe('connecting'))
 }
+
+it('only adds a role to the configured bare bot link for a supported ID and material context', () => {
+  const base = 'https://t.me/fixture_entry_bot'
+  const capabilities = { telegram: true, google: false, github: false, telegramBotUrl: base, telegramVacancyEntry: true }
+  const context = 'v1:' + 'a1'.repeat(32)
+  const plain = { href: base, opensRole: false }
+  for (const id of [1, 2_147_483_647]) {
+    expect(telegramBotEntry(capabilities, id, context)).toEqual({ href: `${base}?start=job_${id}_${'a1'.repeat(12)}`, opensRole: true })
+  }
+  for (const id of [0, -1, 1.5, NaN, 2_147_483_648]) expect(telegramBotEntry(capabilities, id, context)).toEqual(plain)
+  expect(telegramBotEntry(capabilities)).toEqual(plain)
+  expect(telegramBotEntry(capabilities, 7, 'invalid')).toEqual(plain)
+  expect(telegramBotEntry({ ...capabilities, telegramVacancyEntry: false }, 7, context)).toEqual(plain)
+  expect(telegramBotEntry({ ...capabilities, google: true }, 7, context)).toBeNull()
+  for (const url of [base + ' ', base + '\n', base + '?start=other', base + '#other', base + '/more', 'https://t.me@example.invalid/fixture_bot', 'https://example.invalid/fixture_bot']) {
+    expect(telegramBotEntry({ ...capabilities, telegramBotUrl: url }, 7, context)).toBeNull()
+  }
+})
 
 it.each(['TG-SDK', 'TG-LAUNCH'] as const)('identifies %s before any sign-in request', async (reference) => {
   window.location.hash = '#tgWebAppData='
@@ -82,12 +102,28 @@ it('does not mistake a successful POST followed by a signed-out refresh for logi
   expect(state).toMatchObject({ status: 'error', message: generic, supportReference: 'TG-SESSION' })
 })
 
+it.each([requestId, 'untrusted header', requestId.toUpperCase(), requestId.replace('-4abc', '-7abc'), requestId.replace('-9def', '-1def'), null])('only exposes a canonical v4 request ID from the failed sign-in response (%s)', async header => {
+  const response = new Response(null, { status: 401, headers: header === null ? {} : { 'x-request-id': header } })
+  post.mockRejectedValue({ response, data: { requestId }, message: requestId })
+  await initialize()
+  expect(state.supportReference).toBe('TG-SIGNIN-401')
+  expect(state.supportRequestId).toBe(header === requestId ? requestId : undefined)
+})
+
+it('does not show the session refresh request ID or classify it as a sign-in conflict', async () => {
+  refresh.mockRejectedValue({ response: new Response(null, { status: 409, headers: { 'x-request-id': requestId } }) })
+  await initialize()
+  expect(state).toMatchObject({ status: 'error', supportReference: 'TG-SESSION', message: generic })
+  expect(state.supportRequestId).toBeUndefined()
+})
+
 it('retains the separate conflict message without a reference', async () => {
-  post.mockRejectedValue({ status: 409 })
+  post.mockRejectedValue({ response: new Response(null, { status: 409, headers: { 'x-request-id': requestId } }) })
   await initialize()
   expect(state.status).toBe('conflict')
   expect(state.message).toContain('signed in to another account')
   expect(state.supportReference).toBeUndefined()
+  expect(state.supportRequestId).toBeUndefined()
 })
 
 it('adds no support reference to a successful native login or an ordinary browser', async () => {

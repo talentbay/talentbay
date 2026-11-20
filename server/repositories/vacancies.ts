@@ -10,6 +10,7 @@ import { decodeVacancyCursor, encodeVacancyCursor, parseVacancySearch } from '#s
 import { olderVacancies, pageDate, salaryPresent, vacancyOrder } from './vacancy-page'
 import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
 import type { ApplicationContextRow } from '#server/services/vacancies/application-context'
+import { makeVacancyStart } from '#shared/utils/telegram-vacancy-entry'
 import type {
   VacancyDataStatus,
   VacancyListItem,
@@ -18,6 +19,14 @@ import type {
 } from '#shared/types/vacancies'
 
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
+
+export async function publicVacancySlugForStart(id: number, payload: string): Promise<string | null> {
+  const [row] = await useDatabase().select(applicationContextSelection).from(schema.vacancies)
+    .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
+    .where(and(eq(schema.vacancies.id, id), publicVacancyConditions(),
+      sql`${schema.vacancies.sourceName} is distinct from 'TalentBay preview dataset'`)).limit(1)
+  return row && makeVacancyStart(row.id, applicationContextRevision(row)) === payload ? row.slug : null
+}
 
 export async function resolveVacancies(slugs: string[]): Promise<VacancyResolveResponse> {
   const unique = [...new Set(slugs)]

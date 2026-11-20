@@ -1,5 +1,15 @@
 # Candidate Browser Verification
 
+**Website to Telegram (20 November).** On a guest vacancy, the Telegram action names
+the selected role flow only when the configured entry bot can handle it. The browser
+stays signed out. A private chat reply opens the same public vacancy version; profile
+sharing still requires an explicit submission. A stale button reaches the existing
+unavailable page with a way back to Jobs. On failed native login, recovery advice and
+any safe support reference are also accessible inside the Apply dialog, not just in
+the shell behind it. The 390px Apply screenshot checks the recovery text with the
+theme's normal foreground on a warning background. This reuses the Candidate v1
+controls; it is not device acceptance.
+
 **Corrected operator history (20 November).** The candidate receipt distinguishes a
 recorded handoff from a corrected record; neither confirms employer delivery. Paging
 after a new correction refreshes the history. Open applications show the current

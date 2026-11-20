@@ -56,6 +56,8 @@ export default defineNuxtPlugin((nuxtApp) => {
       && !hasCachedTelegramLaunch(key => window.sessionStorage.getItem(key))) return
     let navigationStarted = false
     const stopTrackingNavigation = router.beforeEach(() => { navigationStarted = true })
+    delete state.value.supportRequestId
+    delete state.value.supportReference
     state.value.status = 'connecting'
     let stage: TelegramSupportStage | undefined = 'TG-SDK'
     try {
@@ -110,17 +112,23 @@ export default defineNuxtPlugin((nuxtApp) => {
       state.value.status = 'ready'
     }
     catch (error) {
-      const failure = error as { statusCode?: unknown, status?: unknown } | null
-      const status = failure?.statusCode ?? failure?.status
-      state.value.status = status === 409 ? 'conflict' : 'error'
-      if (status !== 409) {
+      const failure = error as { statusCode?: unknown, status?: unknown, response?: Response } | null
+      const status = failure?.response?.status ?? failure?.statusCode ?? failure?.status
+      const conflict = stage === 'TG-SIGNIN' && status === 409
+      state.value.status = conflict ? 'conflict' : 'error'
+      if (!conflict) {
         state.value.supportReference = stage === 'TG-SIGNIN'
           && typeof status === 'number' && Number.isInteger(status) && status >= 400 && status <= 599
           ? `TG-SIGNIN-${status}` : stage
+        const response = failure?.response
+        if (stage === 'TG-SIGNIN' && response instanceof Response && response.status >= 400 && response.status <= 599) {
+          const id = response.headers.get('x-request-id')
+          if (id?.length === 36 && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(id)) state.value.supportRequestId = id
+        }
       }
-      state.value.message = status === 409
+      state.value.message = conflict
         ? 'This browser is signed in to another account. Manage your sign-in methods in Settings.'
-        : 'Telegram sign-in is unavailable. You can still browse jobs or use another sign-in method.'
+        : 'Telegram sign-in did not complete. Close this Mini App and open TalentBay again from the bot.'
     }
     finally {
       stopTrackingNavigation()

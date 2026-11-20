@@ -220,6 +220,8 @@ async function submit() {
       <template #body>
         <AuthSignInPanel
           v-if="!loggedIn"
+          :vacancy-id="vacancy.id"
+          :application-context="vacancy.applicationContext"
           :title="sessionExpired ? 'Sign in again to apply' : undefined"
           :description="sessionExpired ? 'Your session ended. For privacy, the previous cover note was cleared. You are still on the same vacancy.' : undefined"
           @completed="signedIn"

@@ -6,6 +6,24 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Preserve a guest vacancy when switching into Telegram (20 November)
+
+- A browser visitor can open the entry bot from an eligible vacancy and continue with
+  the same role and company. The parameter contains a public ID and a compact material
+  version, not a credential. The webhook and the eventual page/API read each verify the
+  version. Changing the recipient, modifying or archiving the job cannot silently
+  retarget the link. The original browser remains a guest; no automatic application.
+- A failed Telegram sign-in no longer recommends a nonexistent alternative or sends a
+  signed-out candidate to Settings. A genuine account conflict retains Settings. Only an
+  actual failed sign-in response can provide its UUID request ID; a pre-request failure
+  cannot. The [phone walkthrough](28-telegram-entry-bot.md#check-one-vacancy-on-a-phone)
+  is still required on the primary bot. No production credentials or bot changes.
+- Checked locally: typecheck, lint, build and HTTP smoke; 269 unit tests, 103 PostgreSQL
+  integration tests plus migration upgrade/replay, and 41 public
+  plus 56 PostgreSQL-backed Chromium scenarios without retries. Regression cases include
+  a changed company with the same displayed name, a previously delivered button and
+  same-document history navigation. Independent review found no open P1/P2 in this change.
+
 ## Application handling: what happened vs. what was recorded (20 November)
 
 - The receipt confirms TalentBay received the application. A closure marked **No company

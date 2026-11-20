@@ -1,5 +1,6 @@
 import { defineEventHandler, setHeader } from 'h3'
 import { isDatabaseConfigured } from '#server/db'
+import { runtimeBotEntryConfig } from '#server/services/bot/entry-contract'
 
 function publicBotUrl(value: unknown) {
   if (typeof value !== 'string') return null
@@ -14,6 +15,8 @@ export default defineEventHandler((event) => {
   const github = database && Boolean(config.oauth?.github?.clientId && config.oauth?.github?.clientSecret)
   const telegram = database && Boolean(config.telegramBotToken)
   const botUrl = telegram && !google && !github ? publicBotUrl(config.telegramBotUsername) : null
+  const entry = botUrl ? runtimeBotEntryConfig(config) : null
+  const vacancyEntry = entry && /^[1-9]\d*:[A-Za-z0-9_-]+$/.test(entry.token) && entry.token.startsWith(`${entry.botID}:`)
   setHeader(event, 'cache-control', 'no-store')
-  return { google, github, telegram, ...(botUrl ? { telegramBotUrl: botUrl } : {}) }
+  return { google, github, telegram, ...(botUrl ? { telegramBotUrl: botUrl } : {}), ...(vacancyEntry ? { telegramVacancyEntry: true as const } : {}) }
 })
