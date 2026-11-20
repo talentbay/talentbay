@@ -1,7 +1,24 @@
 # Content Operations
 
-Updated: 2026-10-26. Applies to the unmerged minimal CSV operator workflow.
+Updated: 2026-11-20. Covers the operator import workflow; no real source is enabled by this guide.
 Implementation/design contract: [18-admin-import-contract.md](18-admin-import-contract.md).
+
+## Pick a source before entering any jobs
+
+Prefer a feed or export supplied by the employer. A person reviews the batch and releases
+it; nobody should retype the advertisements. Source availability and the candidate handoff
+are separate decisions:
+
+| Source | Automation evidence | Decision before a real run |
+| --- | --- | --- |
+| An employer on [Lever](https://github.com/lever/postings-api) | The official demo endpoint returned HTTP 200 and structured posting IDs, URLs, locations and optional salary. The existing TalentBay adapter previews a bounded board, then imports selected batches as drafts. No scheduler or real board is enabled. | Agree the exact employer board/region, fields and display scope. Agree who may receive a candidate and how. A single permitted posting is not permission to fetch the whole board. |
+| Employer's own CSV export | An export matching the template can be imported in a single batch, validated before writing. No need to recopy each role. | Confirm the employer can supply approved text, stable IDs and closure updates. Use the agreed contact for candidate outreach. |
+| [We Work Remotely programming RSS](https://weworkremotely.com/remote-job-rss-feed) | The documented public feed returned HTTP 200; items exposed title, GUID, source link, region, category and publication date. There is **no RSS adapter** or source-only Apply mode in TalentBay. | The feed page permits feed use with attribution and links to WWR. It does not establish employer consent to forward profiles. Before enabling, review the [current terms](https://weworkremotely.com/terms-and-conditions) for the intended use. For an agreed link-only selection, use facts and attributed links, not descriptions, logos or internal Apply. Remote location is not a relocation/visa offer. |
+
+This was a read-only feasibility check, not legal clearance, ingestion or publication.
+Do not build a substitute feed from logged-in pages or infer permissions from a successful
+GET. For a product demo without a cleared source use the isolated, labelled synthetic
+review data, never the public catalogue.
 
 ## Access and preparation
 
@@ -53,6 +70,43 @@ HTTP(S) links cannot contain embedded credentials. CSV quotes escape commas/newl
 values clear previous optional fields. Keep company identifiers and metadata consistent
 across a file. Changing company name/website withdraws all its affected vacancies for
 review, including siblings outside this file. Do not invent source IDs on each run.
+
+## First employer: one vacancy
+
+**Request to copy to the CEO or employer:**
+
+> Please send one currently open vacancy for the TalentBay pilot:
+>
+> - **Listing:** Employer name; source name, original posting URL and stable job ID; role title,
+>   employment type, workplace type, two-letter country code and the plain-text description
+>   we may publish. Include salary, city, visa or relocation support only if confirmed.
+> - **Publication permission:** Who owns the content? Give the dated permission reference,
+>   applicable terms, and where and for how long TalentBay may display this listing and its
+>   text. Identify who will tell us about corrections, closure or withdrawal of permission.
+> - **Applications (separate decision):** May TalentBay contact the employer and manually
+>   forward an application for this role with the candidate's permission? If yes, identify
+>   the approved recipient and channel privately; if not agreed, say so. Publishing the
+>   listing does not send an application or authorize forwarding.
+
+**Operator acceptance checklist (first create only):**
+
+- [ ] Confirm the owner has approved **this listing and this preview environment**. If no
+  authorized listing, cleared description or required fact is available, keep the real catalogue
+  empty. Do not import the header alone, a demo row or placeholder text. Permission for one
+  listing does not enable a board fetch or schedule; see the [source contract](25-source-contract.md).
+- [ ] Use the header-only template above with exactly one data row. Assign stable
+  `company_slug` and `vacancy_slug`; check the [fields](#fields) for required values and
+  salary units. Leave unconfirmed optional facts blank. Keep permission evidence and private
+  forwarding details outside the CSV; follow the [operator runbook](31-operator-runbook.md#handle-one-application) before any handoff.
+- [ ] Select **Validate file** (no writes). Expect the intended company and role on record 2,
+  no errors, **Created 1, Updated 0, Unchanged 0**, and no publication-impact warning
+  (0 withdrawals). Stop on any mismatch; do not change the source ID to force a create.
+- [ ] Select **Confirm import**. Find the row in the review queue as `DRAFT` / `UNREVIEWED`;
+  it must not appear in public Jobs yet. Compare the facts, text and source against the
+  permission, acknowledge the review, then select **Verify & publish**.
+- [ ] In the same preview, find the role in public Jobs and open its detail page. Match the
+  employer, title and original source link to the approved row. The public count should rise
+  by one if nothing else changed; a count alone does not verify the listing.
 
 ## Validate, preview, import
 

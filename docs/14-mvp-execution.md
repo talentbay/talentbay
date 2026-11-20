@@ -6,6 +6,24 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Candidate pilot and source decision: 20 November
+
+- Release reconciliation `129234a` was published to PR #67. GitHub reported it mergeable;
+  scope, build, PostgreSQL integration and Vercel Preview passed. Ready for review does
+  not mean merged, approved or deployed to the primary domain.
+- Candidate changes are on `codex/candidate-pilot-readiness`. Empty catalogue, no matches
+  and errors have distinct actions; optional profile completeness no longer determines
+  application eligibility. History links only to current public jobs, with no invented
+  submission-time details for legacy receipts. Invalid salary inputs stay at the field.
+- The owner reports sign-in failure inside the main bot. Public capabilities returned
+  200 with only Telegram enabled. That does not prove correct bot credentials, a
+  successful sign-in POST or a persistent session. Inspect the serving deployment at
+  the failing minute: POST status, request ID and allowlisted rejection reason only.
+  Do not share launch fragments, HARs, credentials, cookies or user profile data.
+- No approved real source. [Source options and automation](19-content-operations.md#pick-a-source-before-entering-any-jobs)
+  distinguishes a permitted feed display from an employer handoff. No real import,
+  forwarding, manual deployment or production database write was performed.
+
 ## Release build and dependency reconciliation: 20 November
 
 - From main `a34d59a`, the clean frozen install failed before the build: duplicate

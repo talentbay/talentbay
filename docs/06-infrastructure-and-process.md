@@ -1,12 +1,20 @@
 # Infrastructure and Process
 
-Last updated: 2026-11-17
+Last updated: 2026-11-20
 
-## Active Integration Route
+## Current Review Route
 
-`codex/mvp-integration` is the single current pre-release line. It contains the cumulative
+Consolidation PR #65 already merged. Dependency/security PR #67 targets `main`; a local
+reconciliation with `main` does not update that PR until published. Check required CI on the
+exact proposed head, and obtain the owner's release decision before merging. Building the
+app must not migrate a shared database. See [execution log](14-mvp-execution.md) and
+[deployment runbook](11-deployment-runbook.md).
+
+## Historical Integration Route
+
+`codex/mvp-integration` was the single pre-release line. It contains the cumulative
 MVP through source-rights `43f74aa`, the updated baseline `5f5f3b5` and main `57b03a0`.
-One draft PR from this branch to `main` is the release-review entry. The earlier topic
+The draft PR from this branch to `main` was the release-review entry. The earlier topic
 PRs below are preserved review history, not independent squash patches to merge in order.
 
 Repository cleanup closes superseded PRs only after verifying that their exact head

@@ -1,5 +1,17 @@
 # Candidate Browser Verification
 
+## Candidate pilot checks: 20 November 2026
+
+Compared Jobs to the active Candidate responsive Figma handoff (frame `2077:739`).
+The search and applied filters remain in the URL. On mobile the modal edits a draft;
+on desktop the same controls are inline. Closing the modal returns keyboard focus.
+The empty-catalogue state now leads to Profile; a no-match state offers to clear the
+applied filters, and an exhausted cursor offers navigation back. A failed request
+is not presented as zero vacancies. All eight targeted compiled Chromium scenarios
+passed using synthetic responses, including narrow (320/390 px) and wide (1024 px)
+layouts; the empty-catalogue screenshots were inspected at 390/1280 px.
+These changes are implementation refinements, not a new approved Figma baseline.
+
 ## Reviewed Apply Context - 2026-10-27
 
 R02 adds a required shown-context precondition, not a new product route/Figma freeze. A
