@@ -28,8 +28,7 @@ export const reviewVacancies = roles.map(({ slug, title, name, companySlug, coun
   },
 }))
 
-export function reviewCsv(item = reviewVacancies[5]) {
-  const columns = readFileSync(new URL('../../public/templates/vacancies.csv', import.meta.url), 'utf8').trim().split(',')
+function vacancyCsvRow(item, columns) {
   const row = {
     source_name: item.source.name, source_url: item.source.url, source_external_id: item.source.externalId,
     company_name: item.company.name, company_slug: item.company.slug, vacancy_slug: item.vacancy.slug,
@@ -40,7 +39,17 @@ export function reviewCsv(item = reviewVacancies[5]) {
     salary_currency: item.vacancy.salary.currency, salary_period: item.vacancy.salary.period, skills: item.vacancy.skills.join('|'),
     relocation_offered: item.vacancy.relocationOffered, visa_sponsorship: item.vacancy.visaSponsorship,
   }
-  return `${columns.join(',')}\n${columns.map(key => `"${String(row[key] ?? '').replaceAll('"', '""')}"`).join(',')}\n`
+  return columns.map(key => `"${String(row[key] ?? '').replaceAll('"', '""')}"`).join(',')
+}
+
+export function vacanciesCsv(items) {
+  const header = readFileSync(new URL('../../public/templates/vacancies.csv', import.meta.url), 'utf8').trim()
+  const columns = header.split(',')
+  return [header, ...items.map(item => vacancyCsvRow(item, columns))].join('\n') + '\n'
+}
+
+export function reviewCsv(item = reviewVacancies[5]) {
+  return vacanciesCsv([item])
 }
 
 export async function seedReview({ sql, request, signIn, personas }) {

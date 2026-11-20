@@ -11,6 +11,7 @@ import { olderVacancies, pageDate, salaryPresent, vacancyOrder } from './vacancy
 import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
 import type { ApplicationContextRow } from '#server/services/vacancies/application-context'
 import { makeVacancyStart } from '#shared/utils/telegram-vacancy-entry'
+import { previewDatasetName } from '#server/services/vacancies/preview-dataset'
 import type {
   VacancyDataStatus,
   VacancyListItem,
@@ -24,7 +25,7 @@ export async function publicVacancySlugForStart(id: number, payload: string): Pr
   const [row] = await useDatabase().select(applicationContextSelection).from(schema.vacancies)
     .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
     .where(and(eq(schema.vacancies.id, id), publicVacancyConditions(),
-      sql`${schema.vacancies.sourceName} is distinct from 'TalentBay preview dataset'`)).limit(1)
+      sql`${schema.vacancies.sourceName} is distinct from ${previewDatasetName}`)).limit(1)
   return row && makeVacancyStart(row.id, applicationContextRevision(row)) === payload ? row.slug : null
 }
 
@@ -167,7 +168,7 @@ type VacancyRow = ApplicationContextRow & Pick<
 
 function toVacancyListItem(row: VacancyRow): VacancyListItem {
   const sourceStatus: VacancyDataStatus = row.reviewStatus === 'VERIFIED'
-    && row.sourceName !== 'TalentBay preview dataset'
+    && row.sourceName !== previewDatasetName
     ? 'VERIFIED'
     : 'DEMO'
 
@@ -213,7 +214,7 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
     },
     source: {
       name: row.sourceName ?? 'TalentBay',
-      url: row.sourceUrl,
+      url: sourceStatus === 'DEMO' ? null : row.sourceUrl,
       status: sourceStatus,
     },
   }

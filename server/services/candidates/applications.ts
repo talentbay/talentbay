@@ -6,6 +6,7 @@ import { publicVacancyConditions } from '#server/repositories/vacancy-visibility
 import { captureApplicationSnapshot } from './application-snapshot'
 import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
 import { applicationDisclosureVersion } from '#shared/types/application-handling'
+import { previewDatasetName } from '#server/services/vacancies/preview-dataset'
 import type {
   CandidateApplicationHistoryItem,
   CandidateApplicationsResponse,
@@ -46,7 +47,7 @@ export async function createApplication(
       .where(and(
         eq(schema.vacancies.id, vacancyID),
         publicVacancyConditions(),
-        sql`${schema.vacancies.sourceName} is distinct from 'TalentBay preview dataset'`,
+        sql`${schema.vacancies.sourceName} is distinct from ${previewDatasetName}`,
       ))
       .limit(1)
       .for('share')

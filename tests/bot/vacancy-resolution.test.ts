@@ -31,8 +31,8 @@ it('resolves a pinned material row to its slug with one public non-demo lookup',
   expect(query).toHaveBeenCalledTimes(1)
   const [statement, params] = query.mock.calls[0]!
   expect(statement).toContain('inner join "organisations"')
-  expect(statement).toContain("is distinct from 'TalentBay preview dataset'")
-  expect(params).toEqual([original.id, 'PUBLISHED', 'VERIFIED', 'ACTIVE', 1])
+  expect(statement).toContain('is distinct from $5')
+  expect(params).toEqual([original.id, 'PUBLISHED', 'VERIFIED', 'ACTIVE', 'TalentBay preview dataset', 1])
 })
 
 it('does not retarget a pin when the receiving company or the vacancy title changes under the same ID', async () => {

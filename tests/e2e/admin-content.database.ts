@@ -1,4 +1,6 @@
 import { randomInt, randomUUID } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import type { BrowserContext } from '@playwright/test'
 import postgres from 'postgres'
@@ -243,4 +245,23 @@ test('source operator UI retains contact exclusions when recovering a mixed impo
   await expect(page.getByText('Operation not confirmed', { exact: true })).toHaveCount(0)
   expect(imported).toBe(1)
   expect(errors).toEqual([])
+})
+
+test('operator can preview seven demo vacancies and cannot confirm a mixed-source file', async ({ page, context }) => {
+  await signIn(context, randomInt(1_000_000_000, 1_000_000_000_000))
+  const demo = execFileSync(process.execPath, [fileURLToPath(new URL('../../scripts/export-preview-vacancies.mjs', import.meta.url))], { env: {}, encoding: 'utf8' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/ktulhu/v1/import')
+  const file = page.getByLabel('Vacancy CSV file')
+  await file.setInputFiles({ name: 'demo.csv', mimeType: 'text/csv', buffer: Buffer.from(demo) })
+  await page.getByRole('button', { name: 'Validate file' }).click()
+  await expect(page.getByRole('heading', { name: 'Import preview' })).toBeVisible()
+  await expect(page.getByText('Senior Backend Engineer', { exact: true })).toBeVisible()
+  await expect(page.getByText('Quality Engineer', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Confirm import' })).toBeEnabled()
+  const ordinary = csv()
+  await file.setInputFiles({ name: 'mixed.csv', mimeType: 'text/csv', buffer: Buffer.from(demo + ordinary.slice(ordinary.indexOf('\n') + 1)) })
+  await page.getByRole('button', { name: 'Validate file' }).click()
+  await expect(page.getByText(/Import demo vacancies separately from other sources/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Confirm import' })).toHaveCount(0)
 })

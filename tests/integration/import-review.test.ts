@@ -74,9 +74,13 @@ describe('operator preview and versioned review', () => {
     expect((await previewVacancyImport([conflicting])).issues[0]?.field).toBe('vacancy_slug')
     await sql`update organisations set status = 'ARCHIVED' where slug = ${input.company.slug}`
     expect((await previewVacancyImport([input])).valid).toBe(false)
+    const companion = item('before-archive')
+    await expect(importVacancies([companion, { ...input, company: { ...input.company, name: 'Must not overwrite archive' } }]))
+      .rejects.toMatchObject({ statusCode: 422 })
+    expect(await sql`select id from organisations where slug = ${companion.company.slug}`).toHaveLength(0)
     const detail = await getAdminVacancy(record!.id)
     await expect(reviewVacancy(record!.id, published, detail.revision)).rejects.toMatchObject({ statusCode: 422 })
-    expect((await getAdminVacancy(record!.id)).company.status).toBe('ARCHIVED')
+    expect(detail.company).toMatchObject({ status: 'ARCHIVED', name: input.company.name })
   })
 
   it('compares actual content even when timestamps are identical', async () => {

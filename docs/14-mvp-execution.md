@@ -6,6 +6,12 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Prepare review-site demo content without seeding a shared database (20 November)
+
+`pnpm --silent demo:vacancies:csv` exports seven marked, fictional roles offline. The five historical source keys are unchanged. The retired seed now stops without loading credentials or writing SQL. Operators validate the CSV, confirm the import into drafts and explicitly publish. Review-site examples have no application context or external source link; the local rehearsal uses separate fixtures to exercise submissions. The reserved sources cannot be mixed with other sources or imported on an unapproved database. [Target and operator steps](11-deployment-runbook.md#postgresql).
+
+Local checks: 304 unit, 52 tooling and 108 disposable PostgreSQL tests, including upgrading and replaying migrations. Typecheck, ESLint, Node build, HTTP smoke and two Chromium operator flows passed. The database test preserved an existing demo ID, withdrew its changed public content, reapplied unchanged data, and rejected an application after explicit republication. Independent review caught an archived-company write in JSON import; regression coverage verifies that the whole batch rolls back. No hosted configuration change, cloud import or production verification.
+
 ## Filter external postings by their own direct recruiting contact (20 November)
 
 For an approved Lever board the importer now requires an explicit, pre-agreed

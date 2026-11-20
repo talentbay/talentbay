@@ -106,7 +106,8 @@ Implemented:
   Vercel Preview use `preview`.
 - Separate Neon `integration` branch with self-cleaning service-level workflow
   tests.
-- Idempotent `pnpm db:seed:preview` workflow with five preview vacancies.
+- Historical five-vacancy preview seed (retired). For the current offline CSV and
+  operator review workflow see the [deployment runbook](11-deployment-runbook.md#postgresql).
 - Dry-run-first `pnpm db:promote-admin` operation for an existing OAuth user.
 - CI, typecheck, ESLint, Vitest and production build.
 - Nuxt 4.5.1, Vue 3.5.40 and a refreshed lockfile without the removed
