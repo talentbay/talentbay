@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VacancySearchResponse } from '#shared/types/vacancies'
+import type { VacancyCompanyOption, VacancySearchResponse } from '#shared/types/vacancies'
 
 definePageMeta({ layout: 'product' })
 useSeoMeta({
@@ -14,25 +14,35 @@ const { data, status, error, refresh } = await useFetch<VacancySearchResponse>(
   { query },
 )
 const filtersOpen = ref(false)
+const pickedCompany = ref<VacancyCompanyOption | null>(null)
+const companyName = computed(() => {
+  const slug = filters.value.company
+  const first = data.value?.items[0]?.company
+  return first?.slug === slug ? first.name : pickedCompany.value?.slug === slug ? pickedCompany.value.name : slug
+})
 const interactive = ref(false)
 onMounted(() => {
   interactive.value = true
 })
-const relocationOpen = ref(false)
 const draft = reactive({
   countryCode: 'all',
   visaSponsorship: false,
   salaryDisclosed: false,
 })
 watch(filtersOpen, (value) => {
-  if (value) Object.assign(draft, filters.value)
+  if (value) {
+    Object.assign(draft, filters.value)
+    pickedCompany.value = filters.value.company ? { slug: filters.value.company, name: companyName.value } : null
+  }
 })
 const count = computed(
   () =>
-    Number(filters.value.countryCode !== 'all') +
+    Number(Boolean(filters.value.company)) + Number(filters.value.countryCode !== 'all') +
     Number(filters.value.visaSponsorship) +
     Number(filters.value.salaryDisclosed),
 )
+const hasAppliedCriteria = computed(() => Boolean(query.value.q?.trim() || count.value))
+const resultsReady = computed(() => status.value === 'success' && Boolean(data.value))
 const countryName = computed(() =>
   filters.value.countryCode === 'all'
     ? ''
@@ -41,7 +51,7 @@ const countryName = computed(() =>
       ),
 )
 async function applyFilters() {
-  await update(draft)
+  await update({ ...draft, company: pickedCompany.value?.slug })
   filtersOpen.value = false
 }
 async function submit() {
@@ -109,12 +119,18 @@ async function submit() {
       aria-label="Active filters"
     >
       <UButton
+        v-if="filters.company" :label="companyName" trailing-icon="i-lucide-x"
+        :aria-label="`Remove company filter: ${companyName}`" variant="soft" size="xs"
+        class="min-h-11 max-w-full" @click="update({ ...filters, company: undefined })"
+      />
+      <UButton
         v-if="countryName"
         :label="countryName"
         trailing-icon="i-lucide-x"
         :aria-label="`Remove ${countryName} filter`"
         variant="soft"
         size="xs"
+        class="min-h-11"
         @click="update({ ...filters, countryCode: 'all' })"
       />
       <UButton
@@ -125,6 +141,7 @@ async function submit() {
         color="success"
         variant="soft"
         size="xs"
+        class="min-h-11"
         @click="update({ ...filters, visaSponsorship: false })"
       />
       <UButton
@@ -134,13 +151,15 @@ async function submit() {
         aria-label="Remove salary disclosed filter"
         variant="soft"
         size="xs"
+        class="min-h-11"
         @click="update({ ...filters, salaryDisclosed: false })"
       />
       <UButton
-        label="Clear"
+        label="Clear filters"
         color="neutral"
         variant="link"
         size="xs"
+        class="min-h-11"
         @click="
           update({
             countryCode: 'all',
@@ -151,7 +170,7 @@ async function submit() {
       />
     </div>
     <div
-      v-if="data?.dataStatus === 'DEMO'"
+      v-if="resultsReady && data?.dataStatus === 'DEMO'"
       class="mt-4 flex items-start gap-2 text-xs leading-5 text-muted"
       role="note"
     >
@@ -163,17 +182,25 @@ async function submit() {
         Preview dataset. These roles and relocation figures are illustrative.
       </p>
     </div>
-    <UButton
-      label="Relocation comparison"
-      :disabled="!interactive"
-      icon="i-lucide-calculator"
-      trailing-icon="i-lucide-chevron-right"
-      color="neutral"
-      variant="outline"
-      block
-      class="mt-4 min-h-12 justify-between lg:hidden"
-      @click="relocationOpen = true"
-    />
+    <UModal
+      title="Relocation comparison"
+      description="Estimate monthly income after destination costs."
+      :ui="{ header: 'shrink-0 items-start', wrapper: 'min-w-0 pe-10', body: 'min-h-0' }"
+    >
+      <UButton
+        label="Relocation comparison"
+        :disabled="!interactive"
+        icon="i-lucide-calculator"
+        trailing-icon="i-lucide-chevron-right"
+        color="neutral"
+        variant="outline"
+        block
+        class="mt-4 min-h-12 justify-between lg:hidden"
+      />
+      <template #body>
+        <RelocationPreview embedded />
+      </template>
+    </UModal>
     <div class="mt-5 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
       <section
         class="min-w-0"
@@ -184,13 +211,15 @@ async function submit() {
           <h2
             id="results-title"
             class="scroll-mt-24 text-2xl font-semibold text-highlighted"
+            aria-live="polite"
+            aria-atomic="true"
           >
-            {{ data?.total ?? 0 }} roles
+            {{ resultsReady && data ? `${data.total} ${data.total === 1 ? 'role' : 'roles'}` : 'Vacancy results' }}
           </h2>
-          <span class="text-xs text-muted">Newest first</span>
+          <span v-if="resultsReady && data?.items.length" class="text-xs text-muted">Newest first</span>
         </div>
         <div
-          v-if="status === 'pending' && !data"
+          v-if="status === 'pending' || status === 'idle'"
           class="space-y-3"
           aria-label="Loading vacancies"
         >
@@ -201,11 +230,11 @@ async function submit() {
           />
         </div>
         <UAlert
-          v-else-if="error"
+          v-else-if="error || !data"
           color="error"
           title="Vacancies unavailable"
           description="Try again shortly."
-          :actions="[{ label: 'Retry', onClick: () => refresh() }]"
+          :actions="[{ label: 'Retry', class: 'min-h-11 min-w-11 justify-center', disabled: !interactive, onClick: () => refresh() }]"
         />
         <div
           v-else-if="data?.items.length"
@@ -218,14 +247,31 @@ async function submit() {
           />
         </div>
         <UEmpty
-          v-else
+          v-else-if="query.before"
+          icon="i-lucide-list-end"
+          title="No more roles on this page"
+          description="Return to the newest results for this search."
+        />
+        <UEmpty
+          v-else-if="hasAppliedCriteria"
           icon="i-lucide-search-x"
           title="No matching vacancies"
-          description="Change the search or remove a filter."
+          description="Try another search or clear your search and filters to see all roles."
+        >
+          <template #actions>
+            <UButton to="/jobs" label="Clear search and filters" icon="i-lucide-list-restart" class="min-h-11" @click="search = ''" />
+          </template>
+        </UEmpty>
+        <UEmpty
+          v-else
+          icon="i-lucide-briefcase-business"
+          title="No vacancies are published right now"
+          description="You can prepare your candidate profile before a role opens."
+          :actions="[{ label: 'Prepare your profile', to: '/profile', icon: 'i-lucide-user-round', class: 'min-h-11' }]"
         />
-        <nav class="mt-5 flex flex-wrap gap-3" aria-label="Vacancy pages">
-          <UButton v-if="route.query.before" :to="{ query: { ...route.query, before: undefined }, hash: '#results-title' }" icon="i-lucide-arrow-up" label="Newest roles" color="neutral" variant="outline" :disabled="status === 'pending'" />
-          <UButton v-if="!error && data?.nextCursor" :to="{ query: { ...route.query, before: data.nextCursor }, hash: '#results-title' }" trailing-icon="i-lucide-arrow-right" label="Older roles" color="neutral" variant="outline" :disabled="status === 'pending'" />
+        <nav v-if="query.before || (resultsReady && data?.nextCursor)" class="mt-5 flex flex-wrap gap-3" aria-label="Vacancy pages">
+          <UButton v-if="query.before" :to="{ query: { ...route.query, before: undefined }, hash: '#results-title' }" icon="i-lucide-arrow-up" label="Newest roles" color="neutral" variant="outline" class="min-h-11" :disabled="status === 'pending'" />
+          <UButton v-if="resultsReady && data?.nextCursor" :to="{ query: { ...route.query, before: data.nextCursor }, hash: '#results-title' }" trailing-icon="i-lucide-arrow-right" label="Older roles" color="neutral" variant="outline" class="min-h-11" />
         </nav>
       </section>
       <div class="hidden lg:block">
@@ -243,6 +289,7 @@ async function submit() {
           class="space-y-5"
           @submit.prevent="applyFilters"
         >
+          <UFormField label="Company"><VacanciesCompanyPicker v-model="pickedCompany" /></UFormField>
           <UFormField label="Location">
             <USelect
               v-model="draft.countryCode"
@@ -268,6 +315,7 @@ async function submit() {
             color="neutral"
             variant="ghost"
             @click="
+              pickedCompany = null;
               Object.assign(draft, {
                 countryCode: 'all',
                 visaSponsorship: false,
@@ -282,15 +330,6 @@ async function submit() {
             icon="i-lucide-check"
           />
         </div>
-      </template>
-    </UModal>
-    <UModal
-      v-model:open="relocationOpen"
-      title="Relocation comparison"
-      description="Estimate monthly income after destination costs."
-    >
-      <template #body>
-        <RelocationPreview />
       </template>
     </UModal>
   </div>

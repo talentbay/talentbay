@@ -1,12 +1,14 @@
 import { and, desc, eq, sql, lt, or, inArray, not } from 'drizzle-orm'
+import type { SQL } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
 import { captureApplicationSnapshot } from './application-snapshot'
 import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
 import { applicationDisclosureVersion } from '#shared/types/application-handling'
+import { previewDatasetName } from '#server/services/vacancies/preview-dataset'
 import type {
-  CandidateApplicationItem,
+  CandidateApplicationHistoryItem,
   CandidateApplicationsResponse,
 } from '#shared/types/candidates'
 
@@ -15,6 +17,7 @@ export const applicationInputSchema = z.object({
   disclosureVersion: z.literal(applicationDisclosureVersion),
   shareAcknowledged: z.literal(true),
   expectedContext: z.string().regex(/^v1:[a-f0-9]{64}$/),
+  expectedCandidateContext: z.string().length(67).regex(/^v1:[a-f0-9]{64}$/),
 }).strict()
 
 export type ApplicationInput = z.infer<typeof applicationInputSchema>
@@ -44,7 +47,7 @@ export async function createApplication(
       .where(and(
         eq(schema.vacancies.id, vacancyID),
         publicVacancyConditions(),
-        sql`${schema.vacancies.sourceName} is distinct from 'TalentBay preview dataset'`,
+        sql`${schema.vacancies.sourceName} is distinct from ${previewDatasetName}`,
       ))
       .limit(1)
       .for('share')
@@ -64,14 +67,11 @@ export async function createApplication(
     const [user] = await tx.select().from(schema.users).where(eq(schema.users.id, userID)).for('share')
     if (!user) throw createError({ statusCode: 404, statusMessage: 'User not found' })
     const [profile] = await tx.select().from(schema.candidateProfiles).where(eq(schema.candidateProfiles.userID, userID)).for('share')
-    const snapshot = captureApplicationSnapshot({
-      user: { id: user.id, name: user.name, email: user.email, avatarUrl: null },
-      profile: profile ? {
-        headline: profile.headline, about: profile.about, city: profile.city, countryCode: profile.countryCode,
-        phone: profile.phone, telegram: profile.telegram, githubUrl: profile.githubUrl, linkedinUrl: profile.linkedinUrl,
-      } : null,
-    }, { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID, revision: vacancy.vacancyRevision.toISOString(), contextRevision: body.expectedContext },
-    { organisationID: vacancy.organisationID, name: vacancy.companyName, revision: vacancy.organisationRevision.toISOString() }, new Date())
+    const snapshot = captureApplicationSnapshot(
+      { user, profile: profile ?? null }, body.expectedCandidateContext,
+      { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID, revision: vacancy.vacancyRevision.toISOString(), contextRevision: body.expectedContext },
+      { organisationID: vacancy.organisationID, name: vacancy.companyName, revision: vacancy.organisationRevision.toISOString() }, new Date(),
+    )
 
     const [application] = await tx
       .insert(schema.applications)
@@ -108,18 +108,12 @@ export async function createApplication(
   })
 }
 
-export async function listCandidateApplications(
+async function readCandidateHistory(
   userID: number,
-  filters: z.infer<typeof candidateApplicationQuery> = {},
-): Promise<CandidateApplicationsResponse> {
-  const db = useDatabase()
-  const owned = eq(schema.applications.userID, userID)
-  const conditions = [owned]
-  if (filters.before) conditions.push(lt(schema.applications.id, filters.before))
-  if (filters.status === 'closed') conditions.push(closedApplication)
-  if (filters.status === 'active') conditions.push(not(closedApplication))
-  const [counts] = await db.select({ all: sql<number>`count(*)::int`, closed: sql<number>`count(*) filter (where ${closedApplication})::int` }).from(schema.applications).where(owned)
-  const rows = await db
+  limit: number,
+  ...conditions: SQL[]
+): Promise<CandidateApplicationHistoryItem[]> {
+  const rows = await useDatabase()
     .select({
       id: schema.applications.id,
       status: schema.applications.status,
@@ -127,11 +121,7 @@ export async function listCandidateApplications(
       createdAt: schema.applications.createdAt,
       snapshot: schema.applications.submissionSnapshot,
       handling: { stage: schema.applications.handlingStage },
-      slug: schema.vacancies.slug,
-      title: schema.vacancies.title,
-      companyName: schema.organisations.name,
-      city: schema.vacancies.city,
-      countryCode: schema.vacancies.countryCode,
+      publicVacancySlug: sql<string | null>`case when ${publicVacancyConditions()} then ${schema.vacancies.slug} end`,
     })
     .from(schema.applications)
     .innerJoin(
@@ -142,27 +132,41 @@ export async function listCandidateApplications(
       schema.organisations,
       eq(schema.vacancies.organisationID, schema.organisations.id),
     )
-    .where(and(...conditions))
-    .orderBy(desc(schema.applications.id)).limit(26)
+    .where(and(eq(schema.applications.userID, userID), ...conditions))
+    .orderBy(desc(schema.applications.id)).limit(limit)
 
-  const items: CandidateApplicationItem[] = rows.slice(0, 25).map(row => ({
+  return rows.map(row => ({
     id: row.id,
     status: row.status,
     coverLetter: row.coverLetter,
     createdAt: row.createdAt.toISOString(),
     handling: row.handling,
+    publicVacancySlug: row.publicVacancySlug,
     vacancy: row.snapshot ? {
       slug: row.snapshot.vacancy.slug, title: row.snapshot.vacancy.title, companyName: row.snapshot.recipient.name,
       city: row.snapshot.vacancy.city, countryCode: row.snapshot.vacancy.countryCode,
-    } : {
-      slug: row.slug,
-      title: row.title,
-      companyName: row.companyName,
-      city: row.city,
-      countryCode: row.countryCode,
-    },
+    } : null,
   }))
+}
 
+export async function getCandidateApplication(userID: number, id: number): Promise<CandidateApplicationHistoryItem> {
+  const [item] = await readCandidateHistory(userID, 1, eq(schema.applications.id, id))
+  if (!item) throw createError({ statusCode: 404, statusMessage: 'Application not found' })
+  return item
+}
+
+export async function listCandidateApplications(
+  userID: number,
+  filters: z.infer<typeof candidateApplicationQuery> = {},
+): Promise<CandidateApplicationsResponse> {
+  const conditions: SQL[] = []
+  if (filters.before) conditions.push(lt(schema.applications.id, filters.before))
+  if (filters.status === 'closed') conditions.push(closedApplication)
+  if (filters.status === 'active') conditions.push(not(closedApplication))
+  const owned = eq(schema.applications.userID, userID)
+  const [counts] = await useDatabase().select({ all: sql<number>`count(*)::int`, closed: sql<number>`count(*) filter (where ${closedApplication})::int` }).from(schema.applications).where(owned)
+  const rows = await readCandidateHistory(userID, 26, ...conditions)
+  const items = rows.slice(0, 25)
   return {
     items,
     total: filters.status === 'active' ? counts!.all - counts!.closed : filters.status === 'closed' ? counts!.closed : counts!.all,

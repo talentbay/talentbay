@@ -4,13 +4,14 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=22.22.3 <23"
+    "node": ">=22.23.5 <23"
   },
   "scripts": {
-    "build": "drizzle-kit migrate && nuxt build",
+    "build": "nuxt build",
     "build:cloudflare": "nuxt build --preset=cloudflare_module",
     "dev": "nuxt dev",
     "dev:review": "node scripts/local-review/start.mjs",
+    "demo:vacancies:csv": "node scripts/export-preview-vacancies.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "preview:cloudflare": "pnpm run build:cloudflare && pnpm dlx wrangler@4.68.0 dev",
@@ -19,6 +20,7 @@
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "audit:dependencies": "node scripts/ci/dependency-audit.mjs",
     "test": "vitest run",
     "test:integration": "node scripts/testing/integration.mjs",
     "test:smoke": "node scripts/smoke-production.mjs",
@@ -31,7 +33,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:promote-admin": "node --env-file=.env scripts/promote-admin.mjs",
     "db:push": "drizzle-kit push",
-    "db:seed:preview": "node --env-file=.env scripts/seed-preview.mjs",
+    "db:seed:preview": "node scripts/seed-preview.mjs",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
@@ -41,8 +43,9 @@
     "@vueuse/core": "^14.4.0",
     "csv-parse": "^7.0.3",
     "drizzle-orm": "^0.45.2",
+    "html-to-text": "^10.0.1",
     "nuxt": "^4.6.4",
-    "nuxt-auth-utils": "^0.5.29",
+    "nuxt-auth-utils": "0.5.32",
     "pinia": "^3.0.4",
     "postgres": "^3.4.9",
     "raw-body": "^4.0.0",

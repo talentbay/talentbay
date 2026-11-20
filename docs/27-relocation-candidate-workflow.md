@@ -1,9 +1,10 @@
 # Relocation Outcome Working Contract
 
-Privacy clarification (G02): drafts are absent from navigation URLs/localStorage, not from
-all network metadata. Existing estimate requests include salary in GET query parameters;
-responses use no-store and app logs strip queries, but provider/browser network exposure
-still needs H02/G05 review. See [private data inventory](33-private-data-and-access.md).
+Privacy update (20 November): the candidate UI sends the estimate inputs in a same-origin
+JSON POST after hydration, including vacancy-prefilled estimates and retries. The request
+URL contains no salary. Form controls still render on the server, and the in-memory draft
+is not saved to localStorage. The server sees the body; legacy GET clients still send
+query parameters. See [private data inventory](33-private-data-and-access.md).
 
 Date: 2026-10-27. D05 / relocation part of E01, under the owner's design-iteration mandate.
 Candidate v1 remains the baseline, not a new approved freeze. Live Figma read confirmed
@@ -28,6 +29,23 @@ Destination changes preserve an amount only within the same currency. Currency c
 clear it immediately, without FX/old results under new currency labels. MONTH midpoint
 is annualized; HOUR/missing/mismatched salary stays blank. No household/rent slider or
 hours/tax-residence inference. A different destination is a scenario, not an employer offer.
+
+For a vacancy with disclosed pay in the destination currency, the annual salary input
+starts at the midpoint of the posted range. Low, Midpoint and High let the candidate
+compare the same role without retyping its salary. A fixed salary has just one choice;
+hourly, undisclosed or currency-mismatched pay has none. Unsupported high values are
+not capped into fictional offers. An explicit edit deselects every range choice, and
+the vacancy's pay choices are not shown for a different destination. Switching ends
+does not submit an application. The one-time moving budget is separate from monthly
+spending and does not calculate an employer's contribution.
+
+An open job can be refreshed in place, including after a rejected Apply. The
+calculator's suggested salary must then come from the current posting. A newly
+different currency, hourly pay, or removed salary cannot leave the old suggested
+amount or its result on screen. A candidate-entered scenario is distinct from a
+posting's suggestion: changing only the role description must not overwrite it.
+Closing a sheet and reopening it is not permission to restore a retired suggestion.
+Vacancy drafts belong to the specific listing, not just its URL slug or the Jobs tab.
 
 ## State Matrix
 

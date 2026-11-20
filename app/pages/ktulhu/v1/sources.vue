@@ -11,6 +11,7 @@ const busy = ref(false)
 const message = ref('')
 const sources = computed(() => (data.value?.items ?? []).map(source => ({ label: source.company, value: source.key })))
 const active = computed(() => progress.value?.state === 'FETCHING' || progress.value?.state === 'READY')
+const excludedIds = computed(() => progress.value?.report.contactSkippedIds ?? [])
 
 async function loadProgress() {
   if (!selected.value) return
@@ -76,10 +77,22 @@ async function run(action: 'FETCH' | 'PREVIEW' | 'IMPORT') {
       <UAlert v-if="message" role="alert" class="mt-5" color="error" title="Operation not confirmed" :description="message" />
       <section v-if="progress" class="mt-6 border-t border-default pt-5" aria-labelledby="source-progress-title">
         <h2 id="source-progress-title" class="text-lg font-semibold text-highlighted">{{ progress.state }}</h2>
-        <p class="mt-2 text-sm text-muted">{{ progress.nextOffset }} of {{ progress.report.recordCount }} records processed</p>
+        <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
+          <span>Scanned: {{ progress.report.recordCount }}</span>
+          <span>Processed: {{ progress.nextOffset }}</span>
+          <span>Excluded by contact rule: {{ excludedIds.length }}</span>
+        </p>
+        <details v-if="excludedIds.length" class="mt-2 text-sm">
+          <summary class="cursor-pointer text-primary focus-visible:outline-2">Excluded posting IDs</summary>
+          <ul class="mt-2 space-y-1">
+            <li v-for="id in excludedIds" :key="id" class="break-all font-mono">
+              <NuxtLink :to="{ path: '/ktulhu/v1/vacancies', query: { q: id } }" class="text-primary underline focus-visible:outline-2">{{ id }}</NuxtLink>
+            </li>
+          </ul>
+        </details>
         <p v-if="progress.report.fetchedAt" class="mt-1 text-sm text-muted">Fetched {{ new Date(progress.report.fetchedAt).toLocaleString() }}</p>
         <p v-if="progress.state === 'READY'" class="mt-1 text-sm text-muted">Snapshot expires {{ new Date(progress.expiresAt).toLocaleString() }}</p>
-        <UAlert v-if="progress.report.failure" class="mt-4" color="warning" title="Source not imported" :description="progress.report.failure" />
+        <UAlert v-if="progress.report.failure" class="mt-4" color="warning" title="Source run failed" :description="progress.report.failure" />
         <p v-if="progress.retryAfterAt" class="mt-2 text-sm text-muted">Retry after {{ new Date(progress.retryAfterAt).toLocaleString() }}</p>
         <ul v-if="progress.report.issues.length" class="mt-3 space-y-1 text-sm">
           <li v-for="issue in progress.report.issues" :key="issue.index">Record {{ issue.index + 1 }}: {{ issue.code }}</li>

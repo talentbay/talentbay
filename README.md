@@ -19,11 +19,11 @@ the owner's configured production deployment and is a separate release decision.
 
 ## Stack
 
-- Nuxt `4.6.2`, Vue `3.5.44`, Nitro.
+- Nuxt `4.6.4`, Vue `3.5.44`, Nitro `2.13.6`.
 - Nuxt UI `4.10.x`, Tailwind CSS `4.3.x`, Manrope.
 - PostgreSQL, Drizzle ORM `0.45.x`.
 - `nuxt-auth-utils` with Google/GitHub OAuth, explicit provider linking and validated Telegram login.
-- pnpm `10.33.0`, Node.js `22.22.3+` (within Node 22).
+- pnpm `10.33.0`, Node.js `22.23.5+` (within Node 22; security floor).
 - Vitest, Playwright Chromium and official Nuxt ESLint flat config.
 
 The repository remains a Nuxt modular monolith. Public vacancy routes use SSR; authenticated/admin legacy-compatible routes are client-rendered where needed.

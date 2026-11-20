@@ -8,15 +8,17 @@ import { normalizeLeverJobs } from '#server/services/sources/lever-normalize'
 import { getSourceProgress, importSourceBatch, previewSourceBatch } from '#server/services/sources/import-run'
 import { approvedSourceSchema, sourceConfigRevision, sourceKey } from '#server/services/sources/registry'
 import { reviewVacancy } from '#server/services/vacancies/review-vacancy'
+import { listAdminVacancies } from '#server/services/vacancies/list-admin-vacancies'
+import { contactRule, contactSection, fixtureMailbox } from '../sources/lever-contact.fixture'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
 const site = `runner-${randomUUID()}`
 const source = approvedSourceSchema.parse({
-  adapter: 'LEVER', config: { site, region: 'GLOBAL', company: { name: 'Fictional Runner Company', slug: site } },
+  adapter: 'LEVER', config: { site, region: 'GLOBAL', company: { name: 'Fictional Runner Company', slug: site }, contactRule },
   approval: { reference: 'local synthetic fixture only, not real approval', contentOwner: 'Fictional Test Operator', approvedAt: '2026-10-27T00:00:00Z', accessMethod: 'PUBLIC_ATS_API', allowedUse: 'FACTS_ONLY', termsUrl: 'https://example.com/fixture-terms' },
 })
 const key = sourceKey(source)
-const raw = (id = randomUUID()) => ({ id, text: 'Fictional Runner Engineer', country: 'GB', workplaceType: 'remote', categories: { commitment: 'Full-time' }, descriptionPlain: 'A complete fictional role used to exercise durable import checkpoints.', hostedUrl: `https://jobs.lever.co/${site}/${id}` })
+const raw = (id = randomUUID()) => ({ id, text: 'Fictional Runner Engineer', country: 'GB', workplaceType: 'remote', categories: { commitment: 'Full-time' }, descriptionPlain: 'A complete fictional role used to exercise durable import checkpoints.', hostedUrl: `https://jobs.lever.co/${site}/${id}`, lists: [contactSection] })
 const json = (data: unknown) => new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json' } })
 const transportFor = (records: unknown[]) => vi.fn<typeof fetch>().mockImplementation(async (url) => {
   const start = Number(new URL(String(url)).searchParams.get('skip'))
@@ -166,7 +168,7 @@ describe('bounded source runner with durable batch checkpoints', () => {
     const item = normalizeLeverJobs(source.config, [raw()]).items[0]!
     const oversized = vi.spyOn(leverFetch, 'fetchLeverJobs').mockResolvedValueOnce({
       source: key, items: Array.from({ length: 110 }, () => ({ ...item, vacancy: { ...item.vacancy, description: 'x'.repeat(20_000) } })),
-      issues: [], recordCount: 110, pageCount: 3, fetchedAt: new Date().toISOString(),
+      issues: [], contactSkippedIds: [], recordCount: 110, pageCount: 3, fetchedAt: new Date().toISOString(),
     })
     try {
       expect(await fetchSourceRun(source, randomUUID(), admin, transportFor([]))).toMatchObject({ state: 'FAILED', report: { failure: 'SNAPSHOT_LIMIT' } })
@@ -203,5 +205,32 @@ describe('bounded source runner with durable batch checkpoints', () => {
     expect(await fetchSourceRun(source, randomUUID(), admin, transportFor([]))).toMatchObject({ state: 'IMPORTED', nextOffset: 0, report: { recordCount: 0 } })
     release(); await rejected
     expect(await sql`select count(*)::int as total from vacancies where source_name=${key}`).toEqual(count)
+  })
+
+  it('imports only eligible drafts and reports excluded IDs without persisting raw contacts', async () => {
+    const allowed = raw(), missing = { ...raw(), lists: [], applyUrl: 'https://example.invalid/apply' }
+    const runID = randomUUID()
+    const mixed = await fetchSourceRun(source, runID, admin, transportFor([missing, allowed]))
+    expect(mixed).toMatchObject({ state: 'READY', report: { recordCount: 2, contactSkippedIds: [missing.id], issues: [] } })
+    const changedRule = { ...source, config: { ...source.config, contactRule: { ...contactRule, mailboxSha256: '1'.repeat(64) } } }
+    await expect(previewSourceBatch(changedRule, runID, admin)).rejects.toMatchObject({ statusCode: 409 })
+    const [row] = await sql`select items,report from source_imports where source_key=${key}`
+    expect(row!.items).toHaveLength(1)
+    expect(JSON.stringify(row)).not.toContain(fixtureMailbox)
+    const plan = await previewSourceBatch(source, runID, admin)
+    const command = { runID, offset: plan.offset, revision: plan.preview.revision! }
+    await expect(importSourceBatch(changedRule, command, admin)).rejects.toMatchObject({ statusCode: 409 })
+    expect(await importSourceBatch(source, command, admin)).toMatchObject({ state: 'IMPORTED', nextOffset: 1, report: { created: 1, contactSkippedIds: [missing.id] } })
+    const rows = await sql`select id,source_external_id,status from vacancies where source_name=${key} and source_external_id in (${missing.id},${allowed.id})`
+    expect(rows).toEqual([{ id: expect.any(Number), source_external_id: allowed.id, status: 'DRAFT' }])
+    await reviewVacancy(rows[0]!.id, { status: 'PUBLISHED', reviewStatus: 'VERIFIED' })
+    const observed = () => sql`select status,source_fetched_at,last_imported_at from vacancies where id=${rows[0]!.id}`
+    const before = await observed()
+    const none = await fetchSourceRun(source, randomUUID(), admin, transportFor([{ ...allowed, lists: [] }, missing]))
+    expect(none).toMatchObject({ state: 'IMPORTED', nextOffset: 0, report: { recordCount: 2, created: 0, contactSkippedIds: [allowed.id, missing.id] } })
+    expect((await sql`select items from source_imports where source_key=${key}`)[0]!.items).toBeNull()
+    expect(await observed()).toEqual(before)
+    expect((await listAdminVacancies({ q: allowed.id })).items).toMatchObject([{ id: rows[0]!.id, status: 'PUBLISHED', sourceName: key }])
+    expect((await listAdminVacancies({ q: missing.id })).items).toEqual([])
   })
 })

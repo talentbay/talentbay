@@ -1,7 +1,9 @@
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
-import type { CandidateProfileResponse } from '#shared/types/candidates'
+import type { Database } from '#server/db'
+import type { CandidateProfileResponse, ReviewedCandidateProfileResponse } from '#shared/types/candidates'
+import { applicationCandidateReview } from './application-candidate-context'
 
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional()
 const optionalUrl = z.union([z.url({ protocol: /^https?$/ }).max(2048), z.literal('')])
@@ -25,8 +27,10 @@ export const candidateProfileInputSchema = z.object({
 
 export type CandidateProfileInput = z.infer<typeof candidateProfileInputSchema>
 
-export async function getCandidateProfile(userID: number): Promise<CandidateProfileResponse> {
-  const db = useDatabase()
+export async function getCandidateProfile(
+  userID: number,
+  db: Pick<Database, 'select'> = useDatabase(),
+): Promise<CandidateProfileResponse> {
   const [row] = await db
     .select({
       user: {
@@ -77,10 +81,15 @@ export async function getCandidateProfile(userID: number): Promise<CandidateProf
   }
 }
 
+export async function getReviewedCandidateProfile(userID: number): Promise<ReviewedCandidateProfileResponse> {
+  const candidate = await getCandidateProfile(userID)
+  return { ...candidate, candidateContext: applicationCandidateReview(candidate).candidateContext }
+}
+
 export async function saveCandidateProfile(
   userID: number,
   input: CandidateProfileInput,
-): Promise<CandidateProfileResponse> {
+): Promise<ReviewedCandidateProfileResponse> {
   const db = useDatabase()
   await db
     .insert(schema.candidateProfiles)
@@ -96,5 +105,5 @@ export async function saveCandidateProfile(
       },
     })
 
-  return await getCandidateProfile(userID)
+  return await getReviewedCandidateProfile(userID)
 }

@@ -1,7 +1,63 @@
 # Security maintenance review
 
-Updated: 2026-10-27. Scope: repository dependency graph and admin authorization; this is not
+Updated: 2026-11-17. Scope: repository dependency graph and admin authorization; this is not
 a penetration-test certification or evidence of a production deployment.
+
+## Current Dependency Refresh - 2026-11-17
+
+The previous three-entry audit is historical. A fresh audit of integration57441af reports
+43 findings (8 high,26 moderate,9 low;0 critical), not the GitHub default-branch banner.
+The security topic raises Nuxt4.6.2 to4.6.4, Nitro2.13.4 to2.13.6, Vite8.3.5 to8.3.8,
+devalue6.0.3, undici8.12.4, launch-editor2.14.2 and node-forge1.4.3 through the supported
+Nuxt subtree. Remaining direct-transitive @nuxt/schema copies are refreshed to4.6.4 within
+their existing ranges. No blanket major overrides or advisory suppression were applied.
+This incorporates the applicable package targets from old-base Dependabot63 without
+replacing the newer MVP manifest/lock with that PR's old graph. Installed Nuxt's Node
+range supports Node22; project security floor is now22.23.5, the11November security release.
+CI selects current Node22; local verification uses a checksum-verified temporary22.23.5,
+not a change to the owner's system installation or actual Vercel runtime.
+
+Fresh full-tree audit now reports4 findings:0 critical/0 high/3 moderate/1 low. `--prod`
+does not prove runtime reachability: Nuxt build/dev tooling is declared under dependencies.
+The narrow CI audit guard independently checks full-tree and production-only reports:
+pnpm deduplicates their paths differently. It checks exact GHSA, package, severity,
+version and reported path;
+registry/parse failures, unknown findings and inconsistent counts fail closed. Known issues
+remain visible, not called fixed. Revisit these exceptions when parents support updates:
+
+| Advisory / package | Current exposure and boundary |
+| --- | --- |
+| GHSA-67mh-4wv8-2f99 / esbuild0.18.20 | Drizzle Kit's deprecated loader, development-server CORS. Migrations use isolated CLI, not that server or publicly exposed Studio. A forced0.x upgrade is not treated as compatible. |
+| GHSA-g7r4-m6w7-qqqr / esbuild0.27.7 | fontless build dependency, Windows development-server file-read condition. Parent requires^0.27; do not expose its dev server or force an incompatible minor just to clear audit. |
+| GHSA-g3hv-75wg-m249 / minimatch10.2.5/10.2.6 | Bounded repository/build patterns in ESLint and Nitro's archive toolchain, not application-supplied globbing. Fix is major11; no blind cross-major override. Audit counts the two versions separately. |
+
+Initial full local verification on22.23.1 passed205unit,40tooling,95SQL/legacy replay,
+20public browser,46DB browser, typechecks/lint, Node build/smoke, Vercel1Node22/74routes,
+public80files/69scripts, optional Cloudflare build and synthetic restore12tables/52rows.
+Final Node22.23.5 verification also passed:206unit/44tooling/95SQL+legacy replay/20public/
+46DB-browser, types/lint/Node+Vercel+Cloudflare builds/smoke/public-output and12-table/52-row
+recovery. Raw URL probes found and then verified a narrow cache/error classification fix;
+all/prod audit guard and independent review passed. Exact RED/GREEN and limits: docs14.
+Current built Node output has no esbuild/minimatch/node-forge package or executable import;
+this is output inspection, not proof of every future hosted artifact or absence of all CVEs.
+Gitleaks8.30.1 read-only all-ref scan covered109 reachable commits: one generic-api-key
+finding is the synthetic UUID commandKey in a unit fixture, not a credential. No real key
+was detected by its rules; this is not a guarantee of a secret-free history. Scan reports
+were fully redacted/private temporary artifacts. GitHub's secret-scanning API reports the
+feature disabled; no account/security settings or credentials were changed.
+
+Official sources checked17November:
+- [Nuxt4.6.4 security release](https://github.com/nuxt/nuxt/releases/tag/v4.6.4).
+- [Nitro2.13.6 security release](https://github.com/nitrojs/nitro/releases/tag/v2.13.6).
+- [Node22.23.5 security release](https://nodejs.org/en/blog/release/v22.23.5).
+- [Nuxt workspace/file-serving advisory](https://github.com/nuxt/nuxt/security/advisories/GHSA-mjrq-cffv-q4qc).
+- [esbuild CORS advisory](https://github.com/evanw/esbuild/security/advisories/GHSA-67mh-4wv8-2f99).
+- [esbuild Windows advisory](https://github.com/evanw/esbuild/security/advisories/GHSA-g7r4-m6w7-qqqr).
+- [minimatch amplification advisory](https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249).
+
+Local checks do not close primary release-configuration/artifact verification, provider abuse controls,
+real-content/data permissions, backup operations, retention/legal/support, native clients
+or human candidate/operator acceptance gates. No main merge or deployment is implied.
 
 ## Remaining Public Inputs / Build Probe - 2026-10-27
 

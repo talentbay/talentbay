@@ -26,9 +26,9 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-      - name: Verify conservative documentation classification
-        run: node --test tests/tooling/ci-scope.test.mjs
+          node-version: '>=22.23.5 <23'
+      - name: Verify scope and build isolation before installing dependencies
+        run: node --test tests/tooling/ci-scope.test.mjs tests/tooling/build-isolation.test.mjs
       - name: Determine complete pull-request scope
         id: scope
         run: node scripts/ci/change-scope.mjs
@@ -56,11 +56,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '>=22.23.5 <23'
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Check dependency advisories against reviewed tooling exceptions
+        run: pnpm audit:dependencies
 
       - name: Typecheck
         run: pnpm typecheck
@@ -159,7 +162,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '>=22.23.5 <23'
           cache: pnpm
 
       - name: Install dependencies
@@ -182,6 +185,11 @@ jobs:
         run: |
           pnpm exec playwright install --only-shell chromium
           node scripts/ci/browser.mjs
+
+      - name: Install WebKit for the mobile pilot scenarios
+        run: |
+          pnpm exec playwright install webkit
+          node scripts/ci/browser.mjs webkit
 
       - name: Browser to API to PostgreSQL tests
         run: pnpm exec playwright test --config playwright.database.config.ts

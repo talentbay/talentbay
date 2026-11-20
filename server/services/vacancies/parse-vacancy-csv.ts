@@ -43,7 +43,7 @@ export function parseVacancyCsv(csv: string) {
     const salary = [value.salary_min, value.salary_max, value.salary_currency, value.salary_period].some(Boolean)
       ? { min: number('salary_min'), max: number('salary_max'), currency: value.salary_currency, period: value.salary_period } : undefined
     const result = vacancyImportItemSchema.safeParse({
-      source: { name: value.source_name, url: value.source_url, externalId: value.source_external_id },
+      source: { name: value.source_name, url: optional('source_url'), externalId: value.source_external_id },
       company: { name: value.company_name, slug: value.company_slug, websiteUrl: optional('company_website_url') },
       vacancy: {
         slug: value.vacancy_slug, title: value.title, summary: optional('summary'), description: value.description,

@@ -11,6 +11,7 @@ export function searchVacancies(input: VacancySearch): VacancySearchResponse {
 
   const items = demoVacancies
     .filter((vacancy) => {
+      if (query.company && vacancy.company.slug !== query.company) return false
       if (normalizedQuery) {
         const searchable = [
           vacancy.title,

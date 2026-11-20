@@ -1,11 +1,373 @@
 # MVP Execution Log
 
-Updated: 2026-11-17
+Updated: 2026-11-20
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/mvp-integration`; consolidated review route in
-`docs/06-infrastructure-and-process.md`. Superseded PRs are history, not separate release steps.
-Existing test deployment still runs `15b8ca3`; new source safeguards are not deployed or merged into main.
-Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
+Consolidated PR #65 is merged. The security review is PR #67 against main; old cumulative
+PRs are history, not separate merges. The reviewer site and production are different
+environments. See [current handoff](09-current-state.md) for the verified scope.
+
+## Reconcile the data-model reference with the migrations (20 November)
+
+The [MVP model](05-data-model.md) replaces a June design sketch. On a fresh disposable
+PostgreSQL 18 cluster the ten committed migrations produced all eleven documented
+application tables. The vacancy foreign keys for organisation, creator and relocation
+destination, key uniqueness and full-text index were checked against PostgreSQL's
+catalogues. The schema and migration files were identical on main `a34d59a` and pilot
+`280a097`. No runtime or schema change, shared migration or real candidate data.
+
+## Start Mini App sign-in without waiting for browser idle time (20 November)
+
+On the previous pilot head, [CI](https://github.com/talentbay/talentbay/actions/runs/44780951025)
+timed out waiting for an auth response; the server logged the expected rejection at the
+test deadline. That timing alone does not establish a cause. Independently, a valid
+synthetic launch could not open Profile in the old build when the browser never scheduled
+idle work. Start the host adapter once hydration finishes instead. Server verification,
+launch freshness and session handling are unchanged.
+
+On the patched Node build: the same valid-launch case passed in Chromium and mobile
+WebKit. Full local suites: 88 database browser scenarios, 41 guest browser scenarios
+and 311 unit tests passed, as did typecheck, lint, build and HTTP smoke. No production
+token or shared database was used. Real-device main-bot acceptance remains open.
+
+## Filter by an exact company in Jobs and the operator queue (20 November)
+
+The public picker searches only employers with publicly visible vacancies. Candidate
+and operator result counts and cursors use the exact company key. Companies with the
+same display name remain separate. No new account, employer page, schema or index.
+
+Local verification: 311 unit, 111 disposable PostgreSQL tests including upgrade/replay,
+typecheck, lint, Node build and HTTP smoke. Four Chromium and two mobile WebKit scenarios
+passed: company selection/paging and the synthetic candidate-to-operator pilot on both,
+plus the admin editor and previous public navigation regression on Chromium. The
+operator contact event is a local record, not an actual delivery to an employer.
+
+GitHub's latest successful Production deployment record still points at `a34d59a`
+(deployment 7939151536). #67 requires review; #69 is a draft. Neither the local
+walkthrough nor a preview build verifies the main bot's login. The next release
+checks are the native launch in the [bot runbook](28-telegram-entry-bot.md) and
+reconciliation/review of the pilot against the security release, not a new job parser.
+
+## Operator single-vacancy editor (20 November)
+
+Queue → Create vacancy / Edit uses the same import schema and content transaction
+as the batch uploader. No separate partner profile or website is required to file
+a first-party draft. Publication remains a separate decision. Stale forms, duplicate
+creations, changes to stable keys and changes to shared company details are rejected.
+The next content task is an exact company filter, not a partner dashboard.
+
+Local evidence: typecheck, lint, Node build and HTTP production smoke; 310 unit tests; upgrade/replay and
+109 integration tests on a disposable PostgreSQL 18; three Chromium scenarios incl.
+CSV regression, single-record creation/publication/conflicting correction and access checks.
+The database test retains the existing application and a sibling's publication. Previous
+head [90c065e passed CI](https://github.com/talentbay/talentbay/actions/runs/44777219761).
+No production DB, employer, bot or domain was used.
+
+## Compare the salary bounds on a vacancy (20 November)
+
+The relocation estimate can use either end of a posted salary range, its midpoint or a manually entered amount. A fixed offer has one listed value. Local verification: 307 unit tests, typecheck, lint and Node build passed. Against disposable PostgreSQL, five Chromium scenarios passed, including vacancy refresh and manual input; the guest salary-range scenario also passed in mobile WebKit over HTTPS. These checks did not exercise the native production Telegram client or verify real city costs. The [previous head's CI](https://github.com/talentbay/talentbay/actions/runs/44774184165) was green; this is not a deployment.
+
+## Prepare review-site demo content without seeding a shared database (20 November)
+
+`pnpm --silent demo:vacancies:csv` exports seven marked, fictional roles offline. The five historical source keys are unchanged. The retired seed now stops without loading credentials or writing SQL. Operators validate the CSV, confirm the import into drafts and explicitly publish. Review-site examples have no application context or external source link; the local rehearsal uses separate fixtures to exercise submissions. The reserved sources cannot be mixed with other sources or imported on an unapproved database. [Target and operator steps](11-deployment-runbook.md#postgresql).
+
+Local checks: 304 unit, 52 tooling and 108 disposable PostgreSQL tests, including upgrading and replaying migrations. Typecheck, ESLint, Node build, HTTP smoke and two Chromium operator flows passed. The database test preserved an existing demo ID, withdrew its changed public content, reapplied unchanged data, and rejected an application after explicit republication. Independent review caught an archived-company write in JSON import; regression coverage verifies that the whole batch rolls back. No hosted configuration change, cloud import or production verification.
+
+## Filter external postings by their own direct recruiting contact (20 November)
+
+For an approved Lever board the importer now requires an explicit, pre-agreed
+mailbox in a named section of the specific posting. It never stores that section
+or publishes the mailbox. The operator can distinguish scanned, committed and
+excluded records and open an excluded ID in the review queue. A previously public
+role needs an operator recheck; neither exclusion nor a missing posting archives it.
+No board is enabled and no real applicant or employer was contacted.
+
+Local: 298 unit and 106 disposable PostgreSQL cases, including changing the rule
+between fetch and commit, mixed/all-excluded batches, and preserving observation
+dates. Typecheck, lint, Node build, HTTP smoke and the focused Chromium operator
+flow passed. Inspected the 320px report; the active board in the browser test is
+intercepted, while the service and database exercise the real importer offline.
+
+## Demonstrate without a live job source (20 November)
+
+The isolated local demo starts with six fictional listings; the operator imports
+a seventh using the sample CSV. Both list and detail identify demo content. Cards
+describe distinct roles; details and flags agree on relocation and visa support.
+Checked the six cards and the Lisbon detail at 390px and 1280px against disposable
+PostgreSQL. Fixture/CSV tests and lint passed. This does not enable a live provider.
+For real third-party openings, see the [direct-contact and source-use criteria](19-content-operations.md#pick-a-source-before-entering-any-jobs).
+
+## London: distinguish rent, travel and a refundable deposit (20 November)
+
+The [review sheet](examples/london-2026-27-review.md#housing-and-commute-two-costs-not-a-total-budget)
+now pins the October one-bedroom observation to its ONS workbook edition and column.
+An offline read verified the file hash and exactly one matching region/month. The
+rent plus one selected Travelcard is a two-item subtotal; a five-week deposit cap
+is a separate cash requirement, not another monthly expense. Independently checked
+against ONS, TfL and the tenant guide. No runtime inputs or city status changed.
+
+## Mobile WebKit pilot path (20 November)
+
+The PostgreSQL browser suite now runs the existing seven `@mobile-pilot` cases
+with Playwright WebKit and an emulated iPhone, alongside the full Chromium project.
+They exercise signed launch, hashless reload, navigation during sign-in and the
+same synthetic vacancy from operator publication to candidate receipt and recorded
+contact. The auth server, session and database are real local code; the Telegram
+host, people, employer and city figures are fixtures.
+
+Local: all 80 database browser cases passed without retries (73 Chromium, 7 WebKit),
+as did typecheck, lint, CI browser/scope tests and a WebKit startup probe.
+No application, production configuration or real bot was changed. Native main-bot
+sign-in remains unverified; use the [runtime triage](28-telegram-entry-bot.md#main-bot-distinguish-launch-sign-in-and-session-20-november-2026)
+for a fresh failed attempt on the serving deployment.
+
+The [initial Linux run](https://github.com/talentbay/talentbay/actions/runs/44761045951)
+passed all 73 Chromium cases but all seven WebKit cases failed over plain HTTP.
+WebKit now uses a loopback HTTPS server; the signed-launch case also checks that
+the browser kept a Secure, HttpOnly session cookie without printing its value.
+This is a test-transport change, not a diagnosis of the main bot.
+
+## Keep a relocation estimate attached to the current offer (20 November)
+
+- Reproduced on the previous build: an open London listing changed its offered pay
+  from GBP to USD. After Apply rejected the stale listing and the candidate reloaded
+  it, the calculator still showed the previous 70,000 GBP.
+- Vacancy suggestions now follow the current salary and destination after an in-place
+  refresh or mobile-sheet reopen. Incompatible pay clears a stale suggestion/result.
+  A manually entered scenario survives unrelated edits. Both presentations use one
+  vacancy-specific estimate; standalone Jobs retains its separate draft.
+- Local: typecheck, clean lint, Node build + HTTP smoke, 296 unit, 105 disposable
+  PostgreSQL (including upgrade/replay), 41 public + 73 DB-backed Chromium tests without
+  retries. Inspected the 390px reopened sheet. Independent review found no open P1/P2
+  within this change. No new live dataset, production operation or schema change.
+- [London review sheet](examples/london-2026-27-review.md): six comparison tests and
+  independent arithmetic review. Official income tax, regular monthly employee NI and
+  upfront visa-fee examples are evidence for the reviewer, not a public take-home result.
+  The public catalogue still has 3 DEMO / 8 UNAVAILABLE / 0 REVIEWED pilot destinations.
+
+## Bind Apply to the candidate details actually reviewed (20 November)
+
+- The dialog captures both the vacancy and candidate version at acknowledgment. A
+  material change to either prevents a new receipt or handling event. Same-owner
+  retries reload the details and keep the note; a different account gets a blank
+  form. Receipt creation and manual contact with an employer remain separate.
+- Saving a profile also checks the displayed owner before writing. Old tabs missing
+  that owner must reopen. A failed session read is not evidence of sign-out; a verified
+  expired session offers sign-in on the same vacancy. New receipts share the preview's
+  safe-link rules. No migration, live-source change, or production operation.
+- Local verification on fictional data: typecheck, lint, 284 unit tests, 105 PostgreSQL
+  tests plus migration upgrade/replay, Node build, HTTP smoke, 41 public Chromium
+  scenarios, 69 PostgreSQL-backed Chromium scenarios (no retries), and backup/restore
+  on two disposable databases. Inspected the 390px inline editor. The independent code
+  review rechecked the owner precondition, session recovery and safe-link projection.
+
+## Recover an open application without changing its target (20 November)
+
+- After a rejected submission the note stays in the current user's dialog. A removed or
+  ineligible target cannot receive another submission from that form. The note can be
+  copied before leaving and does not follow another vacancy at the same address.
+- A changed role can be reloaded without leaving the application. A failed read or a
+  15-second timeout can be retried without sending the application. A successful read
+  must identify the same vacancy and preserves any Telegram version pin. The candidate
+  reviews the refreshed details and gives consent again.
+- Isolated verification: typecheck, ESLint, unit tests, Nuxt build, HTTP smoke, 41 public
+  and 61 PostgreSQL-backed Chromium scenarios with retries disabled. New checks cover
+  archive, replacement, temporary failure, timeout and stale Telegram pin. Inspected the
+  390px terminal dialog. Independent static review found no outstanding P1/P2 in this
+  change. No database schema, host settings or production content changes.
+
+## Preserve a guest vacancy when switching into Telegram (20 November)
+
+- A browser visitor can open the entry bot from an eligible vacancy and continue with
+  the same role and company. The parameter contains a public ID and a compact material
+  version, not a credential. The webhook and the eventual page/API read each verify the
+  version. Changing the recipient, modifying or archiving the job cannot silently
+  retarget the link. The original browser remains a guest; no automatic application.
+- A failed Telegram sign-in no longer recommends a nonexistent alternative or sends a
+  signed-out candidate to Settings. A genuine account conflict retains Settings. Only an
+  actual failed sign-in response can provide its UUID request ID; a pre-request failure
+  cannot. The [phone walkthrough](28-telegram-entry-bot.md#check-one-vacancy-on-a-phone)
+  is still required on the primary bot. No production credentials or bot changes.
+- Checked locally: typecheck, lint, build and HTTP smoke; 269 unit tests, 103 PostgreSQL
+  integration tests plus migration upgrade/replay, and 41 public
+  plus 56 PostgreSQL-backed Chromium scenarios without retries. Regression cases include
+  a changed company with the same displayed name, a previously delivered button and
+  same-document history navigation. Independent review found no open P1/P2 in this change.
+
+## Application handling: what happened vs. what was recorded (20 November)
+
+- The receipt confirms TalentBay received the application. A closure marked **No company
+  response** needs a contact on that application that has not been corrected. Historical
+  unsupported reasons remain in the operator journal, not in candidate-facing claims.
+- A corrected handoff never permits another transfer. The candidate sees the correction
+  even outside the latest page, and cannot merge different versions of the journal by
+  loading earlier entries. Operators must reload and prepare a fresh candidate package
+  after a definitive access, not-found or conflict response; a lost response still permits
+  a retry of the original command without a second handoff.
+- The [acceptance record](15-mvp-acceptance-record.md) separates the verified synthetic
+  pilot from the main bot sign-in failure, missing source permissions and human acceptance.
+  No schema change, real job import or real candidate transmission in this change.
+- Verified on isolated Node 22: typecheck, lint, compiled build and HTTP smoke, 241 unit,
+  103 disposable PostgreSQL integration tests with migration upgrade/replay, and 35 public
+  plus 55 database-backed Chromium scenarios without retries. The tests exercise a real
+  stale-revision conflict and a simulated not-found followed by a same-revision reload.
+  Independent static re-review found no outstanding P1/P2 within this change.
+
+## First employer pilot rehearsal and receipt navigation (20 November)
+
+- One compiled Chromium test now follows the **same** synthetic vacancy and receipt across
+  separate operator and candidate sessions: CSV validation/import, private draft, explicit
+  publication review, search, illustrative London relocation, profile contact, consent,
+  submission, operator assignment and recorded contact, then the candidate's status. No
+  message is delivered to an employer; the candidate cannot see private journal entries.
+- The vacancy opens its actual receipt, including one outside the first 25. The point
+  read uses the same owner-scoped historical projection as the list; it neither reveals
+  another candidate's cover note nor substitutes today's vacancy text for the snapshot.
+- Local release checks: typecheck, lint, Node build, compiled HTTP smoke, 241 unit tests,
+  100 disposable PostgreSQL tests plus legacy migration upgrade/replay, and 35 public +
+  54 database-backed Chromium scenarios without retries. Three focused scenarios then
+  passed again with exact receipt response fields and no-store assertions. Independent
+  static review found no blocking issue with the direct receipt path.
+- Operator follow-ups identified here and addressed in the subsequent change above: prevent or qualify a public
+  "No company response" reason without a valid recorded contact; distinguish corrected
+  handoff entries in the summary without ever enabling repeat sharing. Confirm receipt
+  at submission without implying the employer has already received a profile.
+- This is local acceptance with synthetic data, not a source clearance, verified city,
+  native main-bot login or permission to transmit real applications. See the
+  [source decision](19-content-operations.md#pick-a-source-before-entering-any-jobs) and
+  [main bot triage](28-telegram-entry-bot.md#main-bot-distinguish-launch-sign-in-and-session-20-november-2026).
+
+## Main bot: signed launch with unavailable SDK (20 November)
+
+- Reproduced an independent reason for the generic banner: the old client made no
+  sign-in request when the SDK download failed despite a current launch carrier.
+  Three unit regressions failed on the previous code. The new client allows that
+  carrier through the same server validation and session refresh. A missing SDK cannot
+  confer native controls; an explicitly empty carrier cannot select a stale SDK identity.
+- Checked Node build, HTTP smoke, typecheck, lint, 241 unit tests and 35 public + 52
+  database-backed Chromium cases without retries. Tests held the real auth POST, checked
+  the signed-out session before release, then opened Profile and Applications. Navigation
+  and account-conflict cases preserve the intended page and original account. A cache
+  hint alone with no SDK made zero auth requests. Independent read-only review completed.
+- This does not establish that the main bot lost its SDK. [Production triage](28-telegram-entry-bot.md#main-bot-distinguish-launch-sign-in-and-session-20-november-2026)
+  needs the native attempt and serving logs. No real token, bot settings or profile used.
+
+## Pilot follow-up: salary transport and data coverage (20 November)
+
+- Candidate estimates now send a same-origin JSON POST after hydration, including retries
+  and vacancy-prefilled income. No salary in the request URL, no database write. GET
+  remains for compatibility; provider-wide log privacy is not implied.
+- Tested on Node 22.23.5 from a clean frozen installation: typecheck, lint, Node build,
+  compiled HTTP smoke, 239 unit tests, 100 disposable PostgreSQL integration tests plus
+  legacy upgrade/replay, and 35 public + 49 database-backed Chromium cases (no retries).
+  An independent read-only review found two issues: respecting an adapter's declared body
+  length, and waiting for the superseded browser request before asserting the stable result.
+  Both fixes were reviewed again and are included in these runs.
+- The eleven public pilot destinations split into three DEMO and eight UNAVAILABLE, none
+  REVIEWED. [London evidence packet](26-relocation-data-contract.md#london-first-evidence-packet-not-a-reviewed-estimate-20-november-2026)
+  identifies an automatically readable rent series, not a complete dataset. No real
+  records imported. Main bot sign-in still failed in the owner's native check; no live
+  failure reason or subsequent successful native test has been provided.
+
+## Candidate pilot and source decision: 20 November
+
+- Release reconciliation `129234a` was published to PR #67. GitHub reported it mergeable;
+  scope, build, PostgreSQL integration and Vercel Preview passed. Ready for review does
+  not mean merged, approved or deployed to the primary domain.
+- Candidate changes are on `codex/candidate-pilot-readiness`. Empty catalogue, no matches
+  and errors have distinct actions; optional profile completeness no longer determines
+  application eligibility. History links only to current public jobs, with no invented
+  submission-time details for legacy receipts. Invalid salary inputs stay at the field.
+- The owner reports sign-in failure inside the main bot. Public capabilities returned
+  200 with only Telegram enabled. That does not prove correct bot credentials, a
+  successful sign-in POST or a persistent session. Inspect the serving deployment at
+  the failing minute: POST status, request ID and allowlisted rejection reason only.
+  Do not share launch fragments, HARs, credentials, cookies or user profile data.
+- No approved real source. [Source options and automation](19-content-operations.md#pick-a-source-before-entering-any-jobs)
+  distinguishes a permitted feed display from an employer handoff. No real import,
+  forwarding, manual deployment or production database write was performed.
+- Candidate pilot [PR #69](https://github.com/talentbay/talentbay/pull/69), code through
+  `f5d1d89`, checked with Node 22.23.5 and a frozen lockfile: typecheck, lint, 238 unit
+  checks, 100 integration checks with migration upgrade/replay, Node build, 33 public
+  and 47 database-backed Chromium scenarios without retries. The first concurrent runs
+  hit startup/browser timeouts; both full browser suites passed sequentially on the
+  final code. Recovery passed on two disposable clusters (12 tables, 52 synthetic rows,
+  matching rows/sequences/indexes, no lost application history). These numbers are not
+  a hosted load test or proof of external employer delivery.
+
+## Release build and dependency reconciliation: 20 November
+
+- From main `a34d59a`, the clean frozen install failed before the build: duplicate
+  `@esbuild/aix-ppc64@0.28.2` mapping at lockfile line 394. Do not delete the lockfile,
+  hand-deduplicate YAML or use an unfrozen install in CI. Reconciled against the reviewed
+  manifest and lockfile from `464a0f7`; kept the owner's later Git ignore change.
+- A regression test failed against main's `drizzle-kit migrate && nuxt build` command.
+  The build invokes only Nuxt again; the lifecycle guard runs before CI installs packages.
+  See [release runbook](11-deployment-runbook.md) for the explicit schema step.
+- Verified in a temporary checkout without project dotenv: official Node 22.23.5,
+  pnpm 10.33.0 frozen offline install, typecheck, lint, 206 unit and 46 tooling tests.
+  Both dependency audit scopes passed their exact policy (full: 1 low and 3 moderate;
+  production graph: 1 low and 1 moderate; no high or critical findings at check time).
+- Building with both DB URLs set to an unreachable loopback port succeeded; compiled HTTP
+  smoke then passed without a DB. With an explicit local locale, the disposable Postgres
+  run passed the 0001-to-0009 upgrade/replay and all 95 integration tests and stopped.
+- This records local checks, not a new deployment or an approval to migrate. Public GETs
+  returned an empty verified catalogue and location data; real content and native
+  production acceptance remain separate.
+
+## Security Verification and Primary Recovery - 2026-11-17
+
+Owner requested all code-side release/security checks. Dependency topic starts at57441af,
+not the older main graph. Nuxt4.6.4/Nitro2.13.6/Vite8.3.8 and patched Nuxt/schema subtree
+reduce full-tree audit43findings(8high/26moderate/9low) to4(0high/0critical/3moderate/1low).
+Production-only audit reports2tooling findings; it is not a deployed-code reachability audit.
+Remaining exact esbuild/minimatch exceptions and primary references are in docs16. No
+blanket major override, suppression or zero-vulnerability claim. Node security floor and
+all CI selectors now require22.23.5..22.x. The verified official temporary runtime and
+Gitleaks8.30.1 archives matched their published SHA256 checksums; no system runtime change.
+
+Independent reviewer found no dependency-diff defect, but identified two pre-existing
+gate gaps. New audit:dependencies evaluates BOTH full/prod reports, exact reviewed GHSA/
+version/severity/reported paths and consistent counts; registry failures fail closed.
+An initial implementation checked only full-tree; reviewer demonstrated the production-only
+Nitro archive path was missed. Explicit archive exception plus two-scope collection and
+production-path regression close that P2; independent replay/four tooling tests PASS.
+It is not an exhaustive proof of every possible dependency path.
+
+New raw HTTP smoke revealed //api/v1/profile returned404/application-json/no-cache rather
+than the private no-store/safe error contract. Unit raw-path matrix failed before the fix.
+Conservative origin-form separator/dot classification in private-api now covers those paths;
+no router/auth proof or actual request target is rewritten. Unit and compiled raw HTTP
+tests now PASS:11API separator/dot/encoded-slash paths plus4external-redirect probes.
+Reviewer independently checked15private variants,7negative/public cases and safe errors,
+with no final findings. This is not evidence of a reproduced account/data exposure.
+
+Final unchanged code candidate on Node22.23.5: frozen offline install/explicit no-dotenv
+prepare, Nuxt+operations typechecks, lint,206unit,44tooling,95SQL+legacy0001→0009 upgrade/
+replay,20public browser and46DB-browser PASS (48.3s for the full DB run). Node build/compiled
+HTTP smoke, synthetic recovery12tables/52rows, Vercel1Node22function/74routes and both
+public-output guards80files/69scripts PASS. Optional Cloudflare build PASS; Node output
+restored and owned DB/server processes stopped. Latest full logs: private temporary
+tb-repository-checks-uzJiQh. Earlier full22.23.1 pass,22.23.5 raw-path RED and a later lint
+failure are historical attempts, not retroactively all-green. An ad-hoc smoke also raced
+a rebuild/missing artifact; the sequential final run is the acceptance evidence.
+
+Gitleaks all-ref scan109reachable commits has one generic-api-key false positive: a fixed
+unit-fixture UUID commandKey. No credential detected by these rules; report fully redacted.
+GitHub secret-scanning API reports disabled, not a clean alert list; no setting changed.
+Screenshots of mobile Candidate and wide operator were inspected after framework update.
+Independent reviewer did not repeat the entire coordinator build/browser/SQL suite.
+
+External state changed during this work, not by the agent: repository now PUBLIC,
+Dependabot63 merged to main99b2f0c, PR65 remains OPEN and is no longer draft. GitHub exposes
+a new Production deployment7851282427 at11:00UTC, Vercel status SUCCESS/"Deployment has
+completed". Primary11:18UTC: /302→/jobs and /jobs200;11:19health200/runtimevercel and public
+catalogueDEMO returned. Previous primary404 no longer reproduces. Exact cause of the earlier
+failure was not isolated; do not claim visibility/reconnect alone proved its cause.
+Owner screenshots show Hobby/Gitconnected/mainProduction; team invitation unavailable
+without Pro. The present public repo is not blocked by private-org Hobby rules. Actual
+private provider logs/settings remain inaccessible; no bypass, account switch or token
+handoff. No agent main merge/deploy/env/domain/DB/billing mutation. Primary main deployment
+is NOT the pending full MVP source. Topic PR/CI publication is recorded separately below.
 
 ## Repository Consolidation — 2026-11-17
 

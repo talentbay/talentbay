@@ -15,6 +15,7 @@ export async function listAdminVacancies(input: AdminVacancyFilters) {
   const db = useDatabase()
   const conditions: (SQL | undefined)[] = []
   if (filters.publicOnly) conditions.push(publicVacancyConditions())
+  if (filters.company) conditions.push(eq(schema.organisations.slug, filters.company))
 
   if (filters.status) {
     conditions.push(eq(schema.vacancies.status, filters.status))
@@ -25,7 +26,7 @@ export async function listAdminVacancies(input: AdminVacancyFilters) {
   }
   if (filters.q) {
     const search = containsText(filters.q)
-    conditions.push(or(ilike(schema.vacancies.title, search), ilike(schema.organisations.name, search), ilike(schema.vacancies.sourceName, search))!)
+    conditions.push(or(eq(schema.vacancies.sourceExternalID, filters.q), ilike(schema.vacancies.title, search), ilike(schema.organisations.name, search), ilike(schema.vacancies.sourceName, search))!)
   }
   const before = cursor ? or(
     sql`${schema.vacancies.updatedAt} < ${cursor.date}::timestamptz`,
@@ -39,6 +40,7 @@ export async function listAdminVacancies(input: AdminVacancyFilters) {
         slug: schema.vacancies.slug,
         title: schema.vacancies.title,
         companyName: schema.organisations.name,
+        companySlug: schema.organisations.slug,
         city: schema.vacancies.city,
         countryCode: schema.vacancies.countryCode,
         status: schema.vacancies.status,

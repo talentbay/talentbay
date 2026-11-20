@@ -1,4 +1,5 @@
-import type { CandidateProfileData } from '#shared/types/candidates'
+import type { CandidateProfileData, CandidateProfileResponse } from '#shared/types/candidates'
+import { canSubmitApplication } from '#shared/utils/application-contact'
 
 export type CandidateProfileDraft = { [Key in keyof CandidateProfileData]: string }
 
@@ -14,4 +15,11 @@ export function profileSections(profile: CandidateProfileData | null | undefined
     { label: 'Links', complete: Boolean(profile?.githubUrl || profile?.linkedinUrl) },
     { label: 'About', complete: Boolean(profile?.about?.trim()) },
   ]
+}
+
+export function profileApplicationReadiness(candidate: CandidateProfileResponse | null | undefined) {
+  if (canSubmitApplication(candidate)) return 'ready'
+  if (!candidate?.profile) return 'unsaved'
+  if (!candidate.user.name.trim()) return 'missingName'
+  return 'missingContact'
 }

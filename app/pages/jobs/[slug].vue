@@ -3,40 +3,54 @@ import type {
   RelocationLocationsResponse,
   VacancyListItem,
 } from '#shared/types/vacancies'
-import {
-  annualSalaryMidpoint,
-  formatVacancySalary,
-} from '~/utils/vacancy-salary'
+import { formatVacancySalary } from '~/utils/vacancy-salary'
+import { vacancyEstimateSource } from '~/utils/relocation-draft'
+import { parseVacancyStart } from '#shared/utils/telegram-vacancy-entry'
 
-definePageMeta({ layout: 'product', key: (route) => String(route.params.slug) })
+definePageMeta({
+  layout: 'product',
+  key: route => {
+    const entry = route.query.entry
+    const variant = entry === undefined ? 'canonical' : parseVacancyStart(entry) ? entry : 'invalid'
+    return JSON.stringify([route.params.slug, variant])
+  },
+})
 const route = useRoute()
 const slug = String(route.params.slug)
-const { data: vacancy, error, refresh, status } = await useFetch<VacancyListItem>(
+const entry = route.query.entry
+if (entry !== undefined) {
+  if (import.meta.server) useResponseHeader('Cache-Control').value = 'no-store'
+  if (typeof entry !== 'string' || !parseVacancyStart(entry)) throw createError({ statusCode: 404, statusMessage: 'Vacancy not found', fatal: true })
+}
+const { data: vacancy, error } = await useFetch<VacancyListItem>(
   `/api/v1/vacancies/${slug}`,
+  { query: typeof entry === 'string' ? { entry } : undefined },
 )
 if (error.value || !vacancy.value)
   throw createError({
     statusCode: error.value?.statusCode || 404,
     statusMessage: 'Vacancy not found',
+    fatal: true,
   })
 useSeoMeta({
+  robots: entry === undefined ? undefined : 'noindex',
   title: () =>
     `${vacancy.value?.title} at ${vacancy.value?.company.name} · TalentBay`,
   description: () => vacancy.value?.summary,
 })
-const { data: locations } = await useFetch<RelocationLocationsResponse>('/api/v1/relocation/locations', { key: 'relocation-locations' })
+const locations = await useFetch<RelocationLocationsResponse>('/api/v1/relocation/locations', { key: 'relocation-locations' })
 const relocationLocation = computed(() =>
-  locations.value?.destinations.find(
+  locations.data.value?.destinations.find(
     (item) =>
       item.countryCode === vacancy.value?.location.countryCode &&
       item.city.toLocaleLowerCase('en') ===
         vacancy.value?.location.city?.toLocaleLowerCase('en'),
   ),
 )
-const relocationSalary = computed(() =>
-  vacancy.value?.salary?.currency === relocationLocation.value?.currency
-    ? annualSalaryMidpoint(vacancy.value?.salary || null)
-    : null,
+const estimate = useRelocationEstimate(
+  `vacancy:${vacancy.value.id}`,
+  () => vacancyEstimateSource(relocationLocation.value, vacancy.value?.salary ?? null),
+  locations,
 )
 const sourceUrl = computed(() => safeHttpUrl(vacancy.value?.source.url))
 const location = computed(() =>
@@ -50,9 +64,21 @@ const location = computed(() =>
 )
 const relocationOpen = ref(false)
 const { ready, goBack } = useCandidateBack()
-async function refreshListing() {
-  await refresh()
-  if (error.value || !vacancy.value) showError({ statusCode: error.value?.statusCode || 404, statusMessage: 'Vacancy not found' })
+const originalId = vacancy.value.id
+async function reloadListing(signal: AbortSignal): Promise<'updated' | 'unavailable' | 'retry'> {
+  try {
+    // Commit only a successful read of the same listing; the open draft belongs to it.
+    const updated = await $fetch<VacancyListItem>(`/api/v1/vacancies/${encodeURIComponent(slug)}`, {
+      query: typeof entry === 'string' ? { entry } : undefined,
+      cache: 'no-store', retry: 0, signal,
+    })
+    if (signal.aborted) return 'retry'
+    if (updated.id !== originalId || updated.source.status !== 'VERIFIED' || !updated.applicationContext) return 'unavailable'
+    vacancy.value = updated
+    return 'updated'
+  } catch (cause) {
+    return (cause as { statusCode?: number }).statusCode === 404 ? 'unavailable' : 'retry'
+  }
 }
 </script>
 
@@ -207,16 +233,14 @@ async function refreshListing() {
         class="space-y-5 lg:sticky lg:top-24"
         aria-label="Vacancy actions and estimate"
       >
-        <VacanciesVacancyActions :key="vacancy.id" :vacancy="vacancy" :refreshing="status === 'pending'" @refresh="refreshListing" />
+        <VacanciesVacancyActions :key="vacancy.id" :vacancy="vacancy" :reload-listing="reloadListing" />
         <div
           v-if="relocationLocation"
           class="hidden lg:block"
         >
           <RelocationPreview
-            :context-key="vacancy.slug"
+            :estimate="estimate"
             :context-label="`${vacancy.title} · ${vacancy.company.name}`"
-            :initial-location="relocationLocation.key"
-            :initial-annual-gross="relocationSalary"
           />
         </div>
       </aside>
@@ -231,9 +255,7 @@ async function refreshListing() {
         <RelocationPreview
           v-if="relocationLocation"
           embedded
-          :context-key="vacancy.slug"
-          :initial-location="relocationLocation.key"
-          :initial-annual-gross="relocationSalary"
+          :estimate="estimate"
         />
       </template>
     </UModal>

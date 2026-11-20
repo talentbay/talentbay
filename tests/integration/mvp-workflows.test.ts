@@ -9,6 +9,7 @@ import {
 } from '#server/services/candidates/applications'
 import {
   getCandidateProfile,
+  getReviewedCandidateProfile,
   saveCandidateProfile,
 } from '#server/services/candidates/profile'
 import { importVacancies } from '#server/services/vacancies/import-vacancies'
@@ -144,12 +145,13 @@ describe('database-backed MVP workflows', () => {
       countryCode: 'DE',
       city: 'Berlin',
     })
-    await expect(getCandidateProfile(userID)).resolves.toEqual(profile)
+    await expect(getReviewedCandidateProfile(userID)).resolves.toEqual(profile)
+    expect(await getCandidateProfile(userID)).not.toHaveProperty('candidateContext')
 
     const application = await createApplication(
       userID,
       vacancyID,
-      { ...await applicationInputFor(vacancyID), coverLetter: 'Integration test application.' },
+      { ...await applicationInputFor(vacancyID, userID), coverLetter: 'Integration test application.' },
     )
 
     expect(application.status).toBe('NEW')

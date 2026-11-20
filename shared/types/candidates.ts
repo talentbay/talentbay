@@ -21,6 +21,12 @@ export type CandidateProfileResponse = {
   profile: CandidateProfileData | null
 }
 
+export type ReviewedCandidateProfileResponse = CandidateProfileResponse & {
+  candidateContext: string
+}
+
+export const candidateReviewRequiredCode = 'CANDIDATE_REVIEW_REQUIRED'
+
 export type CandidateApplicationItem = {
   id: number
   status: 'NEW' | 'VIEWED' | 'INTERVIEW' | 'OFFER' | 'REJECTED' | 'WITHDRAWN'
@@ -36,8 +42,13 @@ export type CandidateApplicationItem = {
   }
 }
 
+export type CandidateApplicationHistoryItem = Omit<CandidateApplicationItem, 'vacancy'> & {
+  vacancy: CandidateApplicationItem['vacancy'] | null
+  publicVacancySlug: string | null
+}
+
 export type CandidateApplicationsResponse = {
-  items: CandidateApplicationItem[]
+  items: CandidateApplicationHistoryItem[]
   total: number
   nextCursor: number | null
   counts: { all: number; active: number; closed: number }
@@ -46,8 +57,10 @@ export type CandidateApplicationsResponse = {
 export type CandidateApplicationProgress = {
   id: number
   stage: HandlingStage
+  revision: number
   legacy: boolean
   handoffRecorded: boolean
+  handoffCorrected: boolean
   nextCursor: number | null
   events: {
     revision: number

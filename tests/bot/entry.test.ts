@@ -33,6 +33,18 @@ describe('bot entry configuration and static navigation, not auth/delivery', () 
     expect(prepareBotEntry(update('/applications'), config)!.reply!.reply_markup.inline_keyboard[0]![0]).toEqual({ text: 'Your applications', web_app: { url: `${raw.appOrigin}/applications` } })
     expect(prepareBotEntry(update('/privacy'), config)!.reply!.reply_markup.inline_keyboard[0]![0]).toEqual({ text: 'Privacy Notice', url: `${raw.appOrigin}/privacy` })
   })
+  it('recognizes only complete pinned vacancy starts in a private message to this bot', () => {
+    const tag = 'abcdef0123456789abcdef01'
+    const payload = `job_2147483647_${tag}`
+    expect(prepareBotEntry(update(`/start@TALENTBAY_TEST_BOT ${payload}`), config)?.vacancyStart).toEqual({ id: 2147483647, payload })
+    for (const invalid of ['job_7', `job_0_${tag}`, `job_07_${tag}`, `job_2147483648_${tag}`, `job_7_${tag.toUpperCase()}`, payload + ' extra', payload + '\n', payload + '&next=elsewhere']) {
+      expect(prepareBotEntry(update('/start ' + invalid), config)).toEqual(prepareBotEntry(update('/start'), config))
+    }
+    const privateStart = update('/start ' + payload)
+    expect(prepareBotEntry({ ...privateStart, message: { ...privateStart.message, chat: { id: -1, type: 'group' } } }, config)?.vacancyStart).toBeUndefined()
+    expect(prepareBotEntry(update('/start@different_bot ' + payload), config)?.vacancyStart).toBeUndefined()
+    expect(prepareBotEntry(update('/jobs ' + payload), config)?.vacancyStart).toBeUndefined()
+  })
   it('does not treat chat text, arbitrary URLs, other-bot commands or media as a support inbox/redirect', () => {
     const text = 'My private passport and profile, https://attacker.invalid'
     expect(prepareBotEntry(update(text), config)!.reply!.text).toContain('does not process messages')

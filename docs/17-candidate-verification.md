@@ -1,5 +1,75 @@
 # Candidate Browser Verification
 
+**Exact company filter (20 November).** Jobs → Filters → Company searches company
+labels with published roles. Each suggestion shows the name and unique key to
+distinguish employers with the same name. The applied filter survives reload and
+paging, can be removed independently, and does not navigate to an employer profile.
+This extends the existing Candidate v1 filter sheet, not the Figma baseline.
+
+**Salary range in context (20 November).** The existing Candidate v1 estimate sheet
+and desktop panel now name the annualized advertised range and the active salary
+point. Manual amounts remain available. Moving costs are explicitly separate from the
+monthly result; a relocation badge is not a monetary reimbursement commitment. This is
+an implementation iteration, not a new Figma freeze or a reviewed city price dataset.
+
+**Reviewing changed contact details.** The Apply dialog binds acknowledgment to the
+displayed account, profile and vacancy. When the same candidate edits their contacts
+in another tab, they can review the new details without retyping the note. A different
+account starts an empty form. A failed profile read offers a retry, not a submission.
+Only a submission response with a valid receipt ID can show the new-application success
+message. This is the same Candidate v1 dialog in the web and Mini App layouts.
+
+**Apply on an unavailable listing (20 November).** The existing Apply dialog keeps
+a selectable cover note and a route to Jobs when the open application can no longer
+be submitted. Closing the dialog alone does not copy the note to another listing.
+A failed read after a changed listing leaves the original dialog open with consent
+disabled. No persistent drafts or new screens were added.
+
+**Website to Telegram (20 November).** On a guest vacancy, the Telegram action names
+the selected role flow only when the configured entry bot can handle it. The browser
+stays signed out. A private chat reply opens the same public vacancy version; profile
+sharing still requires an explicit submission. A stale button reaches the existing
+unavailable page with a way back to Jobs. On failed native login, recovery advice and
+any safe support reference are also accessible inside the Apply dialog, not just in
+the shell behind it. The 390px Apply screenshot checks the recovery text with the
+theme's normal foreground on a warning background. This reuses the Candidate v1
+controls; it is not device acceptance.
+
+**Corrected operator history (20 November).** The candidate receipt distinguishes a
+recorded handoff from a corrected record; neither confirms employer delivery. Paging
+after a new correction refreshes the history. Open applications show the current
+handling heading once, not a second badge from an earlier receipt read. This reuses
+Candidate v1 components and does not change the approved design baseline.
+
+**Receipt navigation (20 November).** From the vacancy, **View application** opens the
+matching application directly, even if it is older than the first 25. Reload retains the
+receipt; dismissing it returns to Applications. A link opened by a different signed-in
+candidate shows an unavailable state, not the title or cover note. This reuses the
+existing receipt dialog, not a separate Telegram flow or a new design freeze.
+
+## Candidate pilot checks: 20 November 2026
+
+Compared Jobs to the active Candidate responsive Figma handoff (frame `2077:739`).
+The search and applied filters remain in the URL. On mobile the modal edits a draft;
+on desktop the same controls are inline. Closing the modal returns keyboard focus.
+The empty-catalogue state now leads to Profile; a no-match state offers to clear the
+applied filters, and an exhausted cursor offers navigation back. A failed request
+is not presented as zero vacancies. All eight targeted compiled Chromium scenarios
+passed using synthetic responses, including narrow (320/390 px) and wide (1024 px)
+layouts; the empty-catalogue screenshots were inspected at 390/1280 px.
+These changes are implementation refinements, not a new approved Figma baseline.
+
+The complete compiled pilot suites then passed without retries: 33 public and 47
+database-backed Chromium cases. This includes the application receipt, keyboard focus
+return, simulated Telegram host, salary precision/debounce, and operator workflow.
+The production Telegram client and external employers are not test fixtures.
+
+The pilot also keeps basic Profile and Applications navigation independent of native
+Telegram controls: when the SDK cannot load but the current launch includes signed
+data, only the server's normal verification and a successful session refresh can sign
+the user in. No SDK means no native haptics or buttons. An SDK cache hint by itself
+does not confer identity. This is not a new design freeze or a production login result.
+
 ## Reviewed Apply Context - 2026-10-27
 
 R02 adds a required shown-context precondition, not a new product route/Figma freeze. A
@@ -277,12 +347,16 @@ For database browser tests, create a disposable local PostgreSQL database and ro
 ```bash
 node scripts/assert-ci-database.mjs
 pnpm db:migrate
+pnpm exec playwright install webkit
 pnpm exec playwright test --config playwright.database.config.ts
 ```
 
 The config executes the target guard before any fixture writes. It supplies a fake local
 bot credential and normal signed initData; there is no production test-login backdoor.
 The real HTTP boundary, sealed session, Drizzle and PostgreSQL remain in the loop.
+The WebKit project opens the compiled app over loopback HTTPS on port 3138. Its
+launcher requires OpenSSL and generates a temporary self-signed certificate. Only
+the test client accepts it; the OS trust store and app cookie settings are unchanged.
 GitHub Actions supplies a disposable Postgres service; it needs no provider secrets.
 
 Artifacts are gitignored under separate `test-results/public` and `test-results/database`
@@ -297,7 +371,10 @@ the inconsistent desktop/mobile primary colors and uses unframed profile/setting
 The user explicitly authorized project design changes on 2026-10-26. Figma itself has not
 yet been rewritten to claim a new approved freeze.
 
-Chromium host simulation verifies integration, not native Telegram. Real Google/GitHub
-callbacks, mobile Safari/WebView behavior, provider entitlement, domain/bot configuration,
+The database suite runs the full Chromium project and the `@mobile-pilot` cases in
+WebKit with Playwright's iPhone 13 device profile. To run only the latter, add
+`--project=mobile-webkit`. This covers the signed launch, session/navigation and
+the two-role application path. Emulation does not run the iOS Telegram client or contact a bot.
+Real Google/GitHub callbacks, mobile Safari/WebView behavior, provider entitlement, domain/bot configuration,
 approved content/legal copy and release verification remain required before public beta.
 No passing build or local browser test means merged, deployed or live-provider verified.

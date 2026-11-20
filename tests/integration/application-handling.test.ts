@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { closeDatabase } from '#server/db'
-import { createApplication, withdrawApplication, listCandidateApplications, candidateApplicationForVacancy } from '#server/services/candidates/applications'
+import { createApplication, withdrawApplication, listCandidateApplications, getCandidateApplication, candidateApplicationForVacancy } from '#server/services/candidates/applications'
 import { candidateApplicationProgress } from '#server/services/candidates/application-progress'
 import { handleApplication, prepareApplicationPackage } from '#server/services/admin/application-handling'
 import { getAdminApplication } from '#server/services/admin/applications'
@@ -26,7 +26,7 @@ async function application(legacy = false) {
   const [vacancy] = await sql`insert into vacancies (organisation_id,slug,title,description,status,review_status,employment_type,workplace_type,country_code) values (${company!.id},${slug},'Handling Engineer','Synthetic handling role','PUBLISHED','VERIFIED','FULL_TIME','REMOTE','GB') returning id`
   const row = legacy
     ? (await sql`insert into applications (user_id,vacancy_id) values (${user!.id},${vacancy!.id}) returning id`)[0]!
-    : await createApplication(user!.id, vacancy!.id, await applicationInputFor(vacancy!.id))
+    : await createApplication(user!.id, vacancy!.id, await applicationInputFor(vacancy!.id, user!.id))
   return { id: row.id as number, userID: user!.id as number, vacancyID: vacancy!.id as number, revision: legacy ? 0 : 1 }
 }
 async function contacted(legacy = false) {
@@ -35,6 +35,17 @@ async function contacted(legacy = false) {
   await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'START' })
   await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'CONTACT', ...contact(), privateNote: 'Internal only' })
   return row
+}
+async function expectNoResponseDenied(id: number, revision: number) {
+  const readState = async () => (await sql`
+    select handling_revision, handling_stage,
+      array(select id from application_handling_events where application_id=a.id order by revision) as journal
+    from applications a where id=${id}`)[0]!
+  const before = await readState()
+  expect(before.handling_revision).toBe(revision)
+  await expect(handleApplication(operatorID, id, { ...base(revision), action: 'CLOSE', reason: 'NO_RESPONSE' }))
+    .rejects.toMatchObject({ statusCode: 409 })
+  expect(await readState()).toEqual(before)
 }
 beforeAll(async () => {
   vi.stubGlobal('createError', (details: object) => Object.assign(new Error('Handling failed'), details))
@@ -170,7 +181,7 @@ describe('serialized manual application handling', () => {
     expect(first.handoffRecorded).toBe(false)
   })
 
-  it('paginates all candidate applications without losing an older vacancy duplicate check', async () => {
+  it('paginates history without losing owner-only receipt lookup or an older vacancy duplicate check', async () => {
     const row = await application()
     const [vacancy] = await sql`select organisation_id from vacancies where id=${row.vacancyID}`
     for (let n = 0; n < 27; n++) {
@@ -191,6 +202,19 @@ describe('serialized manual application handling', () => {
     expect(closed.total).toBe(3)
     expect(closed.items.every(item => item.handling.stage === 'CLOSED')).toBe(true)
     expect(JSON.stringify(first)).not.toMatch(/assignedUserID|actorUserID|privateNote|submissionSnapshot/)
+
+    const receipt = second.items.find(item => item.id === row.id)!
+    expect(receipt.publicVacancySlug).toBe(receipt.vacancy!.slug)
+    await expect(getCandidateApplication(row.userID, row.id)).resolves.toEqual(receipt)
+    const legacy = first.items[0]!
+    expect(legacy.vacancy).toBeNull()
+    await expect(getCandidateApplication(row.userID, legacy.id)).resolves.toEqual(legacy)
+
+    await sql`update vacancies set status='ARCHIVED', title='Changed after submission' where id=${row.vacancyID}`
+    await expect(getCandidateApplication(row.userID, row.id)).resolves.toEqual({ ...receipt, publicVacancySlug: null })
+    const notFound = { statusCode: 404, statusMessage: 'Application not found' }
+    await expect(getCandidateApplication(otherID, row.id)).rejects.toMatchObject(notFound)
+    await expect(getCandidateApplication(row.userID, 2_147_483_647)).rejects.toMatchObject(notFound)
   })
 
   it('closes handling with a truthful public reason, never an invented employer rejection', async () => {
@@ -206,24 +230,107 @@ describe('serialized manual application handling', () => {
     expect((await withdrawApplication(row.userID, row.id)).status).toBe('WITHDRAWN')
   })
 
+  it('requires contact evidence on this application regardless of assignment, stage or contacts elsewhere', async () => {
+    const row = await application()
+    await expect(getAdminApplication(row.id)).resolves.toMatchObject({ hasUncorrectedContact: false, handoffRecorded: false, handoffCorrected: false })
+    await expectNoResponseDenied(row.id, row.revision)
+    await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'ASSIGN', assigneeID: operatorID })
+    await expectNoResponseDenied(row.id, row.revision)
+    const other = await contacted()
+    await expect(getAdminApplication(other.id)).resolves.toMatchObject({ hasUncorrectedContact: true })
+    await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'START' })
+    await expectNoResponseDenied(row.id, row.revision)
+    // A historical stage without a CONTACTED journal entry is not evidence of contact.
+    await sql`update applications set handling_stage='CONTACTED' where id=${row.id}`
+    await expect(getAdminApplication(row.id)).resolves.toMatchObject({ hasUncorrectedContact: false })
+    await expectNoResponseDenied(row.id, row.revision)
+  })
+
+  it('keeps a NO_RESPONSE reason supported by an independent contact until that contact is also corrected', async () => {
+    const row = await contacted()
+    const first = row.revision
+    const second = await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'CONTACT', ...contact(), reference: 'Second synthetic contact' })
+    const correct = (targetRevision: number) => handleApplication(otherID, row.id, {
+      ...base(row.revision++), action: 'CORRECT', targetRevision, reason: 'RECORDED_IN_ERROR', privateNote: 'Synthetic contact correction',
+    })
+    await correct(second.revision)
+    await expect(getAdminApplication(row.id)).resolves.toMatchObject({ hasUncorrectedContact: true, handoffRecorded: false, handoffCorrected: false })
+    const closed = await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'CLOSE', reason: 'NO_RESPONSE' })
+    const publicClosure = async () => (await candidateApplicationProgress(row.userID, row.id)).events.find(event => event.revision === closed.revision)
+    expect(await publicClosure()).toMatchObject({ kind: 'CLOSED', closeReason: 'NO_RESPONSE' })
+    await correct(first)
+    const admin = await getAdminApplication(row.id)
+    expect(admin).toMatchObject({ hasUncorrectedContact: false, handoffCorrected: false })
+    expect(admin.events.find(event => event.id === closed.eventID)).toMatchObject({ kind: 'CLOSED', data: { closeReason: 'NO_RESPONSE' } })
+    expect(await publicClosure()).toMatchObject({ kind: 'CLOSED', closeReason: null })
+    await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'REOPEN', privateNote: 'Resume synthetic review' })
+    await expectNoResponseDenied(row.id, row.revision)
+  })
+
+  it('never backfills evidence for a historical closure from a later contact', async () => {
+    const row = await application()
+    // Seed a closure allowed by the previous policy; the current command must not create it.
+    const [historic] = await sql`with closed as (
+      update applications set handling_stage='CLOSED', handling_revision=handling_revision+1, assigned_user_id=${operatorID}
+      where id=${row.id} returning id, handling_revision
+    ) insert into application_handling_events (application_id,revision,kind,stage,actor_user_id,data)
+      select id,handling_revision,'CLOSED','CLOSED',${operatorID},'{"closeReason":"NO_RESPONSE"}'::jsonb from closed returning revision`
+    const historicRevision = historic!.revision as number
+    const history = () => candidateApplicationProgress(row.userID, row.id)
+    expect((await history()).events.find(event => event.revision === historicRevision)).toMatchObject({ kind: 'CLOSED', closeReason: null })
+    const reopened = await handleApplication(operatorID, row.id, { ...base(historicRevision), action: 'REOPEN', privateNote: 'Resume synthetic review' })
+    const fact = await handleApplication(operatorID, row.id, { ...base(reopened.revision), action: 'CONTACT', ...contact() })
+    const later = await handleApplication(operatorID, row.id, { ...base(fact.revision), action: 'CLOSE', reason: 'NO_RESPONSE' })
+    const publicClosures = (await history()).events.filter(event => event.kind === 'CLOSED')
+    expect(publicClosures.map(event => [event.revision, event.closeReason])).toEqual([[later.revision, 'NO_RESPONSE'], [historicRevision, null]])
+    const admin = await getAdminApplication(row.id)
+    expect(admin.events.find(event => event.revision === historicRevision)).toMatchObject({ kind: 'CLOSED', data: { closeReason: 'NO_RESPONSE' } })
+  })
+
   it('appends correction without overwriting the original or granting another handoff', async () => {
     const row = await contacted()
     const shared = await handleApplication(operatorID, row.id, { ...base(row.revision++), action: 'SHARE', ...contact(), confirmCompleted: true })
+    const uncorrected = { handoffRecorded: true, handoffCorrected: false }
+    await expect(getAdminApplication(row.id)).resolves.toMatchObject(uncorrected)
+    await expect(candidateApplicationProgress(row.userID, row.id)).resolves.toMatchObject(uncorrected)
     const [original] = await sql`select * from application_handling_events where id=${shared.eventID}`
     const [snapshot] = await sql`select user_id,vacancy_id,status,submission_snapshot from applications where id=${row.id}`
     const command: ApplicationCommand = { ...base(row.revision), action: 'CORRECT', targetRevision: shared.revision, reason: 'RECORDED_IN_ERROR', privateNote: 'Private correction explanation, never public' }
     const corrected = await handleApplication(otherID, row.id, command)
     expect(await handleApplication(otherID, row.id, command)).toMatchObject({ replayed: true, eventID: corrected.eventID })
+    // Same revision numbers, but only the contact was corrected on this application.
+    const other = await contacted()
+    const otherShare = await handleApplication(operatorID, other.id, { ...base(other.revision), action: 'SHARE', ...contact(), confirmCompleted: true })
+    expect(otherShare.revision).toBe(shared.revision)
+    const otherCorrection = await handleApplication(otherID, other.id, { ...base(otherShare.revision), action: 'CORRECT', targetRevision: other.revision, reason: 'DETAILS_INACCURATE', privateNote: 'Synthetic contact correction' })
+    await expect(getAdminApplication(other.id)).resolves.toMatchObject({ ...uncorrected, hasUncorrectedContact: false })
+    await expect(candidateApplicationProgress(other.userID, other.id)).resolves.toMatchObject(uncorrected)
+    await expectNoResponseDenied(other.id, otherCorrection.revision)
     expect((await sql`select * from application_handling_events where id=${shared.eventID}`)[0]).toEqual(original)
     expect((await sql`select user_id,vacancy_id,status,submission_snapshot from applications where id=${row.id}`)[0]).toEqual(snapshot)
     const progress = await candidateApplicationProgress(row.userID, row.id)
-    expect(progress).toMatchObject({ stage: 'IN_PROGRESS', handoffRecorded: true })
+    expect(progress).toMatchObject({ stage: 'IN_PROGRESS', handoffRecorded: true, handoffCorrected: true })
     expect(progress.events[0]).toMatchObject({ kind: 'CORRECTED', correctedRevision: shared.revision, correctionReason: 'RECORDED_IN_ERROR' })
     expect(progress.events.find(event => event.revision === shared.revision)).toMatchObject({ kind: 'SHARED', corrected: true })
     expect(JSON.stringify(progress)).not.toMatch(/privateNote|actorUserID|assignedUserID|channel|reference|Private correction|Internal only/)
     await expect(handleApplication(otherID, row.id, { ...command, ...base(corrected.revision) })).rejects.toMatchObject({ statusCode: 409 })
-    await handleApplication(operatorID, row.id, { ...base(corrected.revision), action: 'CONTACT', ...contact() })
+    const newContact = await handleApplication(operatorID, row.id, { ...base(corrected.revision), action: 'CONTACT', ...contact() })
+    // Put both the original handoff and its correction outside the admin (50) and candidate (25) windows.
+    const padding = 51
+    await sql.begin(async tx => {
+      await tx`insert into application_handling_events (application_id,revision,kind,stage,actor_user_id)
+        select ${row.id}, ${newContact.revision}::int+n, 'FOLLOW_UP','FOLLOW_UP',${operatorID} from generate_series(1,${padding}::int) as s(n)`
+      await tx`update applications set handling_stage='FOLLOW_UP',handling_revision=${newContact.revision + padding} where id=${row.id}`
+    })
+    const admin = await getAdminApplication(row.id)
+    const recent = await candidateApplicationProgress(row.userID, row.id)
+    expect(admin).toMatchObject({ eventsTruncated: true, hasUncorrectedContact: true, handoffRecorded: true, handoffCorrected: true })
+    expect(recent).toMatchObject({ handoffRecorded: true, handoffCorrected: true })
+    expect(admin.events).toHaveLength(50)
+    expect(recent.events).toHaveLength(25)
+    expect([...admin.events, ...recent.events].every(event => event.kind === 'FOLLOW_UP')).toBe(true)
     await expect(prepareApplicationPackage(operatorID, row.id)).rejects.toMatchObject({ statusCode: 409 })
+    await expect(handleApplication(operatorID, row.id, { ...base(newContact.revision + padding), action: 'SHARE', ...contact(), confirmCompleted: true })).rejects.toMatchObject({ statusCode: 409 })
     expect(await sql`select id from application_handling_events where application_id=${row.id} and kind='SHARED'`).toHaveLength(1)
   })
 
@@ -257,6 +364,8 @@ describe('serialized manual application handling', () => {
     const second = await candidateApplicationProgress(row.userID, row.id, first.nextCursor!)
     expect(second.events.find(event => event.revision === 4)).toMatchObject({ corrected: true })
     expect((await candidateApplicationProgress(other.userID, other.id)).events.find(event => event.revision === 4)).toMatchObject({ corrected: false })
+    await expect(getAdminApplication(row.id)).resolves.toMatchObject({ hasUncorrectedContact: false })
+    await expect(getAdminApplication(other.id)).resolves.toMatchObject({ hasUncorrectedContact: true })
   })
 
   it('rejects forbidden targets/rejection/revoked actors and serializes correction or reopening against withdrawal', async () => {
@@ -268,7 +377,8 @@ describe('serialized manual application handling', () => {
     const results = await Promise.allSettled([operatorID, otherID].map(actor => handleApplication(actor, row.id, { ...base(row.revision), action: 'CORRECT', targetRevision: 4, reason: 'DETAILS_INACCURATE', privateNote: 'Concurrent correction fixture' })))
     expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1)
     expect(await sql`select id from application_handling_events where application_id=${row.id} and kind='CORRECTED'`).toHaveLength(1)
-    const closed = await handleApplication(operatorID, row.id, { ...base(row.revision + 1), action: 'CLOSE', reason: 'NO_RESPONSE' })
+    const closed = await handleApplication(operatorID, row.id, { ...base(row.revision + 1), action: 'CLOSE', reason: 'CONTACT_UNAVAILABLE' })
+    expect((await candidateApplicationProgress(row.userID, row.id)).events[0]).toMatchObject({ kind: 'CLOSED', closeReason: 'CONTACT_UNAVAILABLE' })
     const race = await Promise.allSettled([withdrawApplication(row.userID, row.id), handleApplication(otherID, row.id, { ...base(closed.revision), action: 'REOPEN', privateNote: 'Concurrent reopening fixture' })])
     expect(race[0]!.status).toBe('fulfilled')
     expect((await sql`select status,handling_stage from applications where id=${row.id}`)[0]).toEqual({ status: 'WITHDRAWN', handling_stage: 'CLOSED' })

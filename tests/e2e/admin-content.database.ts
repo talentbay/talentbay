@@ -1,4 +1,6 @@
 import { randomInt, randomUUID } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 import type { BrowserContext } from '@playwright/test'
 import postgres from 'postgres'
@@ -154,12 +156,70 @@ test('CSV validation → atomic draft import → complete review → public reco
   expect(errors).toEqual([])
 })
 
+test('operator creates one draft without a file and can safely correct a published vacancy', async ({ page, context }, testInfo) => {
+  await signIn(context, randomInt(1_000_000_000, 1_000_000_000_000))
+  const key = 'editor-' + randomUUID()
+  try {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/ktulhu/v1/vacancies')
+    await page.getByRole('link', { name: 'Create vacancy' }).click()
+    await page.getByRole('textbox', { name: 'Job title' }).fill('Editorial QA Engineer')
+    await page.getByRole('textbox', { name: 'Vacancy URL key' }).fill(key)
+    await page.getByRole('textbox', { name: 'Company name' }).fill('Editorial Fixture')
+    await page.getByRole('textbox', { name: 'Company key' }).fill(key)
+    await page.getByRole('textbox', { name: 'Country code' }).fill('GB')
+    await page.getByRole('textbox', { name: 'Job description' }).fill('A fictional first-party vacancy for the operator rehearsal.')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }))
+    await page.screenshot({ path: testInfo.outputPath('operator-create-mobile.png'), fullPage: true })
+    await page.getByRole('button', { name: 'Create draft' }).click()
+    await expect(page.getByRole('dialog')).toContainText('Editorial QA Engineer')
+    const [record] = await sql`select id, status,source_url from vacancies where slug=${key}`
+    expect(record).toMatchObject({ status: 'DRAFT', source_url: null })
+    await page.getByRole('checkbox', { name: /I checked the content/ }).check()
+    await page.getByRole('button', { name: 'Verify & publish' }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    const row = page.getByRole('row').filter({ hasText: 'Editorial QA Engineer' })
+    await row.getByRole('button', { name: 'Filter queue by Editorial Fixture' }).click()
+    await expect(page).toHaveURL(new RegExp('company=' + key))
+    await expect(page.getByRole('button', { name: 'Remove company filter' })).toHaveText('Editorial Fixture')
+    await page.getByRole('button', { name: 'Remove company filter' }).click()
+    await expect(page).not.toHaveURL(/company=/)
+    await row.getByRole('link', { name: 'Edit' }).click()
+    const title = page.getByRole('textbox', { name: 'Job title' })
+    await expect(title).toHaveValue('Editorial QA Engineer')
+    await title.fill('Corrected editorial QA role')
+    await expect(page.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+    await page.getByRole('checkbox', { name: /takes it offline/ }).check()
+    await sql`update vacancies set title='Correction from another operator' where id=${record!.id}`
+    await page.getByRole('button', { name: 'Save changes' }).click()
+    await expect(page.getByRole('alert').filter({ hasText: 'This vacancy changed.' })).toBeVisible()
+    await page.getByRole('button', { name: 'Reload latest vacancy' }).click()
+    await expect(title).toHaveValue('Correction from another operator')
+    await title.fill('Corrected editorial QA role')
+    await page.getByRole('checkbox', { name: /takes it offline/ }).check()
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }))
+    await page.screenshot({ path: testInfo.outputPath('operator-correct-desktop.png'), fullPage: true })
+    await page.getByRole('button', { name: 'Save changes' }).click()
+    await expect(page.getByRole('dialog')).toContainText('Corrected editorial QA role')
+    expect(await sql`select id,status,review_status from vacancies where slug=${key}`).toEqual([{ id: record!.id, status: 'DRAFT', review_status: 'UNREVIEWED' }])
+  } finally {
+    await sql`delete from vacancies where slug=${key}`
+    await sql`delete from organisations where slug=${key}`
+  }
+})
+
 test('operator endpoints enforce authorization, same origin, content types and limits', async ({ context }) => {
   await signIn(context, subject + 1, false)
   const endpoint = '/api/v1/admin/vacancies/file'
   const body = { mode: 'preview', csv: csv() }
+  const editor = '/api/v1/admin/vacancies/editor'
+  expect((await context.request.post(editor, { headers, data: {} })).status()).toBe(403)
   expect((await context.request.post(endpoint, { headers, data: body })).status()).toBe(403)
   await signIn(context, subject + 1)
+  expect((await context.request.post(editor, { headers, data: {} })).status()).toBe(422)
+  expect((await context.request.post(editor, { headers: { origin: 'https://other.invalid' }, data: {} })).status()).toBe(403)
   expect((await context.request.post(endpoint, { headers: { origin: 'https://attacker.invalid' }, data: body })).status()).toBe(403)
   expect((await context.request.post(endpoint, { headers: { ...headers, 'content-type': 'text/plain' }, data: 'not json' })).status()).toBe(415)
   expect((await context.request.post(endpoint, { headers: { ...headers, 'content-type': 'application/json' }, data: '{' })).status()).toBe(400)
@@ -189,22 +249,30 @@ test('source endpoints are default-off and enforce current role, strict bounded 
   expect((await context.request.get('/api/v1/admin/sources')).status()).toBe(403)
 })
 
-test('source operator UI previews a fixed fixture and recovers a lost committed response (mock transport only)', async ({ context, page }, testInfo) => {
+test('source operator UI retains contact exclusions when recovering a mixed import (mock transport only)', async ({ context, page }, testInfo) => {
   await signIn(context, subject + 3)
   const sourceKey = 'Lever:global:fictional-ui-fixture'
-  let progress: object | null = null
+  const excludedId = '00000000-0000-4000-8000-000000000002'
+  const report = { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 2, created: 0, updated: 0, unchanged: 0, failure: null, issues: [] }
+  const checkpoint = { sourceKey, nextOffset: 0, expiresAt: '2099-01-01T00:00:00Z', retryAfterAt: null }
+  // Older reports have no contactSkippedIds; rejected records are not contact exclusions.
+  let progress: object = { ...checkpoint, runID: randomUUID(), state: 'FAILED', report: { ...report, failure: 'INVALID_RECORDS', issues: [{ index: 1, id: null, code: 'INVALID_RECORD' }] } }
   let imported = 0
+  async function expectCounts(processed: number, excluded: number) {
+    for (const text of ['Scanned: 2', `Processed: ${processed}`, `Excluded by contact rule: ${excluded}`])
+      await expect(page.getByText(text, { exact: true })).toBeVisible()
+  }
   await page.route('**/api/v1/admin/sources', route => route.fulfill({ json: { items: [{ key: sourceKey, company: 'Fictional UI Fixture', approval: {} }] } }))
   await page.route('**/api/v1/admin/sources/progress?*', route => route.fulfill({ json: { progress } }))
   await page.route('**/api/v1/admin/sources/run', async (route) => {
     const command = route.request().postDataJSON()
     if (command.action === 'FETCH') {
-      progress = { sourceKey, runID: command.runID, state: 'READY', nextOffset: 0, expiresAt: '2099-01-01T00:00:00Z', retryAfterAt: null, report: { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 1, created: 0, updated: 0, unchanged: 0, failure: null, issues: [] } }
+      progress = { ...checkpoint, runID: command.runID, state: 'READY', report: { ...report, contactSkippedIds: [excludedId] } }
       return route.fulfill({ json: { progress } })
     }
     if (command.action === 'PREVIEW') return route.fulfill({ json: { progress, offset: 0, preview: { valid: true, rowCount: 1, issues: [], summary: { created: 1, updated: 0, unchanged: 0, withdrawnPublished: 0 }, revision: 'a'.repeat(64), rows: [{ row: 2, title: 'Fictional Source Engineer', company: 'Fictional UI Fixture', operation: 'CREATED' }] } } })
     imported++
-    progress = { ...(progress as object), state: 'IMPORTED', nextOffset: 1, report: { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 1, created: 1, updated: 0, unchanged: 0, failure: null, issues: [] } }
+    progress = { ...progress, state: 'IMPORTED', nextOffset: 1, report: { ...report, contactSkippedIds: [excludedId], created: 1 } }
     await route.abort('failed')
   })
   const errors: string[] = []
@@ -213,8 +281,13 @@ test('source operator UI previews a fixed fixture and recovers a lost committed 
   await page.goto('/ktulhu/v1/sources')
   await page.getByRole('combobox').click()
   await page.getByRole('option', { name: 'Fictional UI Fixture' }).click()
+  await expect(page.getByRole('heading', { name: 'FAILED', exact: true })).toBeVisible()
+  await expectCounts(0, 0)
   await page.getByRole('button', { name: 'Fetch source', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'READY', exact: true })).toBeVisible()
+  await expectCounts(0, 1)
+  await page.getByText('Excluded posting IDs', { exact: true }).press('Enter')
+  await expect(page.getByRole('link', { name: excludedId })).toHaveAttribute('href', `/ktulhu/v1/vacancies?q=${excludedId}`)
   await page.getByRole('button', { name: 'Preview next batch', exact: true }).click()
   await expect(page.getByText('Fictional Source Engineer', { exact: false })).toBeVisible()
   for (const width of [320, 390, 1440]) {
@@ -224,8 +297,29 @@ test('source operator UI previews a fixed fixture and recovers a lost committed 
   }
   await page.getByRole('button', { name: 'Confirm batch import', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'IMPORTED', exact: true })).toBeVisible()
+  await expectCounts(1, 1)
+  await expect(page.getByText(excludedId, { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Confirm batch import', exact: true })).toHaveCount(0)
   await expect(page.getByText('Operation not confirmed', { exact: true })).toHaveCount(0)
   expect(imported).toBe(1)
   expect(errors).toEqual([])
+})
+
+test('operator can preview seven demo vacancies and cannot confirm a mixed-source file', async ({ page, context }) => {
+  await signIn(context, randomInt(1_000_000_000, 1_000_000_000_000))
+  const demo = execFileSync(process.execPath, [fileURLToPath(new URL('../../scripts/export-preview-vacancies.mjs', import.meta.url))], { env: {}, encoding: 'utf8' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/ktulhu/v1/import')
+  const file = page.getByLabel('Vacancy CSV file')
+  await file.setInputFiles({ name: 'demo.csv', mimeType: 'text/csv', buffer: Buffer.from(demo) })
+  await page.getByRole('button', { name: 'Validate file' }).click()
+  await expect(page.getByRole('heading', { name: 'Import preview' })).toBeVisible()
+  await expect(page.getByText('Senior Backend Engineer', { exact: true })).toBeVisible()
+  await expect(page.getByText('Quality Engineer', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Confirm import' })).toBeEnabled()
+  const ordinary = csv()
+  await file.setInputFiles({ name: 'mixed.csv', mimeType: 'text/csv', buffer: Buffer.from(demo + ordinary.slice(ordinary.indexOf('\n') + 1)) })
+  await page.getByRole('button', { name: 'Validate file' }).click()
+  await expect(page.getByText(/Import demo vacancies separately from other sources/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Confirm import' })).toHaveCount(0)
 })
