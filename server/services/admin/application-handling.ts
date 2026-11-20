@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { and, eq, sql } from 'drizzle-orm'
 import { schema, useDatabase } from '#server/db'
+import { readHistoryEvidence } from '#server/services/applications/history-evidence'
 import { applicationCommandSchema } from '#shared/schemas/application-command'
 import type { ApplicationCommand } from '#shared/schemas/application-command'
 import { hasCandidateRequestedClosure, requireCurrentOperator, requireShareableSnapshot } from './application-package'
@@ -84,6 +85,9 @@ export async function handleApplication(actorID: number, id: number, input: Appl
         kind = 'FOLLOW_UP'
         break
       case 'CLOSE':
+        if (command.reason === 'NO_RESPONSE' && (await readHistoryEvidence(tx, id)).firstUncorrectedContactRevision === null) {
+          conflict('An uncorrected company contact is required to close for no response')
+        }
         data.closeReason = command.reason
         stage = 'CLOSED'
         kind = 'CLOSED'

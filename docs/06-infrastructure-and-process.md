@@ -4,9 +4,11 @@ Last updated: 2026-11-20
 
 ## Current Review Route
 
-Consolidation PR #65 already merged. Dependency/security PR #67 targets `main`; a local
-reconciliation with `main` does not update that PR until published. Check required CI on the
-exact proposed head, and obtain the owner's release decision before merging. Building the
+Consolidation PR #65 already merged. Dependency/security [PR #67](https://github.com/talentbay/talentbay/pull/67)
+has auto-merge enabled and still needs the required reviewer. [Pilot PR #69](https://github.com/talentbay/talentbay/pull/69)
+includes that baseline. After #67 merges, reconcile #69 with the resulting `main` and verify
+its exact head locally and in CI before normal approval and auto-merge. The owner permits
+this reviewed path; do not bypass rules or deploy to production manually. Building the
 app must not migrate a shared database. See [execution log](14-mvp-execution.md) and
 [deployment runbook](11-deployment-runbook.md).
 

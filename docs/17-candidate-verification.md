@@ -1,5 +1,11 @@
 # Candidate Browser Verification
 
+**Corrected operator history (20 November).** The candidate receipt distinguishes a
+recorded handoff from a corrected record; neither confirms employer delivery. Paging
+after a new correction refreshes the history. Open applications show the current
+handling heading once, not a second badge from an earlier receipt read. This reuses
+Candidate v1 components and does not change the approved design baseline.
+
 **Receipt navigation (20 November).** From the vacancy, **View application** opens the
 matching application directly, even if it is older than the first 25. Reload retains the
 receipt; dismissing it returns to Applications. A link opened by a different signed-in

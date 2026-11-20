@@ -27,6 +27,25 @@ sharing prevention, even after a correction. Correction is not evidence that no 
 copy exists or that someone deleted it. Another handoff/re-consent policy is G05, not an
 automatic bypass introduced by a correction. The operator can continue factual follow-up.
 
+### What the candidate and operator can conclude
+
+- Receiving an application does not mean the employer was contacted. Recording **No company
+  response** requires at least one uncorrected contact on this application. A recorded
+  stage, an assignment or a contact on a different application is not evidence.
+- A past closure stays in the journal. The candidate sees its no-response reason only
+  while a contact *before that closure* still supports it. Correcting all those contacts
+  hides the reason, not the closure. Making contact later cannot legitimize the old reason.
+- A corrected handoff is labelled as such, even if the original and its correction are
+  outside the latest page of the journal. Its summary does not claim delivery or recall.
+  A correction does not re-enable preparing or recording a second transfer.
+- Each progress page names its application revision. If the journal changed while the
+  candidate was reading, loading earlier activity refreshes the latest page instead of
+  joining inconsistent versions. This is not a live notification service.
+- A candidate package must match the open application and its revision. A conflict,
+  lost access or missing application clears the package and confirmation; reload the
+  record before preparing another. A lost network response is different: retrying the
+  unchanged command uses its original key rather than recording a second handoff.
+
 ## Reopening TalentBay Handling
 
 Only a handling-CLOSED application without WITHDRAWN/REJECTED status can be reopened.

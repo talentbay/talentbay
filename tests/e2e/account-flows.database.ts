@@ -83,7 +83,7 @@ test('real session → profile edit/retry → application list survives reload',
   }
   await page.getByRole('button', { name: 'Submit application' }).click()
   await expect(page.getByText('Application received by TalentBay', { exact: true })).toBeVisible()
-  await expect(page.getByText('Our team will contact the company about your candidacy and follow up on next steps.', { exact: true })).toBeVisible()
+  await expect(page.getByText("Track our team's review in Applications. You'll see when we record contact with the company.", { exact: true })).toBeVisible()
   await page.goto('/applications')
   await expect(page.getByRole('heading', { name: 'Browser Test Engineer' })).toBeVisible()
   await expect(page.getByText('Received by TalentBay', { exact: true })).toBeVisible()

@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
+import type { Database } from '#server/db'
 import type { CandidateProfileResponse } from '#shared/types/candidates'
 
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional()
@@ -25,8 +26,10 @@ export const candidateProfileInputSchema = z.object({
 
 export type CandidateProfileInput = z.infer<typeof candidateProfileInputSchema>
 
-export async function getCandidateProfile(userID: number): Promise<CandidateProfileResponse> {
-  const db = useDatabase()
+export async function getCandidateProfile(
+  userID: number,
+  db: Pick<Database, 'select'> = useDatabase(),
+): Promise<CandidateProfileResponse> {
   const [row] = await db
     .select({
       user: {

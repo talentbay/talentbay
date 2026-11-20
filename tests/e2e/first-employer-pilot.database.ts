@@ -138,7 +138,7 @@ test('first employer pilot: reviewed CSV to candidate receipt and recorded compa
       const body = await response.json()
       expect(body).toMatchObject({ id: expect.any(Number), status: 'NEW' })
       await expect(candidate.getByText('Application received by TalentBay', { exact: true })).toBeVisible()
-      await expect(candidate.getByText('Our team will contact the company about your candidacy and follow up on next steps.')).toBeVisible()
+      await expect(candidate.getByText("Track our team's review in Applications. You'll see when we record contact with the company.", { exact: true })).toBeVisible()
       return body.id
     })
 

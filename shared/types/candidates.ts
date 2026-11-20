@@ -51,8 +51,10 @@ export type CandidateApplicationsResponse = {
 export type CandidateApplicationProgress = {
   id: number
   stage: HandlingStage
+  revision: number
   legacy: boolean
   handoffRecorded: boolean
+  handoffCorrected: boolean
   nextCursor: number | null
   events: {
     revision: number

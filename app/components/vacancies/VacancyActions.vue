@@ -172,7 +172,7 @@ async function submit() {
           : 'You have already applied to this vacancy'
       "
       :description="outcome === 'submitted'
-        ? 'Our team will contact the company about your candidacy and follow up on next steps.'
+        ? `Track our team's review in Applications. You'll see when we record contact with the company.`
         : undefined"
       color="success"
       variant="soft"

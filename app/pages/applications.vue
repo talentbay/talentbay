@@ -236,6 +236,7 @@ const date = (value: string) =>
             </div>
             <CandidatesApplicationProgress :id="selected.id" :key="selected.id" />
             <UBadge
+              v-if="selected.status !== 'NEW'"
               :color="candidateApplicationBadge(selected).color"
               :label="candidateApplicationBadge(selected).label"
               variant="soft"

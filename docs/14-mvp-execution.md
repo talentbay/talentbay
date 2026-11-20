@@ -6,6 +6,25 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Application handling: what happened vs. what was recorded (20 November)
+
+- The receipt confirms TalentBay received the application. A closure marked **No company
+  response** needs a contact on that application that has not been corrected. Historical
+  unsupported reasons remain in the operator journal, not in candidate-facing claims.
+- A corrected handoff never permits another transfer. The candidate sees the correction
+  even outside the latest page, and cannot merge different versions of the journal by
+  loading earlier entries. Operators must reload and prepare a fresh candidate package
+  after a definitive access, not-found or conflict response; a lost response still permits
+  a retry of the original command without a second handoff.
+- The [acceptance record](15-mvp-acceptance-record.md) separates the verified synthetic
+  pilot from the main bot sign-in failure, missing source permissions and human acceptance.
+  No schema change, real job import or real candidate transmission in this change.
+- Verified on isolated Node 22: typecheck, lint, compiled build and HTTP smoke, 241 unit,
+  103 disposable PostgreSQL integration tests with migration upgrade/replay, and 35 public
+  plus 55 database-backed Chromium scenarios without retries. The tests exercise a real
+  stale-revision conflict and a simulated not-found followed by a same-revision reload.
+  Independent static re-review found no outstanding P1/P2 within this change.
+
 ## First employer pilot rehearsal and receipt navigation (20 November)
 
 - One compiled Chromium test now follows the **same** synthetic vacancy and receipt across
@@ -21,7 +40,7 @@ environments. See [current handoff](09-current-state.md) for the verified scope.
   54 database-backed Chromium scenarios without retries. Three focused scenarios then
   passed again with exact receipt response fields and no-store assertions. Independent
   static review found no blocking issue with the direct receipt path.
-- Separate operator follow-ups from a read-only review: prevent or qualify a public
+- Operator follow-ups identified here and addressed in the subsequent change above: prevent or qualify a public
   "No company response" reason without a valid recorded contact; distinguish corrected
   handoff entries in the summary without ever enabling repeat sharing. Confirm receipt
   at submission without implying the employer has already received a profile.
