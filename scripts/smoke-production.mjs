@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { get as httpGet } from 'node:http'
 import { setTimeout as delay } from 'node:timers/promises'
 import postgres from 'postgres'
 
@@ -63,6 +64,70 @@ async function assertResponse(path, expectedStatus, assertion) {
   }
 
   await assertion?.(response)
+}
+
+async function assertRawResponse(path, expectedStatuses, assertion) {
+  // Keep the request target verbatim: fetch normalizes dot segments before sending.
+  const response = await new Promise((resolve, reject) => {
+    const request = httpGet({
+      hostname: '127.0.0.1', port, path, agent: false,
+      headers: { accept: 'application/json' },
+      signal: AbortSignal.timeout(5_000), maxHeaderSize: 16_384,
+    }, (incoming) => {
+      const chunks = []
+      let bytes = 0
+      incoming.on('data', (chunk) => {
+        bytes += chunk.length
+        if (bytes > 16_384) {
+          incoming.destroy(new Error(`${path} exceeded the raw response body limit`))
+          return
+        }
+        chunks.push(chunk)
+      })
+      incoming.on('error', reject)
+      incoming.on('end', () => resolve({
+        status: incoming.statusCode,
+        headers: incoming.headers,
+        body: Buffer.concat(chunks).toString('utf8'),
+      }))
+    })
+    request.on('error', reject)
+  })
+
+  const location = response.headers.location
+  if (location && new URL(location, baseUrl).origin !== new URL(baseUrl).origin) {
+    throw new Error(`${path} returned an external redirect`)
+  }
+  if (!expectedStatuses.includes(response.status)) {
+    throw new Error(`${path} returned ${response.status}; expected ${expectedStatuses.join(' or ')}`)
+  }
+  try {
+    await assertion?.(response)
+  } catch (error) {
+    throw new Error(`${path} returned ${response.status} (${response.headers['content-type'] || 'no content type'}; ${response.headers['cache-control'] || 'no cache header'}): ${error.message}`, { cause: error })
+  }
+}
+
+function assertRawPrivateDenial(response) {
+  if (response.headers['cache-control'] !== 'no-store') {
+    throw new Error('Raw private API denial must not be cached')
+  }
+  if (!/^application\/json(?:;|$)/i.test(response.headers['content-type'] || '')
+    || /RAW_URL_SMOKE|private(?:@|%40)example\.invalid|<script>/i.test(response.body)) {
+    throw new Error('Raw private API denial must be JSON without reflected URL markers')
+  }
+
+  const body = JSON.parse(response.body)
+  const message = {
+    400: 'Invalid request', 401: 'Authentication required', 403: 'Forbidden', 404: 'Resource not found',
+  }[response.status]
+  const expected = response.status === 404 && body?.statusMessage === 'API endpoint not found'
+    ? { statusCode: 404, statusMessage: 'API endpoint not found' }
+    : { error: true, statusCode: response.status, statusMessage: message, message }
+  if (!body || Object.keys(body).length !== Object.keys(expected).length
+    || Object.entries(expected).some(([key, value]) => body[key] !== value)) {
+    throw new Error('Raw private API denial must contain only the safe public error contract')
+  }
 }
 
 async function assertDatabaseCatalog(body) {
@@ -178,6 +243,22 @@ try {
   await assertResponse('/api/v1/admin/dashboard', 403)
   for (const path of ['/API/v1/admin/dashboard', '/api/v1/ADMIN/dashboard', '/api/v1/admin/USERS', '/api/v1/admin/VACANCIES']) {
     await assertResponse(path, [403, 404])
+  }
+
+  for (const path of [
+    '//api/v1/profile', '//api/v1/admin/dashboard',
+    '/api//v1/profile', '/api/v1//admin/dashboard',
+    '/api/v1/./profile', '/api/v1/ignored/../admin/dashboard',
+    '/api/v1/%2e/profile', '/api/v1/ignored/%2e%2e/admin/dashboard',
+    '/api%2fv1%2fprofile', '/api/v1%2Fadmin%2Fdashboard', '/api/v1/admin%2fdashboard',
+  ]) {
+    await assertRawResponse(
+      `${path}?probe=RAW_URL_SMOKE_private%40example.invalid%3Cscript%3E`,
+      [400, 401, 403, 404], assertRawPrivateDenial,
+    )
+  }
+  for (const path of ['//attacker.invalid/', '///attacker.invalid/', '/..//attacker.invalid/', '/%2F%2Fattacker.invalid/']) {
+    await assertRawResponse(path, [301, 302, 307, 308, 400, 404])
   }
 
   for (const path of ['/api/v1/auth/telegram', '/api/v1/auth/link']) {

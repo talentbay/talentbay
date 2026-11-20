@@ -1,5 +1,10 @@
 function pathname(value: string) {
-  try { return new URL(value, 'http://localhost').pathname.toLowerCase().replace(/\/+$/, '') }
+  try {
+    // Classify origin-form targets conservatively; never use this to rewrite routing/auth.
+    const target = value.startsWith('/') ? `http://localhost${value}` : value
+    const path = new URL(target, 'http://localhost').pathname.replace(/%2f|%5c/gi, '/').replace(/\/+/g, '/')
+    return new URL(`http://localhost${path}`).pathname.toLowerCase().replace(/\/+$/, '')
+  }
   catch { return '' }
 }
 
