@@ -1,8 +1,5 @@
-export function safeHttpUrl(value: string | null | undefined): string | undefined {
-  if (!value) return undefined
-  try {
-    const url = new URL(value)
-    return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password ? url.href : undefined
-  }
-  catch { return undefined }
+import { safeHttpHref } from '#shared/utils/safe-http-url'
+
+export function safeHttpUrl(value: string | null | undefined) {
+  return safeHttpHref(value)
 }

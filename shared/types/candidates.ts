@@ -21,6 +21,12 @@ export type CandidateProfileResponse = {
   profile: CandidateProfileData | null
 }
 
+export type ReviewedCandidateProfileResponse = CandidateProfileResponse & {
+  candidateContext: string
+}
+
+export const candidateReviewRequiredCode = 'CANDIDATE_REVIEW_REQUIRED'
+
 export type CandidateApplicationItem = {
   id: number
   status: 'NEW' | 'VIEWED' | 'INTERVIEW' | 'OFFER' | 'REJECTED' | 'WITHDRAWN'

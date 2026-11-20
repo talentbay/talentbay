@@ -39,7 +39,7 @@ afterAll(async () => {
 describe('immutable managed-application intake', () => {
   it('creates one receipt and snapshot; later profile/role edits cannot change the submitted package', async () => {
     const userID = await candidate()
-    const application = await createApplication(userID, vacancyID, { ...await applicationInputFor(vacancyID), coverLetter: 'Original cover note.' })
+    const application = await createApplication(userID, vacancyID, { ...await applicationInputFor(vacancyID, userID), coverLetter: 'Original cover note.' })
     const before = await getAdminApplication(application.id)
     expect(before.submissionSnapshot).toMatchObject({ candidate: { email: null, profile: { headline: 'Original headline', telegram: '@snapshot_fixture' } }, recipient: { organisationID: companyID, name: 'Original Snapshot Company' }, vacancy: { id: vacancyID, title: 'Original Snapshot Role' } })
     await sql`update candidate_profiles set headline='Changed headline', telegram='@different_fixture' where user_id=${userID}`
@@ -55,17 +55,47 @@ describe('immutable managed-application intake', () => {
 
   it('rejects missing profile/contact without creating an application or receipt', async () => {
     const userID = await candidate(false)
-    const input = await applicationInputFor(vacancyID)
+    const input = await applicationInputFor(vacancyID, userID)
     await expect(createApplication(userID, vacancyID, input)).rejects.toMatchObject({ statusCode: 422 })
     await sql`insert into candidate_profiles (user_id,github_url,telegram) values (${userID},'https://example.invalid/cv',' ')`
-    await expect(createApplication(userID, vacancyID, input)).rejects.toMatchObject({ statusCode: 422 })
+    const current = await applicationInputFor(vacancyID, userID)
+    await expect(createApplication(userID, vacancyID, current)).rejects.toMatchObject({ statusCode: 422 })
     expect(await sql`select id from applications where user_id=${userID}`).toHaveLength(0)
     expect(await sql`select id from application_handling_events where actor_user_id=${userID}`).toHaveLength(0)
   })
 
+  it('keeps the reviewed candidate data as the precondition even when the vacancy is unchanged', async () => {
+    const userID = await candidate()
+    const original = await applicationInputFor(vacancyID, userID)
+    await sql`update candidate_profiles set telegram='@new_snapshot_fixture' where user_id=${userID}`
+    await expect(createApplication(userID, vacancyID, original)).rejects.toMatchObject({ statusCode: 412 })
+    const updatedContact = await applicationInputFor(vacancyID, userID)
+    expect(updatedContact.expectedContext).toBe(original.expectedContext)
+    expect(updatedContact.expectedCandidateContext).not.toBe(original.expectedCandidateContext)
+    await sql`update users set name='Revised name' where id=${userID}`
+    await expect(createApplication(userID, vacancyID, updatedContact)).rejects.toMatchObject({ statusCode: 412 })
+    expect(await sql`select id from applications where user_id=${userID}`).toHaveLength(0)
+    expect(await sql`select id from application_handling_events where actor_user_id=${userID}`).toHaveLength(0)
+    const renewed = await applicationInputFor(vacancyID, userID)
+    await sql`update candidate_profiles set telegram=telegram, updated_at=now() where user_id=${userID}`
+    await sql`update users set avatar_url='https://example.invalid/avatar', updated_at=now() where id=${userID}`
+    const receipt = await createApplication(userID, vacancyID, renewed)
+    expect((await getAdminApplication(receipt.id)).submissionSnapshot?.candidate).toMatchObject({ name: 'Revised name', profile: { telegram: '@new_snapshot_fixture' } })
+  })
+
+  it('distinguishes candidates with identical displayed profile fields', async () => {
+    const first = await candidate(), second = await candidate()
+    const reviewed = await applicationInputFor(vacancyID, first)
+    const other = await applicationInputFor(vacancyID, second)
+    expect(other.expectedCandidateContext).not.toBe(reviewed.expectedCandidateContext)
+    await expect(createApplication(second, vacancyID, reviewed)).rejects.toMatchObject({ statusCode: 412 })
+    expect(await sql`select id from applications where user_id in ${sql([first, second])}`).toHaveLength(0)
+    expect(await sql`select id from application_handling_events where actor_user_id in ${sql([first, second])}`).toHaveLength(0)
+  })
+
   it('serializes concurrent submission retries and withdrawal without duplicating events', async () => {
     const userID = await candidate()
-    const input = await applicationInputFor(vacancyID)
+    const input = await applicationInputFor(vacancyID, userID)
     const results = await Promise.allSettled(Array.from({ length: 4 }, () => createApplication(userID, vacancyID, input)))
     expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1)
     for (const result of results) if (result.status === 'rejected') expect(result.reason).toMatchObject({ statusCode: 409 })
@@ -78,7 +108,7 @@ describe('immutable managed-application intake', () => {
   it('rejects stale displayed content or recipient without an application or receipt, then accepts renewed review', async () => {
     const userID = await candidate()
     const shown = await getVacancyBySlug(suffix)
-    const input = { ...await applicationInputFor(vacancyID), expectedContext: shown!.applicationContext! }
+    const input = { ...await applicationInputFor(vacancyID, userID), expectedContext: shown!.applicationContext! }
     for (const mutation of ['role', 'company'] as const) {
       if (mutation === 'role') await sql`update vacancies set description=description || ' Changed duties.' where id=${vacancyID}`
       else await sql`update organisations set name='Different recipient' where id=${companyID}`
@@ -88,13 +118,20 @@ describe('immutable managed-application intake', () => {
     }
     const refreshed = await getVacancyBySlug(suffix)
     expect(refreshed!.applicationContext).not.toBe(input.expectedContext)
-    const accepted = await createApplication(userID, vacancyID, { ...input, expectedContext: refreshed!.applicationContext! })
+    await sql`update candidate_profiles set about='Revised introduction' where user_id=${userID}`
+    const renewed = await applicationInputFor(vacancyID, userID)
+    await expect(createApplication(userID, vacancyID, { ...input, expectedContext: refreshed!.applicationContext! }))
+      .rejects.toMatchObject({ statusCode: 412, data: { code: 'CANDIDATE_REVIEW_REQUIRED' } })
+    await expect(createApplication(userID, vacancyID, { ...input, expectedCandidateContext: renewed.expectedCandidateContext }))
+      .rejects.toMatchObject({ statusCode: 412 })
+    expect(await sql`select id from application_handling_events where actor_user_id=${userID}`).toHaveLength(0)
+    const accepted = await createApplication(userID, vacancyID, renewed)
     expect((await getAdminApplication(accepted.id)).submissionSnapshot).toMatchObject({ recipient: { name: 'Different recipient' }, vacancy: { contextRevision: refreshed!.applicationContext } })
   })
 
   it('binds the actual recipient ID even when a replacement company has the same displayed name', async () => {
     const userID = await candidate()
-    const input = await applicationInputFor(vacancyID)
+    const input = await applicationInputFor(vacancyID, userID)
     const [replacement] = await sql`insert into organisations (name,slug,status) select name,${randomUUID()},'ACTIVE' from organisations where id=${companyID} returning id`
     replacementCompanies.push(replacement!.id)
     try {

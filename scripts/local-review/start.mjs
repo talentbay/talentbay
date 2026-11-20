@@ -91,10 +91,10 @@ try {
     await new Promise(resolve => setTimeout(resolve, 500))
   }
   if (!ready) throw new Error('Local Nuxt server did not become ready')
-  const request = async (path, { method = 'GET', body, cookies = [] } = {}) => {
+  const request = async (path, { method = 'GET', body, cookies = [], headers = {} } = {}) => {
     const response = await fetch(`${appOrigin}${path}`, {
       method, signal: AbortSignal.timeout(30000),
-      headers: { origin: appOrigin, 'content-type': 'application/json', cookie: cookies.map(cookie => cookie.split(';')[0]).join('; ') },
+      headers: { ...headers, origin: appOrigin, 'content-type': 'application/json', cookie: cookies.map(cookie => cookie.split(';')[0]).join('; ') },
       body: body ? JSON.stringify(body) : undefined,
     })
     if (!response.ok) throw new Error(`Local review request ${method} ${path} failed (${response.status})`)

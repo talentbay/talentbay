@@ -6,6 +6,22 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Bind Apply to the candidate details actually reviewed (20 November)
+
+- The dialog captures both the vacancy and candidate version at acknowledgment. A
+  material change to either prevents a new receipt or handling event. Same-owner
+  retries reload the details and keep the note; a different account gets a blank
+  form. Receipt creation and manual contact with an employer remain separate.
+- Saving a profile also checks the displayed owner before writing. Old tabs missing
+  that owner must reopen. A failed session read is not evidence of sign-out; a verified
+  expired session offers sign-in on the same vacancy. New receipts share the preview's
+  safe-link rules. No migration, live-source change, or production operation.
+- Local verification on fictional data: typecheck, lint, 284 unit tests, 105 PostgreSQL
+  tests plus migration upgrade/replay, Node build, HTTP smoke, 41 public Chromium
+  scenarios, 69 PostgreSQL-backed Chromium scenarios (no retries), and backup/restore
+  on two disposable databases. Inspected the 390px inline editor. The independent code
+  review rechecked the owner precondition, session recovery and safe-link projection.
+
 ## Recover an open application without changing its target (20 November)
 
 - After a rejected submission the note stays in the current user's dialog. A removed or

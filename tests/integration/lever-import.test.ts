@@ -47,7 +47,7 @@ describe('Lever adapter → existing import/review boundary', () => {
     const [user] = await sql`insert into users (name) values ('Lever Candidate Fixture') returning id`
     userID = user!.id
     await sql`insert into candidate_profiles (user_id,telegram) values (${userID},'@lever_fixture')`
-    const application = await createApplication(userID, vacancyID, await applicationInputFor(vacancyID))
+    const application = await createApplication(userID, vacancyID, await applicationInputFor(vacancyID, userID))
     const same = normalizeLeverJobs(source, [{ ...raw, id: id.toUpperCase() }])
     expect((await importVacancies(same.items))[0]).toMatchObject({ id: vacancyID, operation: 'UNCHANGED' })
     expect(await getVacancyBySlug(created!.slug)).toMatchObject({ id: vacancyID })

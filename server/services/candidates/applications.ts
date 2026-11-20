@@ -16,6 +16,7 @@ export const applicationInputSchema = z.object({
   disclosureVersion: z.literal(applicationDisclosureVersion),
   shareAcknowledged: z.literal(true),
   expectedContext: z.string().regex(/^v1:[a-f0-9]{64}$/),
+  expectedCandidateContext: z.string().length(67).regex(/^v1:[a-f0-9]{64}$/),
 }).strict()
 
 export type ApplicationInput = z.infer<typeof applicationInputSchema>
@@ -65,14 +66,11 @@ export async function createApplication(
     const [user] = await tx.select().from(schema.users).where(eq(schema.users.id, userID)).for('share')
     if (!user) throw createError({ statusCode: 404, statusMessage: 'User not found' })
     const [profile] = await tx.select().from(schema.candidateProfiles).where(eq(schema.candidateProfiles.userID, userID)).for('share')
-    const snapshot = captureApplicationSnapshot({
-      user: { id: user.id, name: user.name, email: user.email, avatarUrl: null },
-      profile: profile ? {
-        headline: profile.headline, about: profile.about, city: profile.city, countryCode: profile.countryCode,
-        phone: profile.phone, telegram: profile.telegram, githubUrl: profile.githubUrl, linkedinUrl: profile.linkedinUrl,
-      } : null,
-    }, { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID, revision: vacancy.vacancyRevision.toISOString(), contextRevision: body.expectedContext },
-    { organisationID: vacancy.organisationID, name: vacancy.companyName, revision: vacancy.organisationRevision.toISOString() }, new Date())
+    const snapshot = captureApplicationSnapshot(
+      { user, profile: profile ?? null }, body.expectedCandidateContext,
+      { id: vacancy.id, slug: vacancy.slug, title: vacancy.title, city: vacancy.city, countryCode: vacancy.countryCode, sourceUrl: vacancy.sourceUrl, sourceExternalID: vacancy.sourceExternalID, revision: vacancy.vacancyRevision.toISOString(), contextRevision: body.expectedContext },
+      { organisationID: vacancy.organisationID, name: vacancy.companyName, revision: vacancy.organisationRevision.toISOString() }, new Date(),
+    )
 
     const [application] = await tx
       .insert(schema.applications)

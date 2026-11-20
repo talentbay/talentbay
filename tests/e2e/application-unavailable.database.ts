@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test as base } from '@playwright/test'
 import type { Locator, Page, Route } from '@playwright/test'
 import postgres from 'postgres'
+import { setFixtureProfile } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const origin = 'http://127.0.0.1:3129'
@@ -37,7 +38,7 @@ const test = base.extend<{ draft: Draft }>({
       const login = await page.request.post('/api/v1/auth/telegram', { headers: { origin }, data: { initData: signedLaunch(subject, 'Recovery candidate') } })
       expect(login.status()).toBe(200)
       const userID = Number((await login.json()).user.id)
-      expect((await page.request.put('/api/v1/profile', { headers: { origin }, data: { telegram: '@recovery_fixture' } })).status()).toBe(200)
+      await setFixtureProfile(page.request, userID, { telegram: '@recovery_fixture' })
       await page.setViewportSize({ width: 390, height: 844 })
       await page.goto(`/jobs/${slug}`)
       await page.getByRole('button', { name: 'Apply', exact: true }).click()

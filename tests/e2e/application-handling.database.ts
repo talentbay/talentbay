@@ -2,7 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import type { BrowserContext } from '@playwright/test'
 import postgres from 'postgres'
-import { getApplicationContext } from './support/application'
+import { getApplicationPreconditions, setFixtureProfile } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
@@ -34,10 +34,10 @@ test('candidate → operator contact/package/manual handoff → candidate progre
   const candidate = await browser.newContext({ baseURL: origin })
   const operator = await browser.newContext({ baseURL: origin })
   try {
-    await login(candidate, subject, 'Handling Browser Candidate')
-    await candidate.request.put('/api/v1/profile', { headers: { origin }, data: { headline: 'Submitted headline', telegram: '@handling_browser' } })
-    const expectedContext = await getApplicationContext(candidate.request, suffix)
-    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, coverLetter: 'Submitted browser note.', expectedContext } })
+    const owner = await login(candidate, subject, 'Handling Browser Candidate')
+    await setFixtureProfile(candidate.request, owner.id, { headline: 'Submitted headline', telegram: '@handling_browser' })
+    const preconditions = await getApplicationPreconditions(candidate.request, suffix)
+    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, coverLetter: 'Submitted browser note.', ...preconditions } })
     expect(receipt.status()).toBe(200)
     applicationID = (await receipt.json()).id
     const admin = await login(operator, subject + 1, 'Handling Browser Operator')
@@ -164,11 +164,11 @@ test('candidate → operator contact/package/manual handoff → candidate progre
 test('a stale review cannot expose or reuse a candidate package until the operator reloads', async ({ browser, context, page }) => {
   const candidate = await browser.newContext({ baseURL: origin })
   try {
-    await login(candidate, subject + 8, 'Packet revision candidate')
+    const owner = await login(candidate, subject + 8, 'Packet revision candidate')
     const headers = { origin }
-    expect((await candidate.request.put('/api/v1/profile', { headers, data: { telegram: '@packet_fixture' } })).ok()).toBe(true)
-    const expectedContext = await getApplicationContext(candidate.request, suffix)
-    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext } })
+    await setFixtureProfile(candidate.request, owner.id, { telegram: '@packet_fixture' })
+    const preconditions = await getApplicationPreconditions(candidate.request, suffix)
+    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, ...preconditions } })
     expect(receipt.ok()).toBe(true)
     const { id } = await receipt.json()
     const admin = await login(context, subject + 9, 'Packet revision operator')
@@ -257,10 +257,10 @@ test('closed handling → reopen with lost-response retry → append correction 
   const candidate = await browser.newContext({ baseURL: origin })
   const operator = await browser.newContext({ baseURL: origin })
   try {
-    await login(candidate, subject + 3, 'Recovery Browser Candidate')
-    await candidate.request.put('/api/v1/profile', { headers: { origin }, data: { telegram: '@recovery_fixture' } })
-    const expectedContext = await getApplicationContext(candidate.request, suffix)
-    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext } })
+    const owner = await login(candidate, subject + 3, 'Recovery Browser Candidate')
+    await setFixtureProfile(candidate.request, owner.id, { telegram: '@recovery_fixture' })
+    const preconditions = await getApplicationPreconditions(candidate.request, suffix)
+    const receipt = await candidate.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, ...preconditions } })
     expect(receipt.status()).toBe(200)
     const id = (await receipt.json()).id
     const admin = await login(operator, subject + 4, 'Recovery Browser Operator')

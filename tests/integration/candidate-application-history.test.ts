@@ -37,7 +37,7 @@ afterAll(async () => {
 })
 
 async function submit() {
-  return createApplication(owner, vacancyID, { ...await applicationInputFor(vacancyID), coverLetter: 'Submitted note.' })
+  return createApplication(owner, vacancyID, { ...await applicationInputFor(vacancyID, owner), coverLetter: 'Submitted note.' })
 }
 
 describe('candidate application history', () => {

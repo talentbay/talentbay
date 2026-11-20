@@ -17,7 +17,7 @@ const suffix = randomUUID()
 const sourceName = `Publication regression ${suffix}`
 const sql = postgres(process.env.DATABASE_MIGRATION_URL || process.env.DATABASE_URL!, { max: 1, prepare: false })
 const query = { q: '', sort: 'newest' as const, limit: 50 }
-const applicationInput = { disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true as const, expectedContext: `v1:${'0'.repeat(64)}` }
+const applicationInput = { disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true as const, expectedContext: `v1:${'0'.repeat(64)}`, expectedCandidateContext: `v1:${'0'.repeat(64)}` }
 
 function item(id: string): VacancyImportItem {
   return {
@@ -76,7 +76,7 @@ describe('import publication invariants', () => {
     const first = await published(input)
     const [user] = await sql`insert into users (name, email) values ('Candidate', ${`publication-${suffix}@talentbay.invalid`}) returning id`
     await sql`insert into candidate_profiles (user_id, headline) values (${user!.id}, 'Publication fixture')`
-    const application = await createApplication(user!.id, first.id, { ...await applicationInputFor(first.id), coverLetter: 'Keep this application.' })
+    const application = await createApplication(user!.id, first.id, { ...await applicationInputFor(first.id, user!.id), coverLetter: 'Keep this application.' })
     const before = await listVacancies(query)
 
     const [updated] = await importVacancies([{ ...input, vacancy: { ...input.vacancy, title: 'Unreviewed replacement' } }])

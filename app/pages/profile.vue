@@ -231,6 +231,7 @@ const linkedinUrl = computed(() =>
         <CandidatesProfileEditor
           v-model:open="editing"
           :profile="data.profile"
+          :profile-owner-id="data.user.id"
           @saved="saved"
         />
       </div>

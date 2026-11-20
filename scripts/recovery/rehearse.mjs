@@ -63,8 +63,8 @@ async function startApp(cluster) {
     const delay = Math.min(100, deadline - performance.now())
     if (delay > 0) await sleep(delay, undefined, { signal: stopped.signal })
   }
-  const request = async (path, { method = 'GET', body, cookies = [], expected = 200 } = {}) => {
-    const response = await fetch(origin+path, { method, headers: { origin, 'content-type': 'application/json', cookie: cookies.map(value => value.split(';')[0]).join('; ') }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(15_000) })
+  const request = async (path, { method = 'GET', body, cookies = [], expected = 200, headers = {} } = {}) => {
+    const response = await fetch(origin+path, { method, headers: { ...headers, origin, 'content-type': 'application/json', cookie: cookies.map(value => value.split(';')[0]).join('; ') }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(15_000) })
     assert.equal(response.status, expected, 'Unexpected synthetic API status')
     return { data: await response.json(), cookies: response.headers.getSetCookie(), requestID: response.headers.get('x-request-id') }
   }
@@ -131,10 +131,10 @@ try {
   assert.equal(JSON.stringify(progress.data).includes('Synthetic recovery correction only'), false)
   await after.request(`/api/v1/admin/applications/${handoff.application_id}/package`, { cookies: restoredAdmin.cookies, expected: 409 })
   const newCandidate = await after.signIn(personas.newcomer)
-  await after.request('/api/v1/profile', { method: 'PUT', cookies: newCandidate.cookies, body: { telegram: '@synthetic_restore_candidate' } })
+  const profile = await after.request('/api/v1/profile', { method: 'PUT', cookies: newCandidate.cookies, headers: { 'X-TalentBay-Profile-Owner': String(newCandidate.user.id) }, body: { telegram: '@synthetic_restore_candidate' } })
   const jobs = await after.request('/api/v1/vacancies')
   assert.equal(jobs.data.total, 6)
-  const application = await after.request(`/api/v1/vacancies/${jobs.data.items[0].id}/applications`, { method: 'POST', cookies: newCandidate.cookies, body: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext: jobs.data.items[0].applicationContext } })
+  const application = await after.request(`/api/v1/vacancies/${jobs.data.items[0].id}/applications`, { method: 'POST', cookies: newCandidate.cookies, body: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext: jobs.data.items[0].applicationContext, expectedCandidateContext: profile.data.candidateContext } })
   await after.request(`/api/v1/applications/${application.data.id}/withdraw`, { method: 'POST', cookies: newCandidate.cookies, body: {} })
   // A running process is not DB readiness. Return a real error, never an empty fake queue.
   stage('liveness versus database failure')

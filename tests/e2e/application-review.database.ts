@@ -2,7 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import type { BrowserContext } from '@playwright/test'
 import postgres from 'postgres'
-import { getApplicationContext } from './support/application'
+import { getApplicationPreconditions, getCandidateContext, setFixtureProfile } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
@@ -42,8 +42,9 @@ test('application APIs enforce current admin role, ownership, origin and bounded
   expect((await context.request.post('/api/v1/applications/1/withdraw', { headers: { origin }, data: {} })).status()).toBe(401)
   const candidate = await login(context, subject, 'Review Test Candidate')
   const applyUrl = `/api/v1/vacancies/${vacancyID}/applications`
-  const expectedContext = await getApplicationContext(context.request, suffix)
-  const acknowledgment = { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext }
+  const { expectedContext, expectedCandidateContext } = await getApplicationPreconditions(context.request, suffix)
+  const notice = { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedContext }
+  const acknowledgment = { ...notice, expectedCandidateContext }
   expect((await context.request.post(applyUrl, { headers: { origin }, data: acknowledgment })).status()).toBe(422)
   expect((await context.request.post(applyUrl, { headers: { origin }, data: {} })).status()).toBe(400)
   expect((await context.request.post(applyUrl, { headers: { origin }, data: { ...acknowledgment, userID: candidate.id } })).status()).toBe(400)
@@ -51,8 +52,9 @@ test('application APIs enforce current admin role, ownership, origin and bounded
   expect((await context.request.post(applyUrl, { headers: { origin }, data: { coverLetter: 'x'.repeat(24_001) } })).status()).toBe(413)
   expect((await context.request.post(applyUrl, { headers: { origin: 'https://attacker.invalid' }, data: acknowledgment })).status()).toBe(403)
   expect(await sql`select id from applications where user_id=${candidate.id}`).toHaveLength(0)
-  await context.request.put('/api/v1/profile', { headers: { origin }, data: { telegram: '@review_fixture' } })
-  const response = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { coverLetter: 'Review browser cover note.', ...acknowledgment } })
+  await setFixtureProfile(context.request, candidate.id, { telegram: '@review_fixture' })
+  expect((await context.request.post(applyUrl, { headers: { origin }, data: notice })).status()).toBe(400)
+  const response = await context.request.post(applyUrl, { headers: { origin }, data: { coverLetter: 'Review browser cover note.', ...notice, expectedCandidateContext: await getCandidateContext(context.request) } })
   expect(response.status()).toBe(200)
   applicationID = (await response.json()).id
   expect((await context.request.get(`/api/v1/admin/applications/${applicationID}`)).status()).toBe(403)

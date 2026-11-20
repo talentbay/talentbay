@@ -26,7 +26,7 @@ async function application(legacy = false) {
   const [vacancy] = await sql`insert into vacancies (organisation_id,slug,title,description,status,review_status,employment_type,workplace_type,country_code) values (${company!.id},${slug},'Handling Engineer','Synthetic handling role','PUBLISHED','VERIFIED','FULL_TIME','REMOTE','GB') returning id`
   const row = legacy
     ? (await sql`insert into applications (user_id,vacancy_id) values (${user!.id},${vacancy!.id}) returning id`)[0]!
-    : await createApplication(user!.id, vacancy!.id, await applicationInputFor(vacancy!.id))
+    : await createApplication(user!.id, vacancy!.id, await applicationInputFor(vacancy!.id, user!.id))
   return { id: row.id as number, userID: user!.id as number, vacancyID: vacancy!.id as number, revision: legacy ? 0 : 1 }
 }
 async function contacted(legacy = false) {

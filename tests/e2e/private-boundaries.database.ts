@@ -2,7 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import type { BrowserContext } from '@playwright/test'
 import postgres from 'postgres'
-import { getApplicationContext } from './support/application'
+import { getApplicationPreconditions, setFixtureProfile } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
@@ -46,17 +46,18 @@ test('anonymous private API failures are non-cacheable before body or resource v
 
 test('profile and linking inputs are bounded/strict and cannot choose another user or privilege', async ({ context }) => {
   const user = await signIn(context, 1)
-  expect((await context.request.put('/api/v1/profile', { headers, data: { telegram: '@private_owner_fixture' } })).status()).toBe(200)
+  await setFixtureProfile(context.request, user.id, { telegram: '@private_owner_fixture' })
   for (const endpoint of ['/api/v1/profile', '/api/v1/auth/link']) {
     const method = endpoint.endsWith('link') ? 'POST' : 'PUT'
-    const large = await context.request.fetch(endpoint, { method, headers, data: ' '.repeat(70_000) + '{}' })
+    const inputHeaders = method === 'PUT' ? { ...headers, 'X-TalentBay-Profile-Owner': String(user.id) } : headers
+    const large = await context.request.fetch(endpoint, { method, headers: inputHeaders, data: ' '.repeat(70_000) + '{}' })
     expect(large.status(), endpoint).toBe(413)
     expect(large.headers()['cache-control']).toBe('no-store')
-    const wrongType = await context.request.fetch(endpoint, { method, headers: { ...headers, 'content-type': 'text/plain' }, data: '{}' })
+    const wrongType = await context.request.fetch(endpoint, { method, headers: { ...inputHeaders, 'content-type': 'text/plain' }, data: '{}' })
     expect(wrongType.status()).toBe(415)
     const crossOrigin = await context.request.fetch(endpoint, { method, headers: { ...headers, origin: 'https://attacker.invalid' }, data: {} })
     expect(crossOrigin.status()).toBe(403)
-    const injected = await context.request.fetch(endpoint, { method, headers, data: { userID: user.id + 1, role: 'ADMIN', ...(endpoint.endsWith('link') ? { provider: 'GOOGLE' } : { telegram: '@not_accepted' }) } })
+    const injected = await context.request.fetch(endpoint, { method, headers: inputHeaders, data: { userID: user.id + 1, role: 'ADMIN', ...(endpoint.endsWith('link') ? { provider: 'GOOGLE' } : { telegram: '@not_accepted' }) } })
     expect(injected.status()).toBe(400)
   }
   expect((await sql`select role from users where id=${user.id}`)[0]!.role).toBe('USER')
@@ -71,9 +72,9 @@ test('owner, another candidate and current/revoked admin receive only their perm
     const other = await signIn(otherContext, 3), admin = await signIn(adminContext, 4)
     await sql`update users set role='ADMIN' where id=${admin.id}`
     await signIn(adminContext, 4)
-    expect((await context.request.put('/api/v1/profile', { headers, data: { telegram: '@PRIVATE_OWNER_CONTACT', about: 'PRIVATE_OWNER_ABOUT' } })).status()).toBe(200)
-    const expectedContext = await getApplicationContext(context.request, slug)
-    const created = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, coverLetter: 'PRIVATE_OWNER_NOTE', expectedContext } })
+    await setFixtureProfile(context.request, owner.id, { telegram: '@PRIVATE_OWNER_CONTACT', about: 'PRIVATE_OWNER_ABOUT' })
+    const preconditions = await getApplicationPreconditions(context.request, slug)
+    const created = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, coverLetter: 'PRIVATE_OWNER_NOTE', ...preconditions } })
     expect(created.status()).toBe(200)
     const id = (await created.json()).id
     for (const [revision, action, extra] of [[1, 'ASSIGN', { assigneeID: admin.id }], [2, 'START', {}], [3, 'CONTACT', { channel: 'EMAIL', occurredAt: new Date().toISOString(), reference: 'PRIVATE_INTERNAL_REFERENCE', privateNote: 'PRIVATE_INTERNAL_NOTE' }]] as const) {

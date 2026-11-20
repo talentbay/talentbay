@@ -1,3 +1,5 @@
+import { candidateReviewRequiredCode } from '#shared/types/candidates'
+
 function pathname(value: string) {
   try {
     // Classify origin-form targets conservatively; never use this to rewrite routing/auth.
@@ -30,9 +32,12 @@ const messages: Record<number, string> = {
   422: 'Invalid request data', 429: 'Too many requests', 500: 'Service unavailable', 503: 'Service unavailable',
 }
 
-export function safeApiFailure(error: { statusCode?: unknown }) {
+export function safeApiFailure(error: { statusCode?: unknown; data?: unknown }) {
   const value = error.statusCode
   const status = typeof value === 'number' && Number.isInteger(value) && value >= 400 && value <= 599 ? value : 500
   const statusMessage = messages[status] ?? 'Request failed'
-  return { status, body: { error: true, statusCode: status, statusMessage, message: statusMessage } }
+  const data = error.data
+  const staleCandidate = status === 412 && data !== null && typeof data === 'object' && !Array.isArray(data)
+    && Object.getOwnPropertyDescriptor(data, 'code')?.value === candidateReviewRequiredCode
+  return { status, body: { error: true, statusCode: status, statusMessage, message: statusMessage, ...(staleCandidate ? { code: candidateReviewRequiredCode } : {}) } }
 }

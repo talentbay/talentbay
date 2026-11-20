@@ -1,38 +1,83 @@
 <script setup lang="ts">
 import type {
   CandidateProfileData,
-  CandidateProfileResponse,
+  ReviewedCandidateProfileResponse,
 } from '#shared/types/candidates'
 import { emptyCandidateProfile } from '~/utils/candidate-profile'
+import { readApplicationSession } from '~/utils/read-application-session'
 
-const props = defineProps<{ profile: CandidateProfileData | null }>()
-const emit = defineEmits<{ saved: [value: CandidateProfileResponse] }>()
+const props = defineProps<{ profile: CandidateProfileData | null; profileOwnerId: number | null }>()
+const emit = defineEmits<{ saved: [value: ReviewedCandidateProfileResponse]; ownerMismatch: [] }>()
+const { user, session } = useUserSession()
 const open = defineModel<boolean>('open', { default: false })
 const form = reactive(emptyCandidateProfile())
 const saving = ref(false)
 const error = ref('')
 const dirty = ref(false)
+let generation = 0
+let draftOwner: number | undefined
+onBeforeUnmount(() => { generation++ })
+function discard() {
+  generation++
+  draftOwner = undefined
+  open.value = false
+  Object.assign(form, emptyCandidateProfile())
+  dirty.value = false
+  saving.value = false
+  error.value = ''
+}
+watch(() => user.value?.id, discard, { flush: 'sync' })
+async function ownerMismatch() {
+  discard()
+  const request = generation
+  emit('ownerMismatch')
+  try {
+    const fresh = await readApplicationSession()
+    if (request === generation) session.value = fresh
+  } catch {
+    // The rejected draft stays discarded even if the session cannot be confirmed.
+  }
+}
 watch(open, (value) => {
-  if (!value || dirty.value) return
+  if (!value) return
+  if (!props.profileOwnerId || props.profileOwnerId !== user.value?.id) {
+    void ownerMismatch()
+    return
+  }
+  if (dirty.value) return
+  draftOwner = props.profileOwnerId
   for (const key of Object.keys(form) as Array<keyof typeof form>) form[key] = props.profile?.[key] ?? ''
 })
 async function save() {
-  if (saving.value) return
+  const owner = draftOwner
+  if (!open.value || !owner || owner !== props.profileOwnerId || owner !== user.value?.id || saving.value) return
+  const request = generation
   saving.value = true
   error.value = ''
   try {
-    const result = await $fetch<CandidateProfileResponse>('/api/v1/profile', {
+    const result = await $fetch<ReviewedCandidateProfileResponse>('/api/v1/profile', {
       method: 'PUT',
+      headers: { 'X-TalentBay-Profile-Owner': String(owner) },
       body: form,
     })
+    if (request !== generation || owner !== user.value?.id) return
+    if (result?.user?.id !== owner) {
+      await ownerMismatch()
+      return
+    }
     dirty.value = false
     emit('saved', result)
     open.value = false
-  } catch {
+  } catch (cause) {
+    if (request !== generation) return
+    if ((cause as { statusCode?: number }).statusCode === 412) {
+      await ownerMismatch()
+      return
+    }
     error.value =
       'Your profile could not be saved. Check the fields and try again. Your draft is still here.'
   } finally {
-    saving.value = false
+    if (request === generation) saving.value = false
   }
 }
 </script>

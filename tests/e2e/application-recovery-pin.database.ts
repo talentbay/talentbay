@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import type { Request } from '@playwright/test'
 import postgres from 'postgres'
 import { makeVacancyStart } from '../../shared/utils/telegram-vacancy-entry'
-import { getApplicationContext } from './support/application'
+import { getApplicationContext, setFixtureProfile } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const origin = 'http://127.0.0.1:3129'
@@ -24,7 +24,7 @@ test('a pinned Apply reload keeps the owner draft without falling back to the ch
     const login = await page.request.post('/api/v1/auth/telegram', { headers: { origin }, data: { initData: signedLaunch(subject, 'Pin recovery candidate') } })
     expect(login.status()).toBe(200)
     const owner = (await login.json()).user.id
-    expect((await page.request.put('/api/v1/profile', { headers: { origin }, data: { telegram: '@pin_recovery_fixture' } })).status()).toBe(200)
+    await setFixtureProfile(page.request, owner, { telegram: '@pin_recovery_fixture' })
     const original = await getApplicationContext(page.request, slug)
     const pin = makeVacancyStart(id, original)
     expect(pin).not.toBeNull()

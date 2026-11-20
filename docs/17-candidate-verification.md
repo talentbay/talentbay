@@ -1,5 +1,12 @@
 # Candidate Browser Verification
 
+**Reviewing changed contact details.** The Apply dialog binds acknowledgment to the
+displayed account, profile and vacancy. When the same candidate edits their contacts
+in another tab, they can review the new details without retyping the note. A different
+account starts an empty form. A failed profile read offers a retry, not a submission.
+Only a submission response with a valid receipt ID can show the new-application success
+message. This is the same Candidate v1 dialog in the web and Mini App layouts.
+
 **Apply on an unavailable listing (20 November).** The existing Apply dialog keeps
 a selectable cover note and a route to Jobs when the open application can no longer
 be submitted. Closing the dialog alone does not copy the note to another listing.
