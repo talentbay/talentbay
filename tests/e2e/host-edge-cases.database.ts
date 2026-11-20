@@ -61,7 +61,7 @@ test('failed SDK loading leaves a usable browser fallback and no launch fragment
 })
 
 for (const [offset, sdk] of [[12, 'aborted'], [13, 'loaded without WebApp']] as const) {
-  test(`a fresh carrier signs in through the real server with the SDK ${sdk}`, async ({ page }) => {
+  test(`a fresh carrier signs in through the real server with the SDK ${sdk}`, { tag: '@mobile-pilot' }, async ({ page }) => {
     const id = subject + offset
     const name = 'Fresh carrier candidate'
     const fresh = signedLaunch(id, name, 'job_nonexistent-fixture')
@@ -129,7 +129,7 @@ test('a cache hint alone never posts auth when the SDK is unavailable', async ({
   expect(await sql`select id from oauth_accounts where provider='TELEGRAM' and provider_account_id=${String(subject + 14)}`).toHaveLength(0)
 })
 
-test('hashless reload restores the SDK from its cached launch hint and validates the identity again', async ({ page }) => {
+test('hashless reload restores the SDK from its cached launch hint and validates the identity again', { tag: '@mobile-pilot' }, async ({ page }) => {
   const initData = signedLaunch(subject+5, 'Cached SDK Candidate')
   await page.addInitScript(({ initData }) => {
     sessionStorage.setItem('__telegram__initParams', JSON.stringify({ tgWebAppData: initData }))
@@ -160,7 +160,7 @@ test('a cached forged launch is only a loading hint, never a signed identity', a
   expect((await (await page.request.get('/api/_auth/session')).json()).user).toBeUndefined()
 })
 
-test('an encoded launch authenticates before router normalization and clears its unchanged carrier', async ({ page }) => {
+test('an encoded launch authenticates before router normalization and clears its unchanged carrier', { tag: '@mobile-pilot' }, async ({ page }) => {
   const initData = signedLaunch(subject+6, 'Encoded Launch Candidate')
   await page.addInitScript(({ initData }) => { window.Telegram = { WebApp: { initData, ready: () => {} } } }, { initData })
   const response = page.waitForResponse(response => response.url().endsWith('/api/v1/auth/telegram'))
@@ -227,7 +227,7 @@ test('navigation during SDK loading authenticates the fresh launch, not an expir
   } finally { release() }
 })
 
-test('optional host methods throwing do not block real auth or repeat identity creation on reload', async ({ page }) => {
+test('optional host methods throwing do not block real auth or repeat identity creation on reload', { tag: '@mobile-pilot' }, async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
   await page.setViewportSize({ width: 390, height: 844 })
@@ -253,7 +253,7 @@ test('optional host methods throwing do not block real auth or repeat identity c
   expect(errors).toEqual([])
 })
 
-test('slow launch auth does not block public navigation or overwrite a non-launch destination', async ({ page }) => {
+test('slow launch auth does not block public navigation or overwrite a non-launch destination', { tag: '@mobile-pilot' }, async ({ page }) => {
   let release!: () => void
   let releaseProfile!: () => void
   const hold = new Promise<void>(resolve => { release = resolve })

@@ -6,6 +6,21 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Mobile WebKit pilot path (20 November)
+
+The PostgreSQL browser suite now runs the existing seven `@mobile-pilot` cases
+with Playwright WebKit and an emulated iPhone, alongside the full Chromium project.
+They exercise signed launch, hashless reload, navigation during sign-in and the
+same synthetic vacancy from operator publication to candidate receipt and recorded
+contact. The auth server, session and database are real local code; the Telegram
+host, people, employer and city figures are fixtures.
+
+Local: all 80 database browser cases passed without retries (73 Chromium, 7 WebKit),
+as did typecheck, lint, CI browser/scope tests and a WebKit startup probe.
+No application, production configuration or real bot was changed. Native main-bot
+sign-in remains unverified; use the [runtime triage](28-telegram-entry-bot.md#main-bot-distinguish-launch-sign-in-and-session-20-november-2026)
+for a fresh failed attempt on the serving deployment.
+
 ## Keep a relocation estimate attached to the current offer (20 November)
 
 - Reproduced on the previous build: an open London listing changed its offered pay

@@ -335,6 +335,7 @@ For database browser tests, create a disposable local PostgreSQL database and ro
 ```bash
 node scripts/assert-ci-database.mjs
 pnpm db:migrate
+pnpm exec playwright install webkit
 pnpm exec playwright test --config playwright.database.config.ts
 ```
 
@@ -355,7 +356,10 @@ the inconsistent desktop/mobile primary colors and uses unframed profile/setting
 The user explicitly authorized project design changes on 2026-10-26. Figma itself has not
 yet been rewritten to claim a new approved freeze.
 
-Chromium host simulation verifies integration, not native Telegram. Real Google/GitHub
-callbacks, mobile Safari/WebView behavior, provider entitlement, domain/bot configuration,
+The database suite runs the full Chromium project and the `@mobile-pilot` cases in
+WebKit with Playwright's iPhone 13 device profile. To run only the latter, add
+`--project=mobile-webkit`. This covers the signed launch, session/navigation and
+the two-role application path. Emulation does not run the iOS Telegram client or contact a bot.
+Real Google/GitHub callbacks, mobile Safari/WebView behavior, provider entitlement, domain/bot configuration,
 approved content/legal copy and release verification remain required before public beta.
 No passing build or local browser test means merged, deployed or live-provider verified.

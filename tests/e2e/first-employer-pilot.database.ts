@@ -46,7 +46,7 @@ test.afterAll(async () => {
   } finally { await sql.end() }
 })
 
-test('first employer pilot: reviewed CSV to candidate receipt and recorded company contact', async ({ browser, context, page: candidate }) => {
+test('first employer pilot: reviewed CSV to candidate receipt and recorded company contact', { tag: '@mobile-pilot' }, async ({ browser, context, page: candidate }) => {
   test.slow()
   const operatorContext = await browser.newContext({ baseURL: origin })
   try {

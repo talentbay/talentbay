@@ -11,7 +11,10 @@ export default defineConfig({
   reporter: [['list'], ['html', { outputFolder: 'playwright-report/database', open: 'never' }]],
   outputDir: 'test-results/database',
   use: { baseURL: 'http://127.0.0.1:3129', trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium-db', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium-db', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile-webkit', grep: /@mobile-pilot\b/, use: { ...devices['iPhone 13'] } },
+  ],
   webServer: {
     command: 'node .output/server/index.mjs', url: 'http://127.0.0.1:3129/api/health',
     reuseExistingServer: false, gracefulShutdown: { signal: 'SIGTERM', timeout: 3000 },

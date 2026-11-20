@@ -186,5 +186,10 @@ jobs:
           pnpm exec playwright install --only-shell chromium
           node scripts/ci/browser.mjs
 
+      - name: Install WebKit for the mobile pilot scenarios
+        run: |
+          pnpm exec playwright install webkit
+          node scripts/ci/browser.mjs webkit
+
       - name: Browser to API to PostgreSQL tests
         run: pnpm exec playwright test --config playwright.database.config.ts
