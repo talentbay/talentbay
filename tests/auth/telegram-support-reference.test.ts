@@ -16,7 +16,7 @@ beforeEach(() => {
   loggedIn.value = true
   vi.stubGlobal('window', {
     Telegram: { WebApp: { initData: 'private-fixture', ready: vi.fn() } },
-    location: { hash: '#tgWebAppData=' }, history: { replaceState: vi.fn() }, setTimeout,
+    location: { hash: '#tgWebAppData=current-launch-fixture' }, history: { replaceState: vi.fn() }, setTimeout,
   })
   vi.stubGlobal('document', {
     documentElement: { style: { setProperty: vi.fn() } },
@@ -41,11 +41,26 @@ async function initialize() {
 }
 
 it.each(['TG-SDK', 'TG-LAUNCH'] as const)('identifies %s before any sign-in request', async (reference) => {
+  window.location.hash = '#tgWebAppData='
   if (reference === 'TG-SDK') delete window.Telegram
-  else window.Telegram!.WebApp!.initData = ''
+  // Even a populated SDK cache cannot supply a different identity for an explicitly empty launch.
   await initialize()
   expect(state).toMatchObject({ status: 'error', message: generic, supportReference: reference })
   expect(post).not.toHaveBeenCalled()
+})
+
+it.each(['load-error', 'timeout'] as const)('validates the current carrier on SDK %s without enabling native controls', async (failure) => {
+  delete window.Telegram
+  if (failure === 'timeout') {
+    document.head.append = vi.fn()
+    Object.assign(window, { setTimeout: (callback: () => void) => setTimeout(callback, 0) })
+  }
+  await initialize()
+  expect(post).toHaveBeenCalledExactlyOnceWith('/api/v1/auth/telegram', {
+    method: 'POST', body: { initData: 'current-launch-fixture' }, timeout: 10_000,
+  })
+  expect(state).toMatchObject({ kind: 'web', status: 'ready', haptics: false })
+  expect(refresh).toHaveBeenCalledOnce()
 })
 
 it.each([

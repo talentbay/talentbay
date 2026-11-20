@@ -59,34 +59,43 @@ export default defineNuxtPlugin((nuxtApp) => {
     state.value.status = 'connecting'
     let stage: TelegramSupportStage | undefined = 'TG-SDK'
     try {
-      if (!window.Telegram?.WebApp) {
-        await new Promise<void>((resolve, reject) => {
-          const script = document.createElement('script')
-          const timeout = window.setTimeout(() => reject(new Error('Host load timed out')), 5000)
-          script.src = 'https://telegram.org/js/telegram-web-app.js'
-          script.async = true
-          script.onload = () => { clearTimeout(timeout); resolve() }
-          script.onerror = () => { clearTimeout(timeout); reject(new Error('Host unavailable')) }
-          document.head.append(script)
-        })
-      }
       host = window.Telegram?.WebApp
-      if (!host) throw new Error('Host unavailable')
+      if (!host) {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const script = document.createElement('script')
+            const timeout = window.setTimeout(() => reject(new Error('Host load timed out')), 5000)
+            script.src = 'https://telegram.org/js/telegram-web-app.js'
+            script.async = true
+            script.onload = () => { clearTimeout(timeout); resolve() }
+            script.onerror = () => { clearTimeout(timeout); reject(new Error('Host unavailable')) }
+            document.head.append(script)
+          })
+          host = window.Telegram?.WebApp
+        }
+        catch (error) {
+          // Only this launch's raw carrier can proceed without the SDK; cache is a loading hint.
+          if (!launchInitData) throw error
+        }
+      }
+      if (!host && !launchInitData) throw new Error('Host unavailable')
       stage = 'TG-LAUNCH'
       // Navigation can remove the hash before the asynchronous SDK reads it.
-      const initData = launchInitData || host.initData
+      const initData = launch.has('tgWebAppData') ? launchInitData : host?.initData
       if (!initData) throw new Error('Launch data unavailable')
       telegramInitData = initData
-      state.value.kind = 'telegram'
-      state.value.haptics = Boolean(host.HapticFeedback)
-      updateHost()
-      optional(() => host!.ready())
-      optional(() => host?.expand?.())
-      optional(() => host?.BackButton?.onClick(back))
-      optional(() => host?.SettingsButton?.onClick(settings))
-      optional(() => host?.SettingsButton?.show?.())
-      controller.setBackAction(backAction)
-      for (const event of ['safeAreaChanged', 'contentSafeAreaChanged', 'themeChanged']) optional(() => host?.onEvent?.(event, updateHost))
+      if (host) {
+        state.value.kind = 'telegram'
+        state.value.haptics = Boolean(host.HapticFeedback)
+        updateHost()
+        optional(() => host!.ready())
+        optional(() => host?.expand?.())
+        optional(() => host?.BackButton?.onClick(back))
+        optional(() => host?.SettingsButton?.onClick(settings))
+        optional(() => host?.SettingsButton?.show?.())
+        controller.setBackAction(backAction)
+        for (const event of ['safeAreaChanged', 'contentSafeAreaChanged', 'themeChanged']) optional(() => host?.onEvent?.(event, updateHost))
+      }
 
       stage = 'TG-SIGNIN'
       await $fetch('/api/v1/auth/telegram', { method: 'POST', body: { initData }, timeout: 10_000 })

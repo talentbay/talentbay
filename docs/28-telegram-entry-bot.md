@@ -3,6 +3,29 @@
 I01 implementation contract, 2026-10-27. One Nuxt application and existing server-validated
 Mini App identity flow. No Pre-ICO bot, chat support inbox, CV intake or proactive delivery.
 
+## Main bot: distinguish launch, sign-in and session (20 November 2026)
+
+The owner saw the generic sign-in warning in the main bot. A successful tester-bot
+login or a public `telegram: true` capability is not a successful production login.
+In the pilot code, an unavailable SDK does not prevent validation of a nonempty
+current launch fragment. It does prevent use of native controls. An absent fragment
+and cache hint alone cannot establish a session without the SDK. Signature and age
+validation remain on the server; no new data is stored.
+Open the main bot's menu once and note the time and timezone. In the serving Vercel
+project, filter Runtime Logs for `/api/v1/auth/telegram` around that minute:
+
+| Observation | Next check |
+| --- | --- |
+| No POST | Check the actual Mini App URL from the bot menu, the environment, and launch/SDK loading. Do not rotate a token based on this observation. |
+| POST failed | Collect HTTP status, request ID and the allowlisted `telegramAuthFailure` reason **if present**. An HMAC failure suggests verifying the configured token is for the bot used to open the app; a 5xx is not evidence of a bad signature. |
+| POST succeeded, profile still shows guest | Check the next session refresh and cookie behavior in that client. The sign-in response alone is not the acceptance test. |
+
+Pilot builds can display a reference prefixed with `TG-SDK`, `TG-LAUNCH`,
+`TG-SIGNIN` or `TG-SESSION`. These identify a stage, not a root cause. No token,
+URL fragment, raw launch body, cookie, full HAR or candidate profile is needed in chat.
+Acceptance is a fresh native launch followed by the same signed-in profile in
+Applications, without a second login.
+
 ## Native Auth Recovery - 2026-10-28
 
 Owner's initial native Profile/Applications stayed guest with401 even after reopening.

@@ -6,6 +6,21 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Main bot: signed launch with unavailable SDK (20 November)
+
+- Reproduced an independent reason for the generic banner: the old client made no
+  sign-in request when the SDK download failed despite a current launch carrier.
+  Three unit regressions failed on the previous code. The new client allows that
+  carrier through the same server validation and session refresh. A missing SDK cannot
+  confer native controls; an explicitly empty carrier cannot select a stale SDK identity.
+- Checked Node build, HTTP smoke, typecheck, lint, 241 unit tests and 35 public + 52
+  database-backed Chromium cases without retries. Tests held the real auth POST, checked
+  the signed-out session before release, then opened Profile and Applications. Navigation
+  and account-conflict cases preserve the intended page and original account. A cache
+  hint alone with no SDK made zero auth requests. Independent read-only review completed.
+- This does not establish that the main bot lost its SDK. [Production triage](28-telegram-entry-bot.md#main-bot-distinguish-launch-sign-in-and-session-20-november-2026)
+  needs the native attempt and serving logs. No real token, bot settings or profile used.
+
 ## Pilot follow-up: salary transport and data coverage (20 November)
 
 - Candidate estimates now send a same-origin JSON POST after hydration, including retries

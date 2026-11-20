@@ -7,7 +7,7 @@ const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
 const subject = randomInt(1_000_000_000, 1_000_000_000_000)
 const origin = 'http://127.0.0.1:3129'
 test.afterAll(async () => {
-  await sql`delete from users where id in (select user_id from oauth_accounts where provider='TELEGRAM' and provider_account_id in ${sql(Array.from({ length: 12 }, (_, index) => String(subject+index)))})`
+  await sql`delete from users where id in (select user_id from oauth_accounts where provider='TELEGRAM' and provider_account_id in ${sql(Array.from({ length: 15 }, (_, index) => String(subject+index)))})`
   await sql.end()
 })
 
@@ -50,6 +50,75 @@ test('failed SDK loading leaves a usable browser fallback and no launch fragment
   await expect(page).toHaveURL(/\/jobs$/)
   await page.getByRole('link', { name: 'Settings', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
+})
+
+for (const [offset, sdk] of [[12, 'aborted'], [13, 'loaded without WebApp']] as const) {
+  test(`a fresh carrier signs in through the real server with the SDK ${sdk}`, async ({ page }) => {
+    const id = subject + offset
+    const name = 'Fresh carrier candidate'
+    const fresh = signedLaunch(id, name, 'job_nonexistent-fixture')
+    const cached = signedLaunch(subject + 14, 'Cache-only candidate')
+    await page.addInitScript(value => sessionStorage.setItem('__telegram__initParams', JSON.stringify({ tgWebAppData: value })), cached)
+    let sdkLoads = 0, authPosts = 0
+    await page.route('https://telegram.org/js/telegram-web-app.js', (route) => {
+      sdkLoads++
+      return sdk === 'aborted' ? route.abort() : route.fulfill({ contentType: 'application/javascript', body: '/* no WebApp */' })
+    })
+    let release!: () => void
+    const hold = new Promise<void>(resolve => { release = resolve })
+    await page.route('**/api/v1/auth/telegram', async (route) => {
+      authPosts++
+      await hold
+      await route.continue()
+    })
+    const endpoint = (url: string) => new URL(url).pathname === '/api/v1/auth/telegram'
+    const attempted = page.waitForRequest(req => req.method() === 'POST' && endpoint(req.url()))
+    try {
+      await page.goto((sdk === 'aborted' ? '/jobs#' : '/profile#') + new URLSearchParams({ tgWebAppData: fresh }), { waitUntil: 'domcontentloaded' })
+      const req = await attempted
+      expect(req.postDataJSON().initData === fresh).toBe(true)
+      expect(sdkLoads).toBe(1)
+      expect(await page.evaluate(() => Boolean(window.Telegram?.WebApp))).toBe(false)
+      expect((await (await page.request.get('/api/_auth/session')).json()).user).toBeUndefined()
+      await expect(page.getByRole('heading', { name, exact: true })).toHaveCount(0)
+      if (sdk === 'aborted') {
+        await page.getByRole('navigation', { name: 'Candidate navigation' }).filter({ visible: true }).getByRole('link', { name: 'Profile', exact: true }).click()
+        await expect(page).toHaveURL(/\/profile$/)
+      }
+
+      release()
+      const auth = await req.response()
+      expect(auth?.status()).toBe(200)
+      const { user } = await auth!.json()
+      await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
+      await expect.poll(() => new URL(page.url()).hash === '').toBe(true)
+      expect((await (await page.request.get('/api/_auth/session')).json()).user.id).toBe(user.id)
+      expect(await sql`select user_id from oauth_accounts where provider='TELEGRAM' and provider_account_id=${String(id)}`).toEqual([{ user_id: user.id }])
+      const applications = page.waitForResponse(res => new URL(res.url()).pathname === '/api/v1/applications')
+      await page.getByRole('link', { name: 'Your applications', exact: true }).click()
+      expect((await applications).status()).toBe(200)
+      await expect(page.getByRole('heading', { name: 'Your applications', exact: true })).toBeVisible()
+      await expect(page.getByText('No applications yet', { exact: true })).toBeVisible()
+      expect(authPosts).toBe(1)
+    } finally { release() }
+  })
+}
+
+test('a cache hint alone never posts auth when the SDK is unavailable', async ({ page }) => {
+  const cached = signedLaunch(subject + 14, 'Cache-only candidate')
+  await page.addInitScript(value => sessionStorage.setItem('__telegram__initParams', JSON.stringify({ tgWebAppData: value })), cached)
+  let authPosts = 0
+  page.on('request', req => { if (req.method() === 'POST' && new URL(req.url()).pathname === '/api/v1/auth/telegram') authPosts++ })
+  const sdk = 'https://telegram.org/js/telegram-web-app.js'
+  await page.route(sdk, route => route.abort())
+  const failed = page.waitForEvent('requestfailed', req => req.url() === sdk)
+  await page.goto('/profile')
+  await failed
+  await expect(page.getByRole('status').filter({ hasText: 'Signing you in to Telegram' })).toBeHidden()
+  await expect(page.getByText('Your TalentBay account', { exact: true })).toBeVisible()
+  expect((await (await page.request.get('/api/_auth/session')).json()).user).toBeUndefined()
+  expect(authPosts).toBe(0)
+  expect(await sql`select id from oauth_accounts where provider='TELEGRAM' and provider_account_id=${String(subject + 14)}`).toHaveLength(0)
 })
 
 test('hashless reload restores the SDK from its cached launch hint and validates the identity again', async ({ page }) => {
@@ -213,6 +282,16 @@ test('separate browser stores do not share sessions and a conflicting host canno
     await expect(page.getByText('This browser is signed in to another account. Manage your sign-in methods in Settings.')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Existing Browser Candidate', exact: true })).toBeVisible()
     expect((await (await context.request.get('/api/_auth/session')).json()).user.id).toBe(owner)
+    const offline = await context.newPage()
+    try {
+      await offline.route('https://telegram.org/js/telegram-web-app.js', route => route.abort())
+      const response = offline.waitForResponse(res => new URL(res.url()).pathname === '/api/v1/auth/telegram')
+      const carrier = new URLSearchParams({ tgWebAppData: signedLaunch(subject+4, 'Different Host Candidate') })
+      await offline.goto('/profile#' + carrier)
+      expect((await response).status()).toBe(409)
+      await expect(offline.getByRole('heading', { name: 'Existing Browser Candidate', exact: true })).toBeVisible()
+      expect((await (await context.request.get('/api/_auth/session')).json()).user.id).toBe(owner)
+    } finally { await offline.close() }
     expect(await sql`select id from oauth_accounts where provider='TELEGRAM' and provider_account_id=${String(subject+4)}`).toHaveLength(0)
     const second = await independent.request.post('/api/v1/auth/telegram', { headers: { origin }, data: { initData: signedLaunch(subject+3, 'Existing Browser Candidate') } })
     expect((await second.json()).user.id).toBe(owner)

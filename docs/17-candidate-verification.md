@@ -17,6 +17,12 @@ database-backed Chromium cases. This includes the application receipt, keyboard 
 return, simulated Telegram host, salary precision/debounce, and operator workflow.
 The production Telegram client and external employers are not test fixtures.
 
+The pilot also keeps basic Profile and Applications navigation independent of native
+Telegram controls: when the SDK cannot load but the current launch includes signed
+data, only the server's normal verification and a successful session refresh can sign
+the user in. No SDK means no native haptics or buttons. An SDK cache hint by itself
+does not confer identity. This is not a new design freeze or a production login result.
+
 ## Reviewed Apply Context - 2026-10-27
 
 R02 adds a required shown-context precondition, not a new product route/Figma freeze. A
