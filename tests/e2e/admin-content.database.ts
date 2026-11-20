@@ -156,12 +156,65 @@ test('CSV validation → atomic draft import → complete review → public reco
   expect(errors).toEqual([])
 })
 
+test('operator creates one draft without a file and can safely correct a published vacancy', async ({ page, context }, testInfo) => {
+  await signIn(context, randomInt(1_000_000_000, 1_000_000_000_000))
+  const key = 'editor-' + randomUUID()
+  try {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/ktulhu/v1/vacancies')
+    await page.getByRole('link', { name: 'Create vacancy' }).click()
+    await page.getByRole('textbox', { name: 'Job title' }).fill('Editorial QA Engineer')
+    await page.getByRole('textbox', { name: 'Vacancy URL key' }).fill(key)
+    await page.getByRole('textbox', { name: 'Company name' }).fill('Editorial Fixture')
+    await page.getByRole('textbox', { name: 'Company key' }).fill(key)
+    await page.getByRole('textbox', { name: 'Country code' }).fill('GB')
+    await page.getByRole('textbox', { name: 'Job description' }).fill('A fictional first-party vacancy for the operator rehearsal.')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }))
+    await page.screenshot({ path: testInfo.outputPath('operator-create-mobile.png'), fullPage: true })
+    await page.getByRole('button', { name: 'Create draft' }).click()
+    await expect(page.getByRole('dialog')).toContainText('Editorial QA Engineer')
+    const [record] = await sql`select id, status,source_url from vacancies where slug=${key}`
+    expect(record).toMatchObject({ status: 'DRAFT', source_url: null })
+    await page.getByRole('checkbox', { name: /I checked the content/ }).check()
+    await page.getByRole('button', { name: 'Verify & publish' }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    const row = page.getByRole('row').filter({ hasText: 'Editorial QA Engineer' })
+    await row.getByRole('link', { name: 'Edit' }).click()
+    const title = page.getByRole('textbox', { name: 'Job title' })
+    await expect(title).toHaveValue('Editorial QA Engineer')
+    await title.fill('Corrected editorial QA role')
+    await expect(page.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+    await page.getByRole('checkbox', { name: /takes it offline/ }).check()
+    await sql`update vacancies set title='Correction from another operator' where id=${record!.id}`
+    await page.getByRole('button', { name: 'Save changes' }).click()
+    await expect(page.getByRole('alert').filter({ hasText: 'This vacancy changed.' })).toBeVisible()
+    await page.getByRole('button', { name: 'Reload latest vacancy' }).click()
+    await expect(title).toHaveValue('Correction from another operator')
+    await title.fill('Corrected editorial QA role')
+    await page.getByRole('checkbox', { name: /takes it offline/ }).check()
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }))
+    await page.screenshot({ path: testInfo.outputPath('operator-correct-desktop.png'), fullPage: true })
+    await page.getByRole('button', { name: 'Save changes' }).click()
+    await expect(page.getByRole('dialog')).toContainText('Corrected editorial QA role')
+    expect(await sql`select id,status,review_status from vacancies where slug=${key}`).toEqual([{ id: record!.id, status: 'DRAFT', review_status: 'UNREVIEWED' }])
+  } finally {
+    await sql`delete from vacancies where slug=${key}`
+    await sql`delete from organisations where slug=${key}`
+  }
+})
+
 test('operator endpoints enforce authorization, same origin, content types and limits', async ({ context }) => {
   await signIn(context, subject + 1, false)
   const endpoint = '/api/v1/admin/vacancies/file'
   const body = { mode: 'preview', csv: csv() }
+  const editor = '/api/v1/admin/vacancies/editor'
+  expect((await context.request.post(editor, { headers, data: {} })).status()).toBe(403)
   expect((await context.request.post(endpoint, { headers, data: body })).status()).toBe(403)
   await signIn(context, subject + 1)
+  expect((await context.request.post(editor, { headers, data: {} })).status()).toBe(422)
+  expect((await context.request.post(editor, { headers: { origin: 'https://other.invalid' }, data: {} })).status()).toBe(403)
   expect((await context.request.post(endpoint, { headers: { origin: 'https://attacker.invalid' }, data: body })).status()).toBe(403)
   expect((await context.request.post(endpoint, { headers: { ...headers, 'content-type': 'text/plain' }, data: 'not json' })).status()).toBe(415)
   expect((await context.request.post(endpoint, { headers: { ...headers, 'content-type': 'application/json' }, data: '{' })).status()).toBe(400)

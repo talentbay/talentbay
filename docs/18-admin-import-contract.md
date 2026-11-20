@@ -58,7 +58,7 @@ public employer profile exists. An original source URL is not a company profile.
 
 | Operation | Available now | Next acceptance |
 | --- | --- | --- |
-| Create and correct a vacancy | Admin batch import; a single row is also valid. A changed import returns to review. | One operator form uses the same item validation and review rules as the batch; editing a record preserves its ID and submitted applications. |
+| Create and correct a vacancy | Queue → Create vacancy or Edit. Both the single-record editor and batch importer validate the same item and save through the same transaction service. | Keep the vacancy ID and submitted applications. Changed published content returns to review; other listings at the company are not affected by an editor save. |
 | Read and retire | Public list/detail; admin queue, review and archive. | Archive withdraws public visibility without deleting candidate history; no hard-delete shortcut. |
 | Identify a company | Import resolves the unique company slug to an internal organisation; no partner account is required. Text search includes company names. | An exact company filter groups its jobs even if another company has a similar name; do not link to a nonexistent company page. |
 | Partner authorship | Not a self-service flow today. | Keep the content format. Enforce separately verified membership and company scope on the server for both single and bulk writes; a supplied name, slug or source ID never grants access. |
@@ -66,6 +66,22 @@ public employer profile exists. An original source URL is not a company profile.
 This is a scope clarification, not an instruction to expose generic CRUD for users,
 profiles, application history or every database table. Single-record authoring and
 company filtering come before building a partner dashboard.
+
+### Single-record operator workflow
+
+Create a first-party draft under the reserved source name `TalentBay editorial`; it
+does not need an invented external URL. The form generates a stable source ID for
+that creation attempt. The CSV/JSON equivalent also needs a stable source ID. Other
+sources still require an original URL and permission to publish; the editor grants
+neither permission nor verified status. No partner profile is created.
+
+An edit pins the original vacancy ID, URL key, source key, company and content revision.
+It cannot rename a shared company, erase its website or change sibling vacancies. A
+duplicate creation or stale save is rejected, not upserted over someone else's work.
+After saving, review opens on that exact record. A published correction is explicitly
+acknowledged before saving; unmodified content keeps its prior state. Archived records
+stay archived. Records without a stable source identity are reviewable but not editable
+with this form until provenance is reconciled.
 
 - UTF-8 comma-delimited CSV, optional UTF-8 BOM, quoted commas/newlines supported by
   `csv-parse/sync`; no custom CSV parser, XLSX, ZIP, formula evaluation or URL fetching.

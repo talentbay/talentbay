@@ -89,7 +89,10 @@ async function reviewed() {
       <div>
         <h1 id="vacancy-admin-title" class="scroll-mt-28 text-3xl font-bold text-highlighted">Vacancy review</h1>
       </div>
-      <UButton to="/ktulhu/v1/import" icon="i-lucide-upload" label="Import CSV" />
+      <div class="flex flex-wrap gap-2">
+        <UButton to="/ktulhu/v1/import" icon="i-lucide-upload" label="Import CSV" variant="outline" />
+        <UButton to="/ktulhu/v1/editor/new" icon="i-lucide-plus" label="Create vacancy" />
+      </div>
     </div>
 
     <form class="mt-6 flex flex-wrap gap-3" role="search" @submit.prevent="submitSearch">
@@ -171,6 +174,7 @@ async function reviewed() {
             </td>
             <td class="px-4 py-4">
               <div class="flex justify-end gap-2">
+                <UButton :to="`/ktulhu/v1/editor/${vacancy.id}`" icon="i-lucide-pencil" label="Edit" size="sm" color="neutral" variant="outline" />
                 <UButton
                   label="Review"
                   icon="i-lucide-eye"

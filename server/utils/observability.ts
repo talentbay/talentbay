@@ -11,7 +11,7 @@ type RequestTelemetry = {
   result?: 'replayed' | 'invalid' | 'failed'
 }
 
-const requestOperations = ['application.handling', 'vacancy.file.preview', 'vacancy.file.import', 'source.fetch', 'source.preview', 'source.import'] as const
+const requestOperations = ['application.handling', 'vacancy.file.preview', 'vacancy.file.import', 'vacancy.editor.create', 'vacancy.editor.edit', 'source.fetch', 'source.preview', 'source.import'] as const
 type RequestOperation = typeof requestOperations[number]
 
 type RequestLog = {
@@ -55,7 +55,7 @@ const staticPaths = new Set([
   '/api/v1/relocation/locations', '/api/v1/relocation/preview', '/api/v1/bot/telegram',
   '/api/v1/auth/google', '/api/v1/auth/github', '/api/v1/auth/telegram', '/api/v1/auth/link', '/api/v1/auth/identities', '/api/v1/auth/capabilities',
   '/api/v1/admin/dashboard', '/api/v1/admin/users', '/api/v1/admin/applications',
-  '/api/v1/admin/vacancies', '/api/v1/admin/vacancies/import', '/api/v1/admin/vacancies/file',
+  '/api/v1/admin/vacancies', '/api/v1/admin/vacancies/import', '/api/v1/admin/vacancies/file', '/api/v1/admin/vacancies/editor',
   '/api/v1/admin/sources', '/api/v1/admin/sources/progress', '/api/v1/admin/sources/run',
 ])
 const dynamicPaths: [RegExp, string][] = [

@@ -6,6 +6,21 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Operator single-vacancy editor (20 November)
+
+Queue → Create vacancy / Edit uses the same import schema and content transaction
+as the batch uploader. No separate partner profile or website is required to file
+a first-party draft. Publication remains a separate decision. Stale forms, duplicate
+creations, changes to stable keys and changes to shared company details are rejected.
+The next content task is an exact company filter, not a partner dashboard.
+
+Local evidence: typecheck, lint, Node build and HTTP production smoke; 310 unit tests; upgrade/replay and
+109 integration tests on a disposable PostgreSQL 18; three Chromium scenarios incl.
+CSV regression, single-record creation/publication/conflicting correction and access checks.
+The database test retains the existing application and a sibling's publication. Previous
+head [90c065e passed CI](https://github.com/talentbay/talentbay/actions/runs/44777219761).
+No production DB, employer, bot or domain was used.
+
 ## Compare the salary bounds on a vacancy (20 November)
 
 The relocation estimate can use either end of a posted salary range, its midpoint or a manually entered amount. A fixed offer has one listed value. Local verification: 307 unit tests, typecheck, lint and Node build passed. Against disposable PostgreSQL, five Chromium scenarios passed, including vacancy refresh and manual input; the guest salary-range scenario also passed in mobile WebKit over HTTPS. These checks did not exercise the native production Telegram client or verify real city costs. The [previous head's CI](https://github.com/talentbay/talentbay/actions/runs/44774184165) was green; this is not a deployment.

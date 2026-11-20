@@ -11,7 +11,7 @@ export function importedVacancyContent(item: VacancyImportItem, organisationID: 
     salaryMin: item.vacancy.salary?.min ?? null, salaryMax: item.vacancy.salary?.max ?? null,
     salaryCurrency: item.vacancy.salary?.currency ?? null, salaryPeriod: item.vacancy.salary?.period ?? null,
     skills: [...new Set(item.vacancy.skills)], relocationOffered: item.vacancy.relocationOffered, visaSponsorship: item.vacancy.visaSponsorship,
-    sourceName: item.source.name, sourceUrl: item.source.url, sourceExternalID: item.source.externalId,
+    sourceName: item.source.name, sourceUrl: item.source.url ?? null, sourceExternalID: item.source.externalId,
     sourcePublishedAt: item.vacancy.sourcePublishedAt ? new Date(item.vacancy.sourcePublishedAt) : null,
   }
 }

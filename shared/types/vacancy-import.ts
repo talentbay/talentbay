@@ -20,3 +20,4 @@ export type VacancyImportPreview = {
 
 export const vacancyCsvByteLimit = 512 * 1024
 export const vacancyImportRowLimit = 50
+export const editorialSourceName = 'TalentBay editorial'

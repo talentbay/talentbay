@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { editorialSourceName } from '#shared/types/vacancy-import'
 import type { ImportIssue } from '#shared/types/vacancy-import'
 
 const slugSchema = z.string().trim().min(2).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
@@ -26,7 +27,10 @@ const sourceUrl = httpUrl.refine(value => {
 }, 'LinkedIn and Indeed sources are excluded from imports')
 
 export const vacancyImportItemSchema = z.object({
-  source: z.object({ name: text(120, 2), url: sourceUrl, externalId: text(255, 1) }),
+  source: z.object({ name: text(120, 2), url: sourceUrl.optional(), externalId: text(255, 1) }).superRefine((source, ctx) => {
+    if (!source.url && source.name !== editorialSourceName)
+      ctx.addIssue({ code: 'custom', path: ['url'], message: 'An original URL is required for external vacancies.' })
+  }),
   company: z.object({ name: text(160, 2), slug: slugSchema, websiteUrl: httpUrl.optional() }),
   vacancy: z.object({
     slug: slugSchema, title: text(180, 2), summary: text(500).optional(),
