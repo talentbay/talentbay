@@ -1,8 +1,29 @@
 # Current State
 
-Last updated: 2026-11-17
+Last updated: 2026-11-20
+
+## Current handoff: 20 November
+
+| Surface | Observed state | Next acceptance |
+| --- | --- | --- |
+| Primary website | Public API returns a verified catalogue with zero published jobs. Relocation returns 4 locations and 12 destination entries. An empty catalogue is not a database outage. | One current employer-authorized listing, reviewed and published through the operator workflow. |
+| Candidate web / Mini App | One responsive Nuxt app covers Jobs, Saved (device-local), relocation, profile and managed applications. Native Profile/Applications were previously confirmed on the **tester** bot. | Verify the **primary** bot separately. No inference about native login from a public capabilities flag. |
+| Operator | CSV validation, draft import, review/publish and candidate application handling exist. No new parser is required for the first authorized listing. | Rehearse one approved listing and the operator review before the public pilot; no production candidate data for testing. |
+| Release | Consolidated MVP PR #65 was merged. A clean frozen install at main `a34d59a` failed on a duplicate YAML key, and its general build called a schema migration. | Review the reconciled security/build fix, run clean CI, and obtain a separate release decision. |
+
+The dated sections below are history, not instructions to deploy or reset any environment.
 
 ## Repository Reconciliation — 17 November
+
+Later17November: security topic codex/mvp-dependency-security updates Nuxt4.6.4/Nitro2.13.6/
+schema4.6.4 and Nodefloor22.23.5. Final local206unit/44tooling/95SQL/20public+46DB-browser,
+types/lint/builds/smoke/recovery PASS;4reviewed tooling audit findings remain,0high/critical.
+See docs14/16 for the reproduced raw-path fix and independent review, not zero-risk claims.
+Externally merged Dependabot63 is now main99b2f0c. Fresh GitHub Vercel deploymentSUCCESS
+and primary /jobs200/health200/DEMOcatalogue verified11:18–11:19UTC; prior404 no longer
+reproduces. Repo PUBLIC/Hobby screenshots replace the earlier private/unknown-plan snapshot.
+Agent did not merge main or publish a deployment. Full MVP PR65 remains open/non-draft;
+the old test alias/runtime below is separate. New topic publication/CI: docs14.
 
 The current review line is `codex/mvp-integration`, combining source-rights43f74aa with
 baseline25 reconciliation5f5f3b5 and main57b03a0. One draft integration-to-main PR replaces
