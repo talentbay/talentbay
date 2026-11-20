@@ -124,6 +124,11 @@ is outside the eleven. This says nothing about private drafts.
 | Earnings deductions | [HMRC payroll tables](https://www.gov.uk/guidance/rates-and-thresholds-for-employers-2026-to-2027) separate England PAYE, employee NI and employer NI. | Specify residency, tax year, pay period and included deductions. Verify that the model can represent them before accepting a result. |
 | Local travel | [TfL fare lookup](https://tfl.gov.uk/how-to-pay/check-travel-costs) supports a route or zonal fare reference. | Specify route, mode and commuting frequency. A cap is not a monthly bill; bulk reuse rights have not been established. |
 
+The [London worked review sheet](examples/london-2026-27-review.md) adds independent
+annual tax reference amounts, a counterexample to the continuous taper, a separate
+regular-pay employee NI calculation and a sourced two-year immigration fee example.
+It is evidence for a reviewer, not a city package, a confirmed itinerary or a release.
+
 Still missing: evidence for other recurring costs and the one-time move (departure city,
 itinerary, deposit, temporary housing and fees), a reviewer and a validity period. Keep
 London DEMO. No data was ingested and no employer, source or reviewer was contacted.
