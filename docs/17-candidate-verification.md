@@ -1,5 +1,11 @@
 # Candidate Browser Verification
 
+**Receipt navigation (20 November).** From the vacancy, **View application** opens the
+matching application directly, even if it is older than the first 25. Reload retains the
+receipt; dismissing it returns to Applications. A link opened by a different signed-in
+candidate shows an unavailable state, not the title or cover note. This reuses the
+existing receipt dialog, not a separate Telegram flow or a new design freeze.
+
 ## Candidate pilot checks: 20 November 2026
 
 Compared Jobs to the active Candidate responsive Figma handoff (frame `2077:739`).

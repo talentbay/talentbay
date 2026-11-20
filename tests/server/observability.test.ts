@@ -69,6 +69,7 @@ describe('observability', () => {
     }
     expect(telemetryPath('/api/v1/admin/applications/123/package')).toBe('/api/v1/admin/applications/:id/package')
     expect(telemetryPath('/api/v1/vacancies/resolve')).toBe('/api/v1/vacancies/resolve')
+    expect(telemetryPath('/api/v1/applications/123456')).toBe('/api/v1/applications/:id')
   })
 
   it('uses fixed operation/outcome fields and never equates completed HTTP with delivery', () => {

@@ -37,33 +37,67 @@ const tabs = computed(() => [
 ])
 const items = computed(() => data.value?.items || [])
 const selected = ref<CandidateApplicationHistoryItem | null>(null)
+const owner = computed(() => loggedIn.value ? user.value?.id : undefined)
+const receiptQuery = computed(() => route.query.receipt)
+const unavailable = ref(false)
+const heading = ref<HTMLElement | null>(null)
 let receiptOpener: HTMLButtonElement | null = null
+watch([owner, receiptQuery], async ([account, raw], previous, onCleanup) => {
+  selected.value = null
+  unavailable.value = false
+  if (account !== previous?.[0] || raw !== undefined) receiptOpener = null
+  if (!import.meta.client || !account || raw === undefined) return
+  if (typeof raw !== 'string' || !/^[1-9]\d*$/.test(raw) || !Number.isSafeInteger(Number(raw))) {
+    unavailable.value = true
+    return
+  }
+  const controller = new AbortController()
+  onCleanup(() => controller.abort())
+  const current = () => !controller.signal.aborted && owner.value === account && receiptQuery.value === raw
+  try {
+    const item = await $fetch<CandidateApplicationHistoryItem>(`/api/v1/applications/${raw}`, {
+      credentials: 'same-origin', cache: 'no-store', retry: 0, signal: controller.signal,
+    })
+    if (!current()) return
+    if (item?.id === Number(raw)) selected.value = item
+    else unavailable.value = true
+  } catch {
+    if (current()) unavailable.value = true
+  }
+}, { immediate: true, flush: 'sync' })
+
 function openReceipt(item: CandidateApplicationHistoryItem, event: MouseEvent) {
   receiptOpener = event.currentTarget instanceof HTMLButtonElement ? event.currentTarget : null
   selected.value = item
 }
 function restoreReceiptFocus(event: Event) {
   event.preventDefault()
-  if (selected.value) return
+  if (selected.value || receiptQuery.value !== undefined || route.path !== '/applications') return
   if (receiptOpener?.isConnected) receiptOpener.focus({ preventScroll: true })
+  else heading.value?.focus({ preventScroll: true })
   receiptOpener = null
 }
 onBeforeUnmount(() => { receiptOpener = null })
 const receiptTitle = (item: CandidateApplicationHistoryItem) => item.vacancy?.title ?? `Application #${item.id}`
+function closeReceipt(fullList = false) {
+  if (receiptQuery.value !== undefined) {
+    return router.replace({
+      query: { ...route.query, receipt: undefined, ...(fullList ? { status: undefined, before: undefined } : {}) },
+      hash: route.hash,
+    })
+  }
+  selected.value = null
+}
 const detailsOpen = computed({
-  get: () => Boolean(selected.value),
+  get: () => Boolean(selected.value) || receiptQuery.value !== undefined,
   set: (value) => {
-    if (!value) selected.value = null
+    if (!value) void closeReceipt()
   },
 })
 async function withdrawn() {
-  selected.value = null
+  await closeReceipt()
   await refresh()
 }
-watch(() => user.value?.id, () => {
-  receiptOpener = null
-  selected.value = null
-})
 const date = (value: string) =>
   new Intl.DateTimeFormat('en', {
     day: 'numeric',
@@ -75,7 +109,7 @@ const date = (value: string) =>
 
 <template>
   <div class="product-container py-5 lg:py-10">
-    <h1 class="text-[32px] leading-10 font-bold text-highlighted">
+    <h1 ref="heading" tabindex="-1" class="text-[32px] leading-10 font-bold text-highlighted">
       Your applications
     </h1>
     <p class="mt-3 text-base text-default">
@@ -179,15 +213,17 @@ const date = (value: string) =>
       <UModal
         v-model:open="detailsOpen"
         :content="{ onCloseAutoFocus: restoreReceiptFocus }"
-        :title="selected ? receiptTitle(selected) : 'Application'"
-        :description="selected?.status === 'NEW'
+        :title="selected ? receiptTitle(selected) : unavailable ? 'Application unavailable' : 'Application receipt'"
+        :description="unavailable ? 'This receipt could not be opened.' : selected?.status === 'NEW'
           ? 'Your application is with TalentBay. Our team handles company outreach and follow-up.'
           : 'Your application and current status.'"
         :ui="{ wrapper: 'min-w-0 pe-10', title: 'break-words', content: '[overflow-wrap:anywhere]' }"
       >
         <template #body>
+          <UButton v-if="unavailable" label="View all applications" icon="i-lucide-list" color="neutral" variant="outline" @click="closeReceipt(true)" />
+          <p v-else-if="!selected" role="status" class="text-sm text-muted">Loading application…</p>
           <div
-            v-if="selected"
+            v-else
             class="space-y-5"
           >
             <div>

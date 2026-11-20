@@ -1,4 +1,5 @@
 import { and, desc, eq, sql, lt, or, inArray, not } from 'drizzle-orm'
+import type { SQL } from 'drizzle-orm'
 import { z } from 'zod'
 import { schema, useDatabase } from '#server/db'
 import { publicVacancyConditions } from '#server/repositories/vacancy-visibility'
@@ -6,6 +7,7 @@ import { captureApplicationSnapshot } from './application-snapshot'
 import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
 import { applicationDisclosureVersion } from '#shared/types/application-handling'
 import type {
+  CandidateApplicationHistoryItem,
   CandidateApplicationsResponse,
 } from '#shared/types/candidates'
 
@@ -107,18 +109,12 @@ export async function createApplication(
   })
 }
 
-export async function listCandidateApplications(
+async function readCandidateHistory(
   userID: number,
-  filters: z.infer<typeof candidateApplicationQuery> = {},
-): Promise<CandidateApplicationsResponse> {
-  const db = useDatabase()
-  const owned = eq(schema.applications.userID, userID)
-  const conditions = [owned]
-  if (filters.before) conditions.push(lt(schema.applications.id, filters.before))
-  if (filters.status === 'closed') conditions.push(closedApplication)
-  if (filters.status === 'active') conditions.push(not(closedApplication))
-  const [counts] = await db.select({ all: sql<number>`count(*)::int`, closed: sql<number>`count(*) filter (where ${closedApplication})::int` }).from(schema.applications).where(owned)
-  const rows = await db
+  limit: number,
+  ...conditions: SQL[]
+): Promise<CandidateApplicationHistoryItem[]> {
+  const rows = await useDatabase()
     .select({
       id: schema.applications.id,
       status: schema.applications.status,
@@ -137,10 +133,10 @@ export async function listCandidateApplications(
       schema.organisations,
       eq(schema.vacancies.organisationID, schema.organisations.id),
     )
-    .where(and(...conditions))
-    .orderBy(desc(schema.applications.id)).limit(26)
+    .where(and(eq(schema.applications.userID, userID), ...conditions))
+    .orderBy(desc(schema.applications.id)).limit(limit)
 
-  const items: CandidateApplicationsResponse['items'] = rows.slice(0, 25).map(row => ({
+  return rows.map(row => ({
     id: row.id,
     status: row.status,
     coverLetter: row.coverLetter,
@@ -152,7 +148,26 @@ export async function listCandidateApplications(
       city: row.snapshot.vacancy.city, countryCode: row.snapshot.vacancy.countryCode,
     } : null,
   }))
+}
 
+export async function getCandidateApplication(userID: number, id: number): Promise<CandidateApplicationHistoryItem> {
+  const [item] = await readCandidateHistory(userID, 1, eq(schema.applications.id, id))
+  if (!item) throw createError({ statusCode: 404, statusMessage: 'Application not found' })
+  return item
+}
+
+export async function listCandidateApplications(
+  userID: number,
+  filters: z.infer<typeof candidateApplicationQuery> = {},
+): Promise<CandidateApplicationsResponse> {
+  const conditions: SQL[] = []
+  if (filters.before) conditions.push(lt(schema.applications.id, filters.before))
+  if (filters.status === 'closed') conditions.push(closedApplication)
+  if (filters.status === 'active') conditions.push(not(closedApplication))
+  const owned = eq(schema.applications.userID, userID)
+  const [counts] = await useDatabase().select({ all: sql<number>`count(*)::int`, closed: sql<number>`count(*) filter (where ${closedApplication})::int` }).from(schema.applications).where(owned)
+  const rows = await readCandidateHistory(userID, 26, ...conditions)
+  const items = rows.slice(0, 25)
   return {
     items,
     total: filters.status === 'active' ? counts!.all - counts!.closed : filters.status === 'closed' ? counts!.closed : counts!.all,

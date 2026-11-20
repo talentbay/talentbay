@@ -6,6 +6,30 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## First employer pilot rehearsal and receipt navigation (20 November)
+
+- One compiled Chromium test now follows the **same** synthetic vacancy and receipt across
+  separate operator and candidate sessions: CSV validation/import, private draft, explicit
+  publication review, search, illustrative London relocation, profile contact, consent,
+  submission, operator assignment and recorded contact, then the candidate's status. No
+  message is delivered to an employer; the candidate cannot see private journal entries.
+- The vacancy opens its actual receipt, including one outside the first 25. The point
+  read uses the same owner-scoped historical projection as the list; it neither reveals
+  another candidate's cover note nor substitutes today's vacancy text for the snapshot.
+- Local release checks: typecheck, lint, Node build, compiled HTTP smoke, 241 unit tests,
+  100 disposable PostgreSQL tests plus legacy migration upgrade/replay, and 35 public +
+  54 database-backed Chromium scenarios without retries. Three focused scenarios then
+  passed again with exact receipt response fields and no-store assertions. Independent
+  static review found no blocking issue with the direct receipt path.
+- Separate operator follow-ups from a read-only review: prevent or qualify a public
+  "No company response" reason without a valid recorded contact; distinguish corrected
+  handoff entries in the summary without ever enabling repeat sharing. Confirm receipt
+  at submission without implying the employer has already received a profile.
+- This is local acceptance with synthetic data, not a source clearance, verified city,
+  native main-bot login or permission to transmit real applications. See the
+  [source decision](19-content-operations.md#pick-a-source-before-entering-any-jobs) and
+  [main bot triage](28-telegram-entry-bot.md#main-bot-distinguish-launch-sign-in-and-session-20-november-2026).
+
 ## Main bot: signed launch with unavailable SDK (20 November)
 
 - Reproduced an independent reason for the generic banner: the old client made no

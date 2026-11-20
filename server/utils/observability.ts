@@ -62,6 +62,7 @@ const dynamicPaths: [RegExp, string][] = [
   [/^\/api\/v1\/vacancies\/[^/]+$/, '/api/v1/vacancies/:slug'],
   [/^\/api\/v1\/vacancies\/[^/]+\/application$/, '/api/v1/vacancies/:id/application'],
   [/^\/api\/v1\/vacancies\/[^/]+\/applications$/, '/api/v1/vacancies/:id/applications'],
+  [/^\/api\/v1\/applications\/[^/]+$/, '/api/v1/applications/:id'],
   [/^\/api\/v1\/applications\/[^/]+\/progress$/, '/api/v1/applications/:id/progress'],
   [/^\/api\/v1\/applications\/[^/]+\/withdraw$/, '/api/v1/applications/:id/withdraw'],
   [/^\/api\/v1\/admin\/applications\/[^/]+$/, '/api/v1/admin/applications/:id'],

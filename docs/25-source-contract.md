@@ -16,6 +16,8 @@ No new live source is approved by this change. See [compliance boundaries](08-co
 
 ## Source Register
 
+For the first employer decision, see [pilot source options](19-content-operations.md#pick-a-source-before-entering-any-jobs): a named employer board or an employer-supplied export for managed applications, versus an attributed, link-only RSS selection. The latter has no ingestion or application-routing implementation and is not an approved source.
+
 | Source | Verified technical evidence | Decision / missing gate |
 | --- | --- | --- |
 | Lever Postings | Maintainer docs describe public published postings, JSON, skip/limit, structured country/workplace/salary and plaintext descriptions | Implement one bounded server adapter against fictional fixtures. Specific company/site and republication rights still need approval; no live source configured |

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { closeDatabase } from '#server/db'
-import { createApplication, withdrawApplication, listCandidateApplications, candidateApplicationForVacancy } from '#server/services/candidates/applications'
+import { createApplication, withdrawApplication, listCandidateApplications, getCandidateApplication, candidateApplicationForVacancy } from '#server/services/candidates/applications'
 import { candidateApplicationProgress } from '#server/services/candidates/application-progress'
 import { handleApplication, prepareApplicationPackage } from '#server/services/admin/application-handling'
 import { getAdminApplication } from '#server/services/admin/applications'
@@ -170,7 +170,7 @@ describe('serialized manual application handling', () => {
     expect(first.handoffRecorded).toBe(false)
   })
 
-  it('paginates all candidate applications without losing an older vacancy duplicate check', async () => {
+  it('paginates history without losing owner-only receipt lookup or an older vacancy duplicate check', async () => {
     const row = await application()
     const [vacancy] = await sql`select organisation_id from vacancies where id=${row.vacancyID}`
     for (let n = 0; n < 27; n++) {
@@ -191,6 +191,19 @@ describe('serialized manual application handling', () => {
     expect(closed.total).toBe(3)
     expect(closed.items.every(item => item.handling.stage === 'CLOSED')).toBe(true)
     expect(JSON.stringify(first)).not.toMatch(/assignedUserID|actorUserID|privateNote|submissionSnapshot/)
+
+    const receipt = second.items.find(item => item.id === row.id)!
+    expect(receipt.publicVacancySlug).toBe(receipt.vacancy!.slug)
+    await expect(getCandidateApplication(row.userID, row.id)).resolves.toEqual(receipt)
+    const legacy = first.items[0]!
+    expect(legacy.vacancy).toBeNull()
+    await expect(getCandidateApplication(row.userID, legacy.id)).resolves.toEqual(legacy)
+
+    await sql`update vacancies set status='ARCHIVED', title='Changed after submission' where id=${row.vacancyID}`
+    await expect(getCandidateApplication(row.userID, row.id)).resolves.toEqual({ ...receipt, publicVacancySlug: null })
+    const notFound = { statusCode: 404, statusMessage: 'Application not found' }
+    await expect(getCandidateApplication(otherID, row.id)).rejects.toMatchObject(notFound)
+    await expect(getCandidateApplication(row.userID, 2_147_483_647)).rejects.toMatchObject(notFound)
   })
 
   it('closes handling with a truthful public reason, never an invented employer rejection', async () => {

@@ -16,11 +16,13 @@ const draft = ref('')
 const submitting = ref(false)
 const error = ref('')
 const outcome = ref<'submitted' | 'already' | null>(null)
+const submittedId = ref<number | null>(null)
 const acknowledged = ref(false)
 const contextChanged = ref(false)
 const editingProfile = ref(false)
 const sessionExpired = ref(false)
 let profileEditOwner: number | undefined
+let sessionGeneration = 0
 const { data: profile, status: profileStatus, error: profileError, refresh: refreshProfile } = await useAccountResource<CandidateProfileResponse>('candidate-profile', '/api/v1/profile')
 const contacts = computed(() => applicationContacts(profile.value))
 const profileReady = computed(() => canSubmitApplication(profile.value))
@@ -38,12 +40,19 @@ const applied = computed(() =>
     applications.value?.application,
   ),
 )
+const receiptId = computed(() => submittedId.value ?? applications.value?.application?.id)
+const applicationLink = computed(() => receiptId.value
+  ? { path: '/applications', query: { receipt: String(receiptId.value) } }
+  : '/applications')
 watch(
-  () => user.value?.id,
+  () => loggedIn.value ? user.value?.id : undefined,
   () => {
+    sessionGeneration++
+    submitting.value = false
     draft.value = ''
     error.value = ''
     outcome.value = null
+    submittedId.value = null
     acknowledged.value = false
     contextChanged.value = false
     editingProfile.value = false
@@ -51,6 +60,7 @@ watch(
     sessionExpired.value = false
     open.value = false
   },
+  { flush: 'sync' },
 )
 watch(() => props.vacancy.applicationContext, () => {
   acknowledged.value = false
@@ -107,26 +117,29 @@ async function submit() {
   submitting.value = true
   error.value = ''
   const owner = user.value?.id
+  const generation = sessionGeneration
+  const current = () => generation === sessionGeneration && owner === user.value?.id
   try {
-    await $fetch(`/api/v1/vacancies/${props.vacancy.id}/applications`, {
+    const receipt = await $fetch<{ id: number }>(`/api/v1/vacancies/${props.vacancy.id}/applications`, {
       method: 'POST',
       body: { coverLetter: draft.value || null, disclosureVersion: applicationDisclosureVersion, shareAcknowledged: true, expectedContext: props.vacancy.applicationContext },
     })
-    if (user.value?.id !== owner) return
+    if (!current()) return
+    submittedId.value = receipt?.id ?? null
     outcome.value = 'submitted'
     draft.value = ''
     open.value = false
     haptic('success')
     await refresh()
   } catch (cause) {
-    if (user.value?.id !== owner) return
+    if (!current()) return
     if ((cause as { statusCode?: number }).statusCode === 401) {
       await refreshSession()
       await nextTick()
       if (!loggedIn.value) {
         sessionExpired.value = true
         open.value = true
-      } else error.value = 'Your session could not be confirmed. Try submitting again.'
+      } else if (current()) error.value = 'Your session could not be confirmed. Try submitting again.'
       return
     }
     if ([404, 412].includes((cause as { statusCode?: number }).statusCode ?? 0)) {
@@ -144,7 +157,7 @@ async function submit() {
       await refreshProfile()
     }
   } finally {
-    submitting.value = false
+    if (current()) submitting.value = false
   }
 }
 </script>
@@ -164,7 +177,6 @@ async function submit() {
       color="success"
       variant="soft"
       class="mb-4"
-      :actions="[{ label: 'Applications', to: '/applications' }]"
     />
     <div
       class="candidate-bottom-nav fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-default bg-elevated px-4 pt-3 lg:static lg:z-auto lg:flex-col lg:border-0 lg:bg-transparent lg:p-0"
@@ -185,8 +197,8 @@ async function submit() {
       />
       <UButton
         v-else-if="applied"
-        label="View application"
-        to="/applications"
+        :label="receiptId ? 'View application' : 'Applications'"
+        :to="applicationLink"
         icon="i-lucide-check"
         class="min-h-11 flex-1 justify-center"
       />
