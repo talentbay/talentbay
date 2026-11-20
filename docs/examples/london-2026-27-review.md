@@ -42,7 +42,34 @@ It is not employer NI, and dividing an annual calculation into twelve cannot mod
 irregular pay or reproduce individual payslips. Current data model has no separate
 pay-period NI calculation.
 
+## Housing and commute: two costs, not a total budget
+
+| Monthly item | Reference | What it does not tell us |
+| --- | ---: | --- |
+| One-bedroom private rent, London region, October 2026 | GBP 1,774 | The [ONS series](https://www.ons.gov.uk/economy/inflationandpriceindices/datasets/priceindexofprivaterentsukmonthlypricestatistics) covers new and existing tenancies. This is not an asking rent, a furnished flat quote or an estimate specific to transport zones 1-2. |
+| Adult monthly Travelcard, zones 1-2, 2026 | GBP 171.70 | This is one pass from the [TfL fare schedule](https://content.tfl.gov.uk/adult-fares.pdf), not a monthly pay-as-you-go cap or necessarily the cheapest choice for hybrid work. |
+
+**Subtotal: GBP 1,945.70 per month for these two items only.** It excludes council
+tax, utilities, food, health and other costs. Do not present the difference from
+take-home pay as disposable income.
+
+To reproduce the rent observation, use the **18 November 2026** workbook on the
+ONS page, sheet `Table 1`. Filter `Area code = E12000007` and `Time period =
+2026-10-01`; require one matching row, then read **Rental price one bed**.
+In this edition it is cell `L1849`. The same row contains 2,350 for all dwelling
+sizes and an index of 130.097169 for one-bedroom homes; neither is the selected rent.
+Workbook SHA-256: `a91da1d822b13a6b7fffffaa058cb2d9e16ad4996d982fd43444beb0a6656e72`.
+
 ## Moving: cash needed is not always an expense
+
+**Tenancy deposit, separate from monthly spending:** suppose the *actual* monthly
+rent on a qualifying private tenancy in England were GBP 1,774. Annual rent would
+be GBP 21,288, below the GBP 50,000 threshold. At five weeks the maximum to the
+penny would be GBP 2,046.92 (21,288 / 52 x 5, rounded down). This is a potentially
+refundable amount, not a fee or a required minimum. First month's rent is already
+in the recurring budget; do not add it twice to the same period.
+See the [tenant guide](https://www.gov.uk/assured-periodic-tenancies-tenants/rent-in-advance-and-deposits)
+and [statutory formula](https://www.legislation.gov.uk/ukpga/2019/4/schedule/1/paragraph/2).
 
 The [Home Office worked example](https://www.gov.uk/skilled-worker-visa/how-much-it-costs)
 describes a two-year Skilled Worker application from Argentina, outside the immigration
@@ -58,14 +85,16 @@ eligibility, establish employer reimbursement or provide a flight quote.
 - **Tax:** decide the deductions and supported pay pattern; check the taper, rounding
   and income boundaries against an independent reference before approving any model.
 - **Housing and living:** the [ONS rent selection and its coverage](../26-relocation-data-contract.md#london-first-evidence-packet-not-a-reviewed-estimate-20-november-2026)
-  are documented. Confirm housing basis and supply utilities, groceries, transport,
+  are documented. Confirm housing and commute assumptions; supply council tax, utilities, groceries,
   healthcare and other monthly assumptions; an unknown cost is not zero.
 - **Move:** specify a departure city/date, who pays which fees, and evidence for the
-  airfare, deposit, temporary housing and other upfront costs. Don't count the same
+  airfare, actual deposit, temporary housing and other upfront costs. Don't count the same
   charge in monthly and one-time totals.
 - **Release:** record reviewer, approval reference and validity period only after the
   whole package is checked. No PILOT/VERIFIED JSON, publication or shared DB write
   follows from these examples.
 
-Sources accessed 20 November 2026. Contains public sector information licensed under
-the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
+Sources accessed 20 November 2026. ONS and GOV.UK: contains public sector information
+licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/),
+subject to the [ONS exceptions](https://www.ons.gov.uk/help/terms-conditions).
+TfL is a separate source; this single fare reference does not clear republication of its tables.

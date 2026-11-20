@@ -6,6 +6,15 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## London: distinguish rent, travel and a refundable deposit (20 November)
+
+The [review sheet](examples/london-2026-27-review.md#housing-and-commute-two-costs-not-a-total-budget)
+now pins the October one-bedroom observation to its ONS workbook edition and column.
+An offline read verified the file hash and exactly one matching region/month. The
+rent plus one selected Travelcard is a two-item subtotal; a five-week deposit cap
+is a separate cash requirement, not another monthly expense. Independently checked
+against ONS, TfL and the tenant guide. No runtime inputs or city status changed.
+
 ## Mobile WebKit pilot path (20 November)
 
 The PostgreSQL browser suite now runs the existing seven `@mobile-pilot` cases

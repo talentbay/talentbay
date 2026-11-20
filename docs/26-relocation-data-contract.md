@@ -126,11 +126,13 @@ is outside the eleven. This says nothing about private drafts.
 
 The [London worked review sheet](examples/london-2026-27-review.md) adds independent
 annual tax reference amounts, a counterexample to the continuous taper, a separate
-regular-pay employee NI calculation and a sourced two-year immigration fee example.
+regular-pay employee NI calculation, two monthly budget items, a refundable deposit
+cap and a sourced two-year immigration fee example. The region-wide rent is not
+specific to the chosen travel zones. Neither subtotal nor deposit is a cost-of-living total.
 It is evidence for a reviewer, not a city package, a confirmed itinerary or a release.
 
 Still missing: evidence for other recurring costs and the one-time move (departure city,
-itinerary, deposit, temporary housing and fees), a reviewer and a validity period. Keep
+itinerary, actual tenancy terms, temporary housing and fees), a reviewer and a validity period. Keep
 London DEMO. No data was ingested and no employer, source or reviewer was contacted.
 
 ## Local Engineer Import (D03)
