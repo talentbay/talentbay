@@ -27,8 +27,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify conservative documentation classification
-        run: node --test tests/tooling/ci-scope.test.mjs
+      - name: Verify scope and build isolation before installing dependencies
+        run: node --test tests/tooling/ci-scope.test.mjs tests/tooling/build-isolation.test.mjs
       - name: Determine complete pull-request scope
         id: scope
         run: node scripts/ci/change-scope.mjs

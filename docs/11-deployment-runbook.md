@@ -1,6 +1,25 @@
 # Deployment Runbook
 
-Last updated: 2026-11-17
+Last updated: 2026-11-20
+
+## Primary release: schema first, build without database writes
+
+On 20 November the primary public vacancy and relocation APIs responded successfully again.
+Stas reported applying missing migrations. Main commit `a34d59a` also added migration to
+the general build command; this change separates it again. Do not undo applied migrations.
+
+1. For a release with schema changes, the release owner confirms the intended Neon branch,
+   database and role, reviews the pending SQL and identifies a tested restore point and
+   a previous application version compatible with the new schema. Rehearse on an isolated
+   target first. Do not merge an incompatible app while the production schema is pending.
+2. In the approved release environment only, set the direct `DATABASE_MIGRATION_URL`
+   for that target and run `pnpm db:migrate` once. If it fails, stop; inspect the migration
+   journal and do not promote the app. Do not put this command in Vercel's Build Command,
+   package install hooks or a per-PR workflow against a shared database.
+3. Build with `pnpm build`; the runtime uses the restricted `DATABASE_URL`. For a
+   code-only change there is no schema step. After an approved deployment check the JSON
+   responses from `/api/v1/vacancies?limit=1` and `/api/v1/relocation/locations`,
+   not only `/api/health`. An empty verified catalogue is valid; a 500 is not.
 
 ## Primary Project Is Not the Review Project — 17 November
 
