@@ -5,8 +5,7 @@ import { applicationContacts, canSubmitApplication } from '#shared/utils/applica
 import { safeHttpUrl } from '~/utils/safe-http-url'
 import type { VacancyListItem } from '#shared/types/vacancies'
 
-const props = defineProps<{ vacancy: VacancyListItem; refreshing?: boolean }>()
-const emit = defineEmits<{ refresh: [] }>()
+const props = defineProps<{ vacancy: VacancyListItem; reloadListing: (signal: AbortSignal) => Promise<'updated' | 'unavailable' | 'retry'> }>()
 const { loggedIn, user, fetch: refreshSession } = useUserSession()
 const { initialized, isSaved, toggleSaved } = useSavedVacancies()
 const { haptic } = useProductHost()
@@ -18,11 +17,17 @@ const error = ref('')
 const outcome = ref<'submitted' | 'already' | null>(null)
 const submittedId = ref<number | null>(null)
 const acknowledged = ref(false)
-const contextChanged = ref(false)
+const listingState = ref<'ready' | 'changed' | 'unavailable'>('ready')
+const refreshing = ref(false)
 const editingProfile = ref(false)
 const sessionExpired = ref(false)
 let profileEditOwner: number | undefined
 let sessionGeneration = 0
+let reloadRequest: AbortController | undefined
+onBeforeUnmount(() => {
+  sessionGeneration++
+  reloadRequest?.abort()
+})
 const { data: profile, status: profileStatus, error: profileError, refresh: refreshProfile } = await useAccountResource<CandidateProfileResponse>('candidate-profile', '/api/v1/profile')
 const contacts = computed(() => applicationContacts(profile.value))
 const profileReady = computed(() => canSubmitApplication(profile.value))
@@ -48,13 +53,15 @@ watch(
   () => loggedIn.value ? user.value?.id : undefined,
   () => {
     sessionGeneration++
+    reloadRequest?.abort()
     submitting.value = false
     draft.value = ''
     error.value = ''
     outcome.value = null
     submittedId.value = null
     acknowledged.value = false
-    contextChanged.value = false
+    listingState.value = 'ready'
+    refreshing.value = false
     editingProfile.value = false
     profileEditOwner = undefined
     sessionExpired.value = false
@@ -64,15 +71,30 @@ watch(
 )
 watch(() => props.vacancy.applicationContext, () => {
   acknowledged.value = false
-  contextChanged.value = false
-  error.value = ''
 })
-watch(() => props.refreshing, (value, previous) => {
-  if (value || !previous) return
+async function reviewListing() {
+  if (refreshing.value || listingState.value !== 'changed') return
+  const generation = sessionGeneration
+  const request = new AbortController()
+  const timeout = setTimeout(() => request.abort(), 15_000)
+  reloadRequest = request
+  refreshing.value = true
   acknowledged.value = false
-  contextChanged.value = false
   error.value = ''
-})
+  try {
+    const result = await props.reloadListing(request.signal)
+    if (generation !== sessionGeneration) return
+    if (result === 'updated') listingState.value = 'ready'
+    else if (result === 'unavailable') listingState.value = 'unavailable'
+    else error.value = 'The listing could not be reloaded. Your cover note is still here. Try again.'
+  } finally {
+    clearTimeout(timeout)
+    if (reloadRequest === request) {
+      reloadRequest = undefined
+      refreshing.value = false
+    }
+  }
+}
 function editProfile() {
   if (!loggedIn.value || submitting.value) return
   profileEditOwner = user.value?.id
@@ -111,7 +133,7 @@ async function submit() {
     applied.value ||
     props.vacancy.source.status === 'DEMO'
     || !acknowledged.value || !profileReady.value
-    || !props.vacancy.applicationContext || contextChanged.value || props.refreshing
+    || !props.vacancy.applicationContext || listingState.value !== 'ready' || refreshing.value
   )
     return
   submitting.value = true
@@ -142,9 +164,12 @@ async function submit() {
       } else if (current()) error.value = 'Your session could not be confirmed. Try submitting again.'
       return
     }
-    if ([404, 412].includes((cause as { statusCode?: number }).statusCode ?? 0)) {
+    if ((cause as { statusCode?: number }).statusCode === 404) {
       acknowledged.value = false
-      contextChanged.value = true
+      listingState.value = 'unavailable'
+    } else if ((cause as { statusCode?: number }).statusCode === 412) {
+      acknowledged.value = false
+      listingState.value = 'changed'
       error.value = 'This listing changed. Reload it and review the company and role again before applying. Your cover note is still here.'
     } else if ((cause as { statusCode?: number }).statusCode === 409) {
       outcome.value = 'already'
@@ -203,6 +228,14 @@ async function submit() {
         class="min-h-11 flex-1 justify-center"
       />
       <UButton
+        v-else-if="listingState === 'unavailable'"
+        label="Application unavailable"
+        color="neutral"
+        variant="outline"
+        class="min-h-11 flex-1 justify-center"
+        @click="open = true"
+      />
+      <UButton
         v-else
         :label="loggedIn ? 'Apply' : 'Sign in to apply'"
         :disabled="!initialized || (loggedIn && status === 'pending')"
@@ -212,14 +245,21 @@ async function submit() {
     </div>
     <UModal
       v-model:open="open"
-      :title="`Apply for ${vacancy.title}`"
+      :title="listingState === 'unavailable' ? 'Application unavailable' : `Apply for ${vacancy.title}`"
       :description="vacancy.company.name"
       :dismissible="!submitting"
       :ui="{ wrapper: 'min-w-0 pe-10', title: 'break-words', content: '[overflow-wrap:anywhere]' }"
     >
       <template #body>
+        <section v-if="listingState === 'unavailable'" class="space-y-4">
+          <p role="status" class="text-default">Submission is no longer available for this application.</p>
+          <UFormField v-if="draft" label="Cover note" hint="You can copy it before leaving.">
+            <UTextarea :model-value="draft" readonly :rows="6" class="w-full" />
+          </UFormField>
+          <UButton to="/jobs" label="Browse jobs" icon="i-lucide-search" />
+        </section>
         <AuthSignInPanel
-          v-if="!loggedIn"
+          v-else-if="!loggedIn"
           :vacancy-id="vacancy.id"
           :application-context="vacancy.applicationContext"
           :title="sessionExpired ? 'Sign in again to apply' : undefined"
@@ -266,7 +306,7 @@ async function submit() {
               class="w-full"
             />
           </UFormField>
-          <UCheckbox :key="vacancy.applicationContext" v-model="acknowledged" :label="`I ask TalentBay to contact ${vacancy.company.name } and share this application with them for this role.`" :disabled="!profileReady || contextChanged || refreshing" />
+          <UCheckbox :key="vacancy.applicationContext" v-model="acknowledged" :label="`I ask TalentBay to contact ${vacancy.company.name } and share this application with them for this role.`" :disabled="!profileReady || listingState !== 'ready' || refreshing" />
           <p class="text-xs text-muted">You can withdraw in Applications. Withdrawal stops further handling here; it cannot recall information already shared outside TalentBay. No employer response or placement is guaranteed.</p>
           <UAlert
             v-if="error"
@@ -274,11 +314,11 @@ async function submit() {
             title="Application failed"
             :description="error"
           />
-          <UButton v-if="contextChanged" label="Reload listing" icon="i-lucide-refresh-cw" variant="outline" :loading="refreshing" @click="emit('refresh')" />
+          <UButton v-if="listingState === 'changed'" label="Reload listing" icon="i-lucide-refresh-cw" variant="outline" :loading="refreshing" @click="reviewListing" />
         </form>
       </template>
       <template
-        v-if="loggedIn"
+        v-if="loggedIn && listingState !== 'unavailable'"
         #footer
       >
         <div class="flex w-full justify-end gap-3">
@@ -295,7 +335,7 @@ async function submit() {
             label="Submit application"
             icon="i-lucide-send"
             :loading="submitting"
-            :disabled="submitting || applied || !acknowledged || !profileReady || profileStatus === 'pending' || Boolean(profileError) || contextChanged || refreshing || !vacancy.applicationContext"
+            :disabled="submitting || applied || !acknowledged || !profileReady || profileStatus === 'pending' || Boolean(profileError) || listingState !== 'ready' || refreshing || !vacancy.applicationContext"
           />
         </div>
       </template>

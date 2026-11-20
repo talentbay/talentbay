@@ -6,6 +6,21 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Recover an open application without changing its target (20 November)
+
+- After a rejected submission the note stays in the current user's dialog. A removed or
+  ineligible target cannot receive another submission from that form. The note can be
+  copied before leaving and does not follow another vacancy at the same address.
+- A changed role can be reloaded without leaving the application. A failed read or a
+  15-second timeout can be retried without sending the application. A successful read
+  must identify the same vacancy and preserves any Telegram version pin. The candidate
+  reviews the refreshed details and gives consent again.
+- Isolated verification: typecheck, ESLint, unit tests, Nuxt build, HTTP smoke, 41 public
+  and 61 PostgreSQL-backed Chromium scenarios with retries disabled. New checks cover
+  archive, replacement, temporary failure, timeout and stale Telegram pin. Inspected the
+  390px terminal dialog. Independent static review found no outstanding P1/P2 in this
+  change. No database schema, host settings or production content changes.
+
 ## Preserve a guest vacancy when switching into Telegram (20 November)
 
 - A browser visitor can open the entry bot from an eligible vacancy and continue with

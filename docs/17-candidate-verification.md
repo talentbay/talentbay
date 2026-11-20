@@ -1,5 +1,11 @@
 # Candidate Browser Verification
 
+**Apply on an unavailable listing (20 November).** The existing Apply dialog keeps
+a selectable cover note and a route to Jobs when the open application can no longer
+be submitted. Closing the dialog alone does not copy the note to another listing.
+A failed read after a changed listing leaves the original dialog open with consent
+disabled. No persistent drafts or new screens were added.
+
 **Website to Telegram (20 November).** On a guest vacancy, the Telegram action names
 the selected role flow only when the configured entry bot can handle it. The browser
 stays signed out. A private chat reply opens the same public vacancy version; profile

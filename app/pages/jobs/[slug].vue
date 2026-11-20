@@ -24,7 +24,7 @@ if (entry !== undefined) {
   if (import.meta.server) useResponseHeader('Cache-Control').value = 'no-store'
   if (typeof entry !== 'string' || !parseVacancyStart(entry)) throw createError({ statusCode: 404, statusMessage: 'Vacancy not found', fatal: true })
 }
-const { data: vacancy, error, refresh, status } = await useFetch<VacancyListItem>(
+const { data: vacancy, error } = await useFetch<VacancyListItem>(
   `/api/v1/vacancies/${slug}`,
   { query: typeof entry === 'string' ? { entry } : undefined },
 )
@@ -66,9 +66,21 @@ const location = computed(() =>
 )
 const relocationOpen = ref(false)
 const { ready, goBack } = useCandidateBack()
-async function refreshListing() {
-  await refresh()
-  if (error.value || !vacancy.value) showError({ statusCode: error.value?.statusCode || 404, statusMessage: 'Vacancy not found' })
+const originalId = vacancy.value.id
+async function reloadListing(signal: AbortSignal): Promise<'updated' | 'unavailable' | 'retry'> {
+  try {
+    // Commit only a successful read of the same listing; the open draft belongs to it.
+    const updated = await $fetch<VacancyListItem>(`/api/v1/vacancies/${encodeURIComponent(slug)}`, {
+      query: typeof entry === 'string' ? { entry } : undefined,
+      cache: 'no-store', retry: 0, signal,
+    })
+    if (signal.aborted) return 'retry'
+    if (updated.id !== originalId || updated.source.status !== 'VERIFIED' || !updated.applicationContext) return 'unavailable'
+    vacancy.value = updated
+    return 'updated'
+  } catch (cause) {
+    return (cause as { statusCode?: number }).statusCode === 404 ? 'unavailable' : 'retry'
+  }
 }
 </script>
 
@@ -223,7 +235,7 @@ async function refreshListing() {
         class="space-y-5 lg:sticky lg:top-24"
         aria-label="Vacancy actions and estimate"
       >
-        <VacanciesVacancyActions :key="vacancy.id" :vacancy="vacancy" :refreshing="status === 'pending'" @refresh="refreshListing" />
+        <VacanciesVacancyActions :key="vacancy.id" :vacancy="vacancy" :reload-listing="reloadListing" />
         <div
           v-if="relocationLocation"
           class="hidden lg:block"

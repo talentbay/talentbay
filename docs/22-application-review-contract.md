@@ -154,8 +154,13 @@ authentication token, legal approval or proof that an arbitrary client rendered 
 The supported UI sends that shown value as required `expectedContext` with the unchecked
 acknowledgment. Missing/malformed values return400; the transaction locks current public
 vacancy/company rows and rejects a mismatch with412 before creating a snapshot or receipt.
-The modal retains its cover note, refreshes the role and requires a new unchecked review;
-412 must never be presented as the409 duplicate-application outcome.
+The modal retains its cover note in memory for this user and vacancy. On 412 the
+candidate can reload the same vacancy (including any Telegram version parameter) and
+review the new details; consent starts unchecked. A temporary read failure offers
+another read, not another submission. A 404 while submitting or reloading, or a new
+vacancy ID at the old slug, ends this attempt without moving the draft to the replacement.
+The candidate can select the note before leaving. A 404 is not proof of employer action,
+and a 412 is not the 409 duplicate-application outcome.
 
 New snapshots retain that exact context fingerprint. Package preparation/manual handoff
 rechecks it under the existing locks and public/closure/assignee constraints. Timestamp-only
