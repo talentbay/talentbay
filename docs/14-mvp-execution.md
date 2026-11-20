@@ -6,6 +6,24 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Keep a relocation estimate attached to the current offer (20 November)
+
+- Reproduced on the previous build: an open London listing changed its offered pay
+  from GBP to USD. After Apply rejected the stale listing and the candidate reloaded
+  it, the calculator still showed the previous 70,000 GBP.
+- Vacancy suggestions now follow the current salary and destination after an in-place
+  refresh or mobile-sheet reopen. Incompatible pay clears a stale suggestion/result.
+  A manually entered scenario survives unrelated edits. Both presentations use one
+  vacancy-specific estimate; standalone Jobs retains its separate draft.
+- Local: typecheck, clean lint, Node build + HTTP smoke, 296 unit, 105 disposable
+  PostgreSQL (including upgrade/replay), 41 public + 73 DB-backed Chromium tests without
+  retries. Inspected the 390px reopened sheet. Independent review found no open P1/P2
+  within this change. No new live dataset, production operation or schema change.
+- [London review sheet](examples/london-2026-27-review.md): six comparison tests and
+  independent arithmetic review. Official income tax, regular monthly employee NI and
+  upfront visa-fee examples are evidence for the reviewer, not a public take-home result.
+  The public catalogue still has 3 DEMO / 8 UNAVAILABLE / 0 REVIEWED pilot destinations.
+
 ## Bind Apply to the candidate details actually reviewed (20 November)
 
 - The dialog captures both the vacancy and candidate version at acknowledgment. A

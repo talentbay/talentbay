@@ -2,23 +2,22 @@
 import type { RelocationLocationsResponse } from '#shared/types/vacancies'
 import { maxAnnualGross } from '#shared/utils/relocation-income'
 import { relocationMoney } from '~/utils/relocation-presentation'
+import { vacancyEstimateSource } from '~/utils/relocation-draft'
 
 const props = withDefaults(defineProps<{
-  initialLocation?: string
-  initialAnnualGross?: number | null
-  contextKey?: string
+  estimate?: ReturnType<typeof useRelocationEstimate>
   contextLabel?: string
   embedded?: boolean
-}>(), { initialLocation: 'london', initialAnnualGross: null, contextKey: 'jobs', contextLabel: '', embedded: false })
+}>(), { estimate: undefined, contextLabel: '', embedded: false })
 const titleID = useId()
 const interactive = ref(false)
 onMounted(() => { interactive.value = true })
-const { data: locations, error: locationsError, refresh: refreshLocations } = await useFetch<RelocationLocationsResponse>(
-  '/api/v1/relocation/locations', { key: 'relocation-locations' },
-)
 const {
-  location, annualGross, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource,
-} = useRelocationEstimate(props, locations)
+  location, annualGross, markIncomeEdited, destinations, selected, supported, valid, incomeError, notice, currentResult, updating, resource, locationsError, refreshLocations,
+} = props.estimate ?? useRelocationEstimate(
+  'standalone', () => vacancyEstimateSource({ key: 'london', currency: 'GBP' }, null),
+  await useFetch<RelocationLocationsResponse>('/api/v1/relocation/locations', { key: 'relocation-locations' }),
+)
 const { error, execute } = await resource
 const locationItems = computed(() => destinations.value.map(item => ({
   label: `${item.city}, ${item.countryCode}${item.availability === 'DEMO' ? ' · Demo' : item.availability === 'UNAVAILABLE' ? ' · Data unavailable' : ''}`,
@@ -46,7 +45,7 @@ const retainedPercent = computed(() => currentResult.value && currentResult.valu
         <USelect v-model="location" :disabled="!interactive" :items="locationItems" value-key="value" class="w-full" />
       </UFormField>
       <UFormField v-if="supported" label="Annual gross salary" :hint="selected?.currency" :error="incomeError">
-        <UInput v-model.number="annualGross" :disabled="!interactive" type="number" min="0" :max="maxAnnualGross" step="0.01" inputmode="decimal" class="w-full" />
+        <UInput v-model.number="annualGross" :disabled="!interactive" type="number" min="0" :max="maxAnnualGross" step="0.01" inputmode="decimal" class="w-full" @input="markIncomeEdited" />
       </UFormField>
     </div>
     <p v-if="notice" class="mt-3 text-xs text-muted" role="status">{{ notice }}</p>

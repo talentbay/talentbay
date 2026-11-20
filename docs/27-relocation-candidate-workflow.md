@@ -30,6 +30,14 @@ clear it immediately, without FX/old results under new currency labels. MONTH mi
 is annualized; HOUR/missing/mismatched salary stays blank. No household/rent slider or
 hours/tax-residence inference. A different destination is a scenario, not an employer offer.
 
+An open job can be refreshed in place, including after a rejected Apply. The
+calculator's suggested salary must then come from the current posting. A newly
+different currency, hourly pay, or removed salary cannot leave the old suggested
+amount or its result on screen. A candidate-entered scenario is distinct from a
+posting's suggestion: changing only the role description must not overwrite it.
+Closing a sheet and reopening it is not permission to restore a retired suggestion.
+Vacancy drafts belong to the specific listing, not just its URL slug or the Jobs tab.
+
 ## State Matrix
 
 | State | Visible result / action | Acceptance |

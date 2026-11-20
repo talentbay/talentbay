@@ -3,10 +3,8 @@ import type {
   RelocationLocationsResponse,
   VacancyListItem,
 } from '#shared/types/vacancies'
-import {
-  annualSalaryMidpoint,
-  formatVacancySalary,
-} from '~/utils/vacancy-salary'
+import { formatVacancySalary } from '~/utils/vacancy-salary'
+import { vacancyEstimateSource } from '~/utils/relocation-draft'
 import { parseVacancyStart } from '#shared/utils/telegram-vacancy-entry'
 
 definePageMeta({
@@ -40,19 +38,19 @@ useSeoMeta({
     `${vacancy.value?.title} at ${vacancy.value?.company.name} · TalentBay`,
   description: () => vacancy.value?.summary,
 })
-const { data: locations } = await useFetch<RelocationLocationsResponse>('/api/v1/relocation/locations', { key: 'relocation-locations' })
+const locations = await useFetch<RelocationLocationsResponse>('/api/v1/relocation/locations', { key: 'relocation-locations' })
 const relocationLocation = computed(() =>
-  locations.value?.destinations.find(
+  locations.data.value?.destinations.find(
     (item) =>
       item.countryCode === vacancy.value?.location.countryCode &&
       item.city.toLocaleLowerCase('en') ===
         vacancy.value?.location.city?.toLocaleLowerCase('en'),
   ),
 )
-const relocationSalary = computed(() =>
-  vacancy.value?.salary?.currency === relocationLocation.value?.currency
-    ? annualSalaryMidpoint(vacancy.value?.salary || null)
-    : null,
+const estimate = useRelocationEstimate(
+  `vacancy:${vacancy.value.id}`,
+  () => vacancyEstimateSource(relocationLocation.value, vacancy.value?.salary ?? null),
+  locations,
 )
 const sourceUrl = computed(() => safeHttpUrl(vacancy.value?.source.url))
 const location = computed(() =>
@@ -241,10 +239,8 @@ async function reloadListing(signal: AbortSignal): Promise<'updated' | 'unavaila
           class="hidden lg:block"
         >
           <RelocationPreview
-            :context-key="vacancy.slug"
+            :estimate="estimate"
             :context-label="`${vacancy.title} · ${vacancy.company.name}`"
-            :initial-location="relocationLocation.key"
-            :initial-annual-gross="relocationSalary"
           />
         </div>
       </aside>
@@ -259,9 +255,7 @@ async function reloadListing(signal: AbortSignal): Promise<'updated' | 'unavaila
         <RelocationPreview
           v-if="relocationLocation"
           embedded
-          :context-key="vacancy.slug"
-          :initial-location="relocationLocation.key"
-          :initial-annual-gross="relocationSalary"
+          :estimate="estimate"
         />
       </template>
     </UModal>
