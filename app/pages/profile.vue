@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CandidateProfileResponse } from '#shared/types/candidates'
-import { profileSections } from '~/utils/candidate-profile'
+import { profileApplicationReadiness, profileSections } from '~/utils/candidate-profile'
 
 definePageMeta({ layout: 'product' })
 useSeoMeta({ title: 'Profile · TalentBay', robots: 'noindex' })
@@ -11,6 +11,13 @@ const { data, status, error, refresh } =
     '/api/v1/profile',
   )
 const editing = ref(false)
+const applicationMessages = {
+  ready: 'Your profile has the details needed to apply.',
+  unsaved: 'Save your profile before applying.',
+  missingName: 'Your account needs a name before you can apply.',
+  missingContact: 'Add a valid phone number or Telegram username to apply. A valid account email also works.',
+}
+const applicationMessage = computed(() => applicationMessages[profileApplicationReadiness(data.value)])
 const sections = computed(() => profileSections(data.value?.profile))
 const completed = computed(
   () => sections.value.filter((section) => section.complete).length,
@@ -183,12 +190,12 @@ const linkedinUrl = computed(() =>
               Profile completeness
             </h2>
             <span class="shrink-0 text-xs text-primary">
-              {{ completed }} / 5
+              {{ completed }} / {{ sections.length }}
             </span>
           </div>
           <UProgress
             :model-value="completed"
-            :max="5"
+            :max="sections.length"
             class="mt-3"
             aria-label="Profile completeness"
           />
@@ -196,13 +203,13 @@ const linkedinUrl = computed(() =>
             v-if="missing"
             class="mt-3 text-xs leading-5 text-muted"
           >
-            Missing: {{ missing }}
+            Not filled in: {{ missing }}
           </p>
-          <p
-            v-else
-            class="mt-3 text-sm text-muted"
-          >
-            Your profile is ready.
+          <h3 class="mt-4 text-sm font-semibold text-highlighted">
+            Application readiness
+          </h3>
+          <p class="mt-1 text-sm text-muted">
+            {{ applicationMessage }}
           </p>
           <UButton
             label="Edit profile"

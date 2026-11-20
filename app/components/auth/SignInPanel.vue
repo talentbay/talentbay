@@ -6,9 +6,7 @@ const {
   data,
   error: capabilityError,
   refresh,
-} = await useFetch<{ google: boolean; github: boolean; telegram: boolean }>(
-  '/api/v1/auth/capabilities',
-)
+} = await useFetch('/api/v1/auth/capabilities')
 const { busy, error, open } = useOAuthWindow()
 async function signIn(provider: 'GOOGLE' | 'GITHUB') {
   if (await open(provider)) emit('completed')
@@ -80,6 +78,25 @@ async function signIn(provider: 'GOOGLE' | 'GITHUB') {
         :loading="busy === 'GITHUB'"
         :disabled="Boolean(busy)"
         @click="signIn('GITHUB')"
+      />
+    </div>
+    <div
+      v-else-if="data?.telegram && data.telegramBotUrl && host.kind === 'web' && host.status === 'ready'"
+      class="mt-5"
+    >
+      <p class="text-sm text-muted">
+        In Telegram, choose Start, then Open TalentBay. This browser stays signed out.
+      </p>
+      <UButton
+        :to="data.telegramBotUrl"
+        external
+        target="_blank"
+        rel="noopener noreferrer"
+        label="Open Telegram bot"
+        icon="i-lucide-send"
+        size="lg"
+        block
+        class="mt-3"
       />
     </div>
     <p
