@@ -3,6 +3,7 @@ export type SourceRunReport = {
   fetchedAt: string | null
   pageCount: number
   recordCount: number
+  contactSkippedIds: string[]
   created: number
   updated: number
   unchanged: number

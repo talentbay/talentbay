@@ -1,6 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
+import { getCandidateContext, setFixtureProfile } from './support/application'
 import { signedLaunch } from './support/telegram'
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
@@ -24,7 +25,7 @@ test('a changed listing requires explicit renewed review, not a false duplicate 
   const login = await context.request.post('/api/v1/auth/telegram', { headers: { origin }, data: { initData: signedLaunch(randomInt(1e9, 1e12), 'Context Candidate') } })
   expect(login.status()).toBe(200)
   userID = (await login.json()).user.id
-  await context.request.put('/api/v1/profile', { headers: { origin }, data: { telegram: '@context_fixture' } })
+  await setFixtureProfile(context.request, userID, { telegram: '@context_fixture' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(`/jobs/${slug}`)
   await page.getByRole('button', { name: 'Apply', exact: true }).click()
@@ -53,6 +54,7 @@ test('a changed listing requires explicit renewed review, not a false duplicate 
   const [application] = await sql`select submission_snapshot from applications where user_id=${userID}`
   expect(application!.submission_snapshot.recipient.name).toBe('Updated Context Company')
   expect(application!.submission_snapshot.vacancy.contextRevision).toMatch(/^v1:[a-f0-9]{64}$/)
-  const response = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true } })
+  const expectedCandidateContext = await getCandidateContext(context.request)
+  const response = await context.request.post(`/api/v1/vacancies/${vacancyID}/applications`, { headers: { origin }, data: { disclosureVersion: 'talentbay-managed-v1', shareAcknowledged: true, expectedCandidateContext } })
   expect(response.status()).toBe(400)
 })

@@ -1,5 +1,8 @@
 # Nuxt dev/build outputs
 .output
+.output-native-review
+.native-review-publish
+.codex-attachments/
 .data
 .nuxt
 .nitro

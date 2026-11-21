@@ -36,6 +36,7 @@ export type VacancyListItem = {
   company: {
     name: string
     initials: string
+    slug?: string // Older device-local saved snapshots may not contain a company key.
   }
   location: {
     city: string | null
@@ -69,6 +70,8 @@ export type VacancySearchResponse = {
   dataStatus: VacancyDataStatus
   nextCursor: string | null
 }
+
+export type VacancyCompanyOption = { slug: string, name: string }
 
 export type VacancyResolveResponse = {
   items: VacancyListItem[]

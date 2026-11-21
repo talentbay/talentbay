@@ -21,6 +21,12 @@ export function isDatabaseConfigured(): boolean {
   return Boolean(process.env.DATABASE_URL)
 }
 
+// Compare the live client's parsed target, not a second parse of a mutable URL.
+export function hasSingleDatabaseHost(host: string): boolean {
+  const hosts = databaseClient?.options.host
+  return hosts?.length === 1 && hosts[0] === host
+}
+
 export function useDatabase(): Database {
   if (database) {
     return database

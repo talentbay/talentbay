@@ -48,6 +48,46 @@ must be retryable without duplicate records or automatic publication.
 
 ## File and API contract
 
+### Company labels and write access (20 November)
+
+Use one vacancy format for the team and, later, partners. An operator or an agent
+can prepare multiple records for the existing CSV/JSON import. The company name
+and stable company key group vacancies; they are not proof of a partnership or a
+right to manage that company. A label is plain text for candidates while no
+public employer profile exists. An original source URL is not a company profile.
+
+| Operation | Available now | Next acceptance |
+| --- | --- | --- |
+| Create and correct a vacancy | Queue → Create vacancy or Edit. Both the single-record editor and batch importer validate the same item and save through the same transaction service. | Keep the vacancy ID and submitted applications. Changed published content returns to review; other listings at the company are not affected by an editor save. |
+| Read and retire | Public list/detail; admin queue, review and archive. | Archive withdraws public visibility without deleting candidate history; no hard-delete shortcut. |
+| Identify a company | Import resolves a stable company key without a partner account. Candidates select a company under Filters; operators can narrow the queue from a vacancy row. Both lists use exact key equality alongside text and other filters. | Changing companies resets paging. Names alone never merge employers and do not link to company profiles. |
+| Partner authorship | Not a self-service flow today. | Keep the content format. Enforce separately verified membership and company scope on the server for both single and bulk writes; a supplied name, slug or source ID never grants access. |
+
+This is a scope clarification, not an instruction to expose generic CRUD for users,
+profiles, application history or every database table. Neither single-record authoring
+nor company filtering requires a partner dashboard.
+
+Public company suggestions are bounded to 25 per search, return name and key only,
+and exclude companies with no publicly visible vacancies. An operator can still group
+draft or archived vacancies inside the authorized queue. Company choice lives in the
+current search URL, not the candidate's saved preferences.
+
+### Single-record operator workflow
+
+Create a first-party draft under the reserved source name `TalentBay editorial`; it
+does not need an invented external URL. The form generates a stable source ID for
+that creation attempt. The CSV/JSON equivalent also needs a stable source ID. Other
+sources still require an original URL and permission to publish; the editor grants
+neither permission nor verified status. No partner profile is created.
+
+An edit pins the original vacancy ID, URL key, source key, company and content revision.
+It cannot rename a shared company, erase its website or change sibling vacancies. A
+duplicate creation or stale save is rejected, not upserted over someone else's work.
+After saving, review opens on that exact record. A published correction is explicitly
+acknowledged before saving; unmodified content keeps its prior state. Archived records
+stay archived. Records without a stable source identity are reviewable but not editable
+with this form until provenance is reconciled.
+
 - UTF-8 comma-delimited CSV, optional UTF-8 BOM, quoted commas/newlines supported by
   `csv-parse/sync`; no custom CSV parser, XLSX, ZIP, formula evaluation or URL fetching.
 - Maximum file text 512 KiB, 50 data records; bounded HTTP body and parser record buffer.

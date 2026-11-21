@@ -1,12 +1,15 @@
 import { z } from 'zod'
+import { annualGrossInputError } from '#shared/utils/relocation-income'
 
-export const maxAnnualGross = 2_000_000
 const text = (min = 1, max = 2000) => z.string().trim().min(min).max(max).refine(value => !value.includes('\0'))
 const amount = z.number().nonnegative().max(100_000_000)
 const rate = z.number().int().min(0).max(10_000)
 const supportedCurrencies = new Set(Intl.supportedValuesOf('currency'))
 export const relocationCurrencySchema = z.string().regex(/^[A-Z]{3}$/).refine(value => supportedCurrencies.has(value), 'Currency is not supported by this runtime')
-export const annualGrossSchema = z.number().nonnegative().max(maxAnnualGross)
+export const annualGrossSchema = z.number().superRefine((value, context) => {
+  const message = annualGrossInputError(value)
+  if (message) context.addIssue({ code: 'custom', message })
+})
 export const monthlyCostsSchema = z.object({ rent: amount, utilities: amount, groceries: amount, transport: amount, healthcare: amount, other: amount }).strict()
 export const oneTimeCostsSchema = z.object({ flight: amount, visa: amount, deposit: amount, temporaryHousing: amount, other: amount }).strict()
 export const taxModelSchema = z.discriminatedUnion('type', [

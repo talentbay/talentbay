@@ -3,15 +3,16 @@ import { describe, expect, it, vi } from 'vitest'
 import { leverSourceSchema } from '#server/services/sources/lever-contract'
 import { normalizeLeverJobs } from '#server/services/sources/lever-normalize'
 import { fetchLeverJobs } from '#server/services/sources/lever-fetch'
+import { contactRule, contactSection, fixtureMailbox } from './lever-contact.fixture'
 
-const source = leverSourceSchema.parse({ site: 'fixture-company', region: 'GLOBAL', company: { name: 'Fictional Source Company', slug: 'fixture-source-company' }, locations: { Berlin: { city: 'Berlin', countryCode: 'DE' } } })
+const source = leverSourceSchema.parse({ site: 'fixture-company', region: 'GLOBAL', company: { name: 'Fictional Source Company', slug: 'fixture-source-company' }, locations: { Berlin: { city: 'Berlin', countryCode: 'DE' } }, contactRule })
 function posting() {
   const id = randomUUID()
   return {
     id, text: 'Synthetic TypeScript Engineer', country: 'DE', workplaceType: 'hybrid',
     categories: { commitment: 'Full-time', location: 'Berlin' },
     descriptionPlain: 'A fictional engineering role used only for isolated source tests.',
-    lists: [{ text: 'Requirements', content: '<ul><li>TypeScript &amp; PostgreSQL</li><li>Testing</li></ul><script>do not retain this script</script><img src="https://attacker.invalid/track">' }],
+    lists: [contactSection, { text: 'Requirements', content: '<ul><li>TypeScript &amp; PostgreSQL</li><li>Testing</li></ul><script>do not retain this script</script><img src="https://attacker.invalid/track">' }],
     hostedUrl: `https://jobs.lever.co/fixture-company/${id}`,
     salaryRange: { min: 70_000, max: 90_000, currency: 'EUR', interval: 'per-year' },
   }
@@ -36,6 +37,7 @@ describe('Lever source normalization', () => {
     const cases = [
       [{ ...raw, categories: { ...raw.categories, commitment: 'Volunteer' } }, 'UNSUPPORTED_EMPLOYMENT'],
       [{ ...raw, workplaceType: 'unspecified' }, 'UNSPECIFIED_WORKPLACE'],
+      [{ ...raw, text: `Engineer: ${fixtureMailbox}` }, 'CHECK_TITLE'],
       [{ ...raw, country: null, categories: { ...raw.categories, location: 'Unknown' } }, 'UNRESOLVED_LOCATION'],
       [{ ...raw, salaryRange: { ...raw.salaryRange, interval: 'per-project' } }, 'UNSUPPORTED_SALARY_PERIOD'],
       [{ ...raw, salaryRange: { ...raw.salaryRange, min: 1.5 } }, 'INVALID_RECORD'],
@@ -62,9 +64,28 @@ describe('Lever source normalization', () => {
     const result = normalizeLeverJobs(source, [{ ...raw, descriptionPlain: undefined, description: '<div>'.repeat(200) + raw.descriptionPlain + '</div>'.repeat(200) }])
     expect(result.items).toHaveLength(1)
     expect(result.issues).toEqual([])
-    const withoutProse = { ...raw, descriptionPlain: undefined, description: undefined, lists: undefined }
+    const withoutProse = { ...raw, descriptionPlain: undefined, description: undefined, lists: [contactSection] }
     expect(normalizeLeverJobs(source, [withoutProse]).items[0]).toEqual(result.items[0])
-    expect(normalizeLeverJobs(source, [{ ...withoutProse, description: 'x'.repeat(100_001), lists: { untrusted: 'not parsed' } }]).items[0]).toEqual(result.items[0])
+    expect(normalizeLeverJobs(source, [{ ...withoutProse, description: 'x'.repeat(100_001) }]).items[0]).toEqual(result.items[0])
+  })
+  it('only accepts one approved role-specific mailbox and never persists it in normalized output', () => {
+    const raw = posting()
+    const skipped: unknown[] = [
+      [], undefined, { untrusted: 'not a list' },
+      [{ text: 'Privacy', content: contactSection.content }],
+      [contactSection, { ...contactSection, text: contactSection.text.toUpperCase() }],
+      ...['<li>other@example.invalid</li>', '<li>https://example.invalid/apply</li>',
+        `<li><a href="mailto:${fixtureMailbox}">Apply</a></li>`, `${contactSection.content}<li>two</li>`,
+        `<li>Do not send to ${fixtureMailbox}</li>`, '<li>RECRUITING@example.invalid</li>'].map(content => [{ ...contactSection, content }]),
+    ]
+    for (const lists of skipped) {
+      const result = normalizeLeverJobs(source, [{ ...raw, lists, descriptionPlain: fixtureMailbox, applyUrl: raw.hostedUrl + '/apply' }])
+      expect(result).toMatchObject({ items: [], contactSkippedIds: [raw.id], issues: [] })
+    }
+    const eligible = normalizeLeverJobs(source, [{ ...raw, lists: [{ ...contactSection, content: '<li>recruiting@EXAMPLE.INVALID</li>' }] }])
+    expect(eligible.items).toHaveLength(1)
+    expect(eligible.contactSkippedIds).toEqual([])
+    expect(JSON.stringify(eligible)).not.toContain(fixtureMailbox)
   })
 })
 
@@ -103,6 +124,13 @@ describe('bounded server-only Lever fetch', () => {
     const endless = vi.fn<typeof fetch>().mockImplementation(async () => response(Array.from({ length: 50 }, posting)))
     await expect(fetchLeverJobs(source, endless)).rejects.toMatchObject({ code: 'PAGE_LIMIT' })
     expect(endless).toHaveBeenCalledTimes(5)
+  })
+  it('does not hide a repeated posting across pages just because it has no eligible contact', async () => {
+    const excluded = { ...posting(), lists: [] }
+    const pages = [[excluded, ...Array.from({ length: 49 }, posting)], [excluded]]
+    const transport = vi.fn<typeof fetch>().mockImplementation(async () => response(pages.shift()))
+    await expect(fetchLeverJobs(source, transport)).rejects.toMatchObject({ code: 'DUPLICATE_ID' })
+    expect(transport).toHaveBeenCalledTimes(2)
   })
   it('redacts network errors and refuses a user-controlled fetch URL/site', async () => {
     const transport = vi.fn<typeof fetch>().mockRejectedValue(new Error('credential=do-not-log'))

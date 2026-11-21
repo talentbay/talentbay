@@ -231,7 +231,17 @@ For Neon:
    first verify the intended branch and read-only runtime/schema/data readiness.
 5. After migration approval and rollback preparation, run `pnpm db:migrate` against that branch.
 6. Verify tables and indexes.
-7. Run `pnpm db:seed:preview` only for an explicitly approved preview dataset.
+7. To prepare fictional vacancies, run `pnpm --silent demo:vacancies:csv > talentbay-demo.csv`
+   locally. This only generates a file. The old `db:seed:preview` no longer writes to any DB.
+   For a separately approved refresh of the review site, independently verify its Neon branch and
+   set `TALENTBAY_REVIEW_IMPORT_HOST` **only there** to that branch's exact pooled hostname (no URL
+   or password). The runtime also checks the connected database and role. Leave it unset on the
+   main site. In the review admin, validate the file, inspect any withdrawals, then confirm the
+   import and explicitly review and publish the desired rows. New/changed rows are not published
+   by import; unchanged rows retain their state. Do not rename the source to bypass a refusal.
+   The published examples are marked DEMO and cannot receive applications. To rehearse actual
+   submissions using fictional accounts, use the disposable local review and its own one-row
+   sample; six slugs are already owned by another fixture source there.
 
 Do not run `db:push` against shared Preview or Production databases.
 

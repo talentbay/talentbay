@@ -39,7 +39,10 @@ async function submit(mode: 'preview' | 'import') {
   }
   catch (error) {
     const status = (error as { statusCode?: number }).statusCode
-    message.value = status === 409 ? 'Content changed since validation. Validate the file again.' : 'The request could not be completed. Validate again before retrying; existing source IDs prevent duplicates.'
+    if (status === 403) message.value = 'This account or environment cannot import this file. The seven-job demo CSV is for the configured review site. The local rehearsal has its own sample CSV.'
+    else if (status === 422) message.value = 'Check the file and company status before retrying. Import demo vacancies separately from other sources.'
+    else if (status === 409) message.value = 'Content changed since validation. Validate the file again.'
+    else message.value = 'The request could not be completed. Validate again before retrying; existing source IDs prevent duplicates.'
     preview.value = null
   }
   finally { busy.value = false }

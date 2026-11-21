@@ -11,7 +11,7 @@ type RequestTelemetry = {
   result?: 'replayed' | 'invalid' | 'failed'
 }
 
-const requestOperations = ['application.handling', 'vacancy.file.preview', 'vacancy.file.import', 'source.fetch', 'source.preview', 'source.import'] as const
+const requestOperations = ['application.handling', 'vacancy.file.preview', 'vacancy.file.import', 'vacancy.editor.create', 'vacancy.editor.edit', 'source.fetch', 'source.preview', 'source.import'] as const
 type RequestOperation = typeof requestOperations[number]
 
 type RequestLog = {
@@ -51,17 +51,18 @@ function getPathname(requestUrl: string) {
 
 const staticPaths = new Set([
   '/api/health', '/api/_auth/session',
-  '/api/v1/vacancies', '/api/v1/vacancies/resolve', '/api/v1/profile', '/api/v1/applications',
+  '/api/v1/vacancies', '/api/v1/vacancies/resolve', '/api/v1/job-filters/companies', '/api/v1/profile', '/api/v1/applications',
   '/api/v1/relocation/locations', '/api/v1/relocation/preview', '/api/v1/bot/telegram',
   '/api/v1/auth/google', '/api/v1/auth/github', '/api/v1/auth/telegram', '/api/v1/auth/link', '/api/v1/auth/identities', '/api/v1/auth/capabilities',
   '/api/v1/admin/dashboard', '/api/v1/admin/users', '/api/v1/admin/applications',
-  '/api/v1/admin/vacancies', '/api/v1/admin/vacancies/import', '/api/v1/admin/vacancies/file',
+  '/api/v1/admin/vacancies', '/api/v1/admin/vacancies/import', '/api/v1/admin/vacancies/file', '/api/v1/admin/vacancies/editor',
   '/api/v1/admin/sources', '/api/v1/admin/sources/progress', '/api/v1/admin/sources/run',
 ])
 const dynamicPaths: [RegExp, string][] = [
   [/^\/api\/v1\/vacancies\/[^/]+$/, '/api/v1/vacancies/:slug'],
   [/^\/api\/v1\/vacancies\/[^/]+\/application$/, '/api/v1/vacancies/:id/application'],
   [/^\/api\/v1\/vacancies\/[^/]+\/applications$/, '/api/v1/vacancies/:id/applications'],
+  [/^\/api\/v1\/applications\/[^/]+$/, '/api/v1/applications/:id'],
   [/^\/api\/v1\/applications\/[^/]+\/progress$/, '/api/v1/applications/:id/progress'],
   [/^\/api\/v1\/applications\/[^/]+\/withdraw$/, '/api/v1/applications/:id/withdraw'],
   [/^\/api\/v1\/admin\/applications\/[^/]+$/, '/api/v1/admin/applications/:id'],

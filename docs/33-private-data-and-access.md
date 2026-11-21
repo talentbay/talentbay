@@ -84,12 +84,12 @@ Snapshot copies include original contact information and a cover note, not just 
 to the current profile. Removing the current profile alone cannot implement an export or
 erasure request. No automatic renewal of sharing permission follows a changed profile.
 
-Calculation requests currently use GET query parameters (`location`, `annualGross`). They
-are not page-navigation history or persisted TalentBay salary records, and app logs strip
-queries; browser network tools and provider/proxy logging can still observe them. No-store
-does not erase such metadata. This exposure needs the real H02/G05 logging/privacy decision
-(including whether to change the transport before real use); do not claim financial input
-never leaves the browser or is absent from every possible provider log.
+The candidate calculator sends `location` and `annualGross` in a bounded same-origin POST
+body, never in its request URL. The calculation is read-only, does not persist the input,
+and returns `no-store`. Older clients can still call GET with salary in the query string.
+Browser network inspection, the receiving server and any body-capturing instrumentation
+can still see the POST payload or response. H02/G05 must verify deployed logging and
+retention; neither the move to POST nor `no-store` guarantees provider-wide privacy.
 
 ## Cascades and Privacy Work Procedure
 

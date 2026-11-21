@@ -20,6 +20,9 @@ describe('bounded import JSON transport', () => {
     await expect(readBoundedJson(event([], {}, { csv: 'valid' }), 100)).resolves.toEqual({ csv: 'valid' })
     await expect(readBoundedJson(event([], {}, { csv: 'x'.repeat(1000) }), 100)).rejects.toMatchObject({ statusCode: 413 })
   })
+  it('also respects the original content length when a host supplied a small parsed object', async () => {
+    await expect(readBoundedJson(event([], { 'content-length': '1025' }, { location: 'london', annualGross: 0 }), 1024)).rejects.toMatchObject({ statusCode: 413 })
+  })
   it('rejects invalid JSON/UTF-8 and unsupported content encodings', async () => {
     await expect(readBoundedJson(event([Buffer.from('{invalid')]))).rejects.toMatchObject({ statusCode: 400 })
     await expect(readBoundedJson(event([Buffer.from([0xff])]))).rejects.toMatchObject({ statusCode: 400 })

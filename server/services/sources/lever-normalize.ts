@@ -1,6 +1,7 @@
 import type { VacancyImportItem } from '#server/services/vacancies/import-schema'
 import { vacancyImportItemSchema } from '#server/services/vacancies/import-schema'
 import { leverPostingSchema, leverSourceSchema } from './lever-contract'
+import { matchesPostingContact } from './lever-contact'
 import type { LeverPosting, LeverSource, SourceRecordIssue } from './lever-contract'
 
 // TalentBay-authored notice, not a copied or machine-paraphrased source description.
@@ -14,10 +15,12 @@ const periods: Record<string, 'YEAR' | 'MONTH' | 'HOUR'> = {
   'per-year': 'YEAR', year: 'YEAR', yearly: 'YEAR', annual: 'YEAR',
   'per-month': 'MONTH', month: 'MONTH', monthly: 'MONTH', 'per-hour': 'HOUR', hour: 'HOUR', hourly: 'HOUR',
 }
-const recordIssueCodes = new Set(['UNSUPPORTED_EMPLOYMENT', 'UNSPECIFIED_WORKPLACE', 'UNRESOLVED_LOCATION', 'INVALID_SOURCE_URL', 'UNSUPPORTED_SALARY_PERIOD', 'INVALID_IMPORT_FIELDS'])
+const recordIssueCodes = new Set(['UNSUPPORTED_EMPLOYMENT', 'UNSPECIFIED_WORKPLACE', 'UNRESOLVED_LOCATION', 'INVALID_SOURCE_URL', 'UNSUPPORTED_SALARY_PERIOD', 'INVALID_IMPORT_FIELDS', 'CHECK_TITLE'])
 
 function normalizePosting(source: LeverSource, job: LeverPosting): VacancyImportItem {
   const id = job.id.toLowerCase()
+  // Only the title is provider free text in the public DTO; don't forward embedded mailboxes.
+  if (job.text.includes('@')) throw new Error('CHECK_TITLE')
   const commitment = job.categories.commitment.trim().toLowerCase()
   const employmentType = Object.hasOwn(employment, commitment) ? employment[commitment] : undefined
   if (!employmentType) throw new Error('UNSUPPORTED_EMPLOYMENT')
@@ -53,6 +56,7 @@ export function normalizeLeverJobs(config: LeverSource, records: unknown[]) {
   const source = leverSourceSchema.parse(config)
   const items: VacancyImportItem[] = []
   const issues: SourceRecordIssue[] = []
+  const contactSkippedIds: string[] = []
   const seen = new Set<string>()
   if (records.length > 200) throw new Error('Source normalization is limited to 200 records')
   records.forEach((record, index) => {
@@ -61,8 +65,12 @@ export function normalizeLeverJobs(config: LeverSource, records: unknown[]) {
     const id = parsed.data.id.toLowerCase()
     if (seen.has(id)) { issues.push({ index, id, code: 'DUPLICATE_ID' }); return }
     seen.add(id)
-    try { items.push(normalizePosting(source, parsed.data)) }
+    try {
+      const item = normalizePosting(source, parsed.data)
+      if (matchesPostingContact(parsed.data.lists, source.contactRule)) items.push(item)
+      else contactSkippedIds.push(id)
+    }
     catch (error) { issues.push({ index, id: parsed.data.id, code: error instanceof Error && recordIssueCodes.has(error.message) ? error.message : 'INVALID_RECORD' }) }
   })
-  return { source: `Lever:${source.region.toLowerCase()}:${source.site}`, items, issues, recordCount: records.length }
+  return { source: `Lever:${source.region.toLowerCase()}:${source.site}`, items, issues, contactSkippedIds, recordCount: records.length }
 }

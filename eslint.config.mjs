@@ -4,6 +4,8 @@ export default withNuxt({
   ignores: [
     '.nuxt/**',
     '.output/**',
+    '.output-native-review/**',
+    '.native-review-publish/**',
     'coverage/**',
     'test-results/**',
     'playwright-report/**',

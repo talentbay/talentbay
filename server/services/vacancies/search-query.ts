@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
+import { companyKeySchema } from './company-filter'
 
 export const vacancySearchSchema = z.object({
   q: z.string().trim().max(100).default(''),
+  company: companyKeySchema.optional(),
   countryCode: z.string().regex(/^[a-z]{2}$/i).transform(value => value.toUpperCase()).optional(),
   workplaceType: z.enum(['ONSITE', 'HYBRID', 'REMOTE']).optional(),
   visaSponsorship: z.boolean().default(false), salaryDisclosed: z.boolean().default(false),

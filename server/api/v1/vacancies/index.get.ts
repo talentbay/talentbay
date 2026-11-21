@@ -3,6 +3,7 @@ import { listVacancies } from '#server/repositories/vacancies'
 
 const querySchema = z.object({
   q: z.string().optional(),
+  company: z.string().optional(),
   countryCode: z.string().optional(),
   workplaceType: z.enum(['ONSITE', 'HYBRID', 'REMOTE']).optional(),
   visaSponsorship: z.enum(['true', 'false']).optional(),

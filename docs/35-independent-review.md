@@ -124,7 +124,8 @@ Important residual limits to challenge, not silently accept:
   are demo or missing. The technical2M annual-gross nominal cap can exclude realistic ARS
   salaries; do not describe it as a universal purchasing-power bound.
 - Calculation GET query can be observed in browser/provider/proxy metadata. No-store/app
-  log redaction is not universal privacy. H02/G05 must resolve real transport/log policy.
+  log redaction is not universal privacy. Follow-up (20 November): the candidate UI
+  moved to POST; compatibility GET and deployed logging policy remain in scope for H02/G05.
 - No approved retention/erasure/export/support-owner/channel/legal texts or real sharing
   process. Snapshot/private notes/backups/manual copies matter; raw legacy FK cascades are
   unsafe as an ad-hoc privacy operation. No export/delete/disconnect endpoint is shipped.

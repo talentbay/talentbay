@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
+import { parseVacancyStart } from '#shared/utils/telegram-vacancy-entry'
 
 const safeID = z.number().int().positive().max(Number.MAX_SAFE_INTEGER)
 const configSchema = z.object({
@@ -20,6 +21,15 @@ export type BotEntryConfig = z.infer<typeof configSchema>
 export function parseBotEntryConfig(input: unknown): BotEntryConfig | null {
   const parsed = configSchema.safeParse(input)
   return parsed.success ? { ...parsed.data, appOrigin: new URL(parsed.data.appOrigin).origin } : null
+}
+export function runtimeBotEntryConfig(runtime: {
+  telegramBotID: unknown; telegramBotUsername: unknown; telegramBotToken: unknown
+  telegramWebhookSecret: unknown; telegramAppOrigin: unknown
+}) {
+  return parseBotEntryConfig({
+    botID: runtime.telegramBotID, username: runtime.telegramBotUsername, token: runtime.telegramBotToken,
+    secret: runtime.telegramWebhookSecret, appOrigin: runtime.telegramAppOrigin,
+  })
 }
 export function verifyBotWebhookSecret(actual: string | undefined, expected: string): boolean {
   if (!actual || actual.length > 256) return false
@@ -42,7 +52,19 @@ export type BotWebhookReply = {
   text: string
   reply_markup: { inline_keyboard: { text: string; web_app?: { url: string }; url?: string }[][] }
 }
-export function prepareBotEntry(input: unknown, config: BotEntryConfig): { updateID: number; reply: BotWebhookReply | null } | null {
+export function vacancyEntryReply(chatID: number, appOrigin: string, slug: string | null, payload: string): BotWebhookReply {
+  const available = slug !== null && slug.length <= 120 && slug.trim() === slug
+    && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && parseVacancyStart(payload) !== null
+  const url = new URL(available ? `/jobs/${slug}` : '/jobs', appOrigin)
+  if (available) url.searchParams.set('entry', payload)
+  return {
+    method: 'sendMessage', chat_id: chatID,
+    text: available ? 'Open this vacancy in TalentBay to review it and apply.' : 'This vacancy is unavailable. You can still browse other jobs.',
+    reply_markup: { inline_keyboard: [[{ text: available ? 'Open vacancy' : 'Browse jobs', web_app: { url: url.href } }]] },
+  }
+}
+
+export function prepareBotEntry(input: unknown, config: BotEntryConfig): { updateID: number; reply: BotWebhookReply | null; vacancyStart?: { id: number; payload: string } } | null {
   const result = updateSchema.safeParse(input)
   if (!result.success) return null
   const { update_id: updateID, message } = result.data
@@ -53,12 +75,17 @@ export function prepareBotEntry(input: unknown, config: BotEntryConfig): { updat
   const command = match?.[1]?.toLowerCase()
   const url = (path: string) => new URL(path, config.appOrigin).href
   const appButton = (text: string, path: string) => ({ text, web_app: { url: url(path) } })
+  let vacancyStart: { id: number; payload: string } | undefined
   let text: string
   let buttons: BotWebhookReply['reply_markup']['inline_keyboard'] = [[appButton('Open TalentBay', '/jobs')]]
   switch (command) {
-    case 'start':
+    case 'start': {
+      const payload = match?.[3]
+      const pin = parseVacancyStart(payload)
+      if (payload && pin && message.text === message.text.trimEnd()) vacancyStart = { id: pin.id, payload }
       text = 'Welcome to TalentBay. Browse jobs, estimate relocation costs and manage your profile in the app. Applications go to the TalentBay team, who contact the company to propose your candidacy.'
       break
+    }
     case 'jobs':
       text = 'Open TalentBay to browse jobs and compare relocation estimates. Data availability is shown in each estimate.'
       buttons = [[appButton('Browse jobs', '/jobs')]]
@@ -77,5 +104,5 @@ export function prepareBotEntry(input: unknown, config: BotEntryConfig): { updat
     default:
       text = 'This bot opens TalentBay. It does not process messages or documents as support requests. Use /jobs, /applications or /help.'
   }
-  return { updateID, reply: { method: 'sendMessage', chat_id: message.chat.id, text, reply_markup: { inline_keyboard: buttons } } }
+  return { updateID, ...(vacancyStart ? { vacancyStart } : {}), reply: { method: 'sendMessage', chat_id: message.chat.id, text, reply_markup: { inline_keyboard: buttons } } }
 }

@@ -1,8 +1,40 @@
 # Interactive Local Product Review
 
-Updated: 2026-10-27. Local engineering review, not public beta or live-provider acceptance.
+Updated: 2026-11-21. Two separate local modes, neither a public beta.
 
-## Start
+## Real Telegram on a local build
+
+Use Node 22, locked dependencies, PostgreSQL 18, ngrok v3 and a **TalentBay-only**
+ngrok HTTPS dev domain and agent credential. Do not reuse another project's endpoint,
+ngrok profile or bot. Do **not** expose the role chooser or the Nuxt dev server.
+
+1. Put `TALENTBAY_NATIVE_ORIGIN=https://<your-domain>.ngrok-free.dev` and
+   `TALENTBAY_NGROK_AUTHTOKEN=<your-agent-credential>` in the ignored
+   `.env.talentbay-native.local` (permissions 600). Use the *actual* origin from
+   [your ngrok domains](https://dashboard.ngrok.com/domains), with no path. The
+   launcher also accepts the bare assigned hostname and supplies HTTPS.
+   Only the token of `@talentbay_tester_bot` is valid (`TALENTBAY_TEST_BOT_TOKEN`).
+   On the existing TalentBay workstation the launcher can use that bot's token
+   from the project-local ignored `.env.preview-review.local`; no need to copy it.
+2. Run `pnpm build:telegram`, then `pnpm dev:telegram`. Keep the second command
+   running. Wait for **Native review ready**. Each run creates a fresh local database
+   and one fictional role. The bridge compares the public response with this run's
+   unique job before connecting the test bot. No Neon or Vercel credentials are needed.
+3. In a browser open the HTTPS origin, open the fictional vacancy as a guest and
+   use the Telegram Apply link. Close any previous Mini App. In the bot press
+   **Start**, then **Open vacancy** beneath the new reply (not an older chat button),
+   check it is the same vacancy, then open **Profile** and **Applications**. Opening
+   the general menu alone does not test the return to the original job. Use only
+   fictional profile/contact details. A real Telegram launch identifies the tester
+   to this temporary database; do not share the link as a public beta.
+4. Stop with Ctrl+C. This detaches the matching test bot webhook/menu, stops the
+   tunnel and removes the disposable DB. After a crash, check the bot bindings before
+   reusing/releasing the hostname. No production bot or DNS changes are needed.
+
+The old Vercel review hostname is paused. Historical links in this repository are
+not test instructions. The following offline mode is for local role switching only.
+
+## Offline role chooser
 
 Use the locked pnpm dependencies, Node 22 and an already installed PostgreSQL 18.
 The launcher looks for its `bin` directory in the usual Homebrew/Linux locations;

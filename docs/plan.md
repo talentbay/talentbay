@@ -1,6 +1,6 @@
 # TalentBay Product & Architecture Plan
 
-Last updated: 2026-10-27
+Last updated: 2026-11-20
 Decision: ship the MVP on Nuxt/Node + Vercel + Neon.
 
 Detailed remaining work: [delivery proposal](23-mvp-delivery-plan.md) and
@@ -54,6 +54,16 @@ integration was found in the active code audit; analytics infrastructure is not 
 prerequisite. PostgreSQL remains the source of truth; D1 migration is out of scope.
 
 ## Product contract
+
+Start the demo with clearly fictional jobs. External feeds can temporarily fill gaps
+only where the source terms allow the intended use and a direct recruiting contact
+exists for that role. The long-term supply plan is direct employer/recruiter agreements,
+not broad scraping or automatic applications. No partner is assumed to have signed.
+
+Prioritize one candidate's decision and handoff over the size of the catalogue:
+open a role, see what is known and unknown about moving, get a budget estimate, and
+understand that TalentBay receives the application before contacting the employer.
+Keep funding, token issuance and Web3 outside this Web2 delivery plan.
 
 Share routes, domain logic and components across hosts:
 

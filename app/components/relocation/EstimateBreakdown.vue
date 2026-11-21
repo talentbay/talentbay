@@ -45,6 +45,7 @@ const moving = computed(() => props.estimate.details ? [
   <section class="mt-5 border-t border-default pt-4" aria-label="Initial moving budget">
     <h3 class="text-sm font-semibold text-highlighted">Initial moving budget</h3>
     <p class="mt-2 text-xl font-semibold tabular-nums">{{ money(estimate.oneTimeMove) }}</p>
+    <p class="mt-1 text-xs text-muted">Separate from monthly spending. This estimate does not calculate employer reimbursements.</p>
     <details v-if="estimate.details" class="mt-2 text-sm">
       <summary class="cursor-pointer py-2 text-primary focus-visible:outline-2 focus-visible:outline-primary">Moving budget details</summary>
       <dl class="mt-2 space-y-2">

@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
-import { chromium } from '@playwright/test'
+import { chromium, webkit } from '@playwright/test'
 
-export async function ensureBrowser({ launch = () => chromium.launch(), install = () => execFileSync('pnpm', ['exec', 'playwright', 'install-deps', 'chromium'], { stdio: 'inherit', timeout: 600_000 }), platform = process.platform } = {}) {
+export async function ensureBrowser({ engine = 'chromium', launch = () => ({ chromium, webkit })[engine].launch(), install = target => execFileSync('pnpm', ['exec', 'playwright', 'install-deps', target], { stdio: 'inherit', timeout: 600_000 }), platform = process.platform } = {}) {
+  if (!['chromium', 'webkit'].includes(engine)) throw new Error('Unsupported browser probe')
   try {
     const browser = await launch()
     await browser.close()
@@ -10,7 +11,7 @@ export async function ensureBrowser({ launch = () => chromium.launch(), install 
   } catch (error) {
     // Avoid blanket apt upgrades on ready runners, without ignoring a missing library.
     if (platform !== 'linux' || !/Host system is missing dependencies|error while loading shared libraries/.test(String(error?.message))) throw error
-    install()
+    install(engine)
     const browser = await launch()
     await browser.close()
     return 'installed-system-dependencies'
@@ -18,5 +19,6 @@ export async function ensureBrowser({ launch = () => chromium.launch(), install 
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  console.log(`Chromium startup: ${await ensureBrowser()}.`)
+  const engine = process.argv[2] ?? 'chromium'
+  console.log(`${engine} startup: ${await ensureBrowser({ engine })}.`)
 }

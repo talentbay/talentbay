@@ -6,6 +6,8 @@ import { vacancyImportRequestSchema } from './import-schema'
 import type { VacancyImportItem } from './import-schema'
 import { importedVacancyContent } from './import-content'
 import { prepareVacancyImport } from './import-preview'
+import { requirePreviewDatasetTarget } from './preview-dataset'
+import { resolveEditorItem, type EditorTarget } from './editor-target'
 export { vacancyImportItemSchema, vacancyImportRequestSchema } from './import-schema'
 export type { VacancyImportItem } from './import-schema'
 
@@ -15,7 +17,7 @@ export type VacancyImportResult = {
   operation: 'CREATED' | 'UPDATED' | 'UNCHANGED'
 }
 export type ImportTransaction = Parameters<Parameters<Database['transaction']>[0]>[0]
-type ImportOptions = { expectedRevision?: string, actorUserID?: number, sourceFetchedAt?: Date }
+type ImportOptions = { expectedRevision?: string, actorUserID?: number, sourceFetchedAt?: Date, editorTarget?: EditorTarget }
 
 export async function importVacancies(
   items: VacancyImportItem[],
@@ -27,9 +29,14 @@ export async function importVacancies(
 /** Allows the source checkpoint and this bounded batch to commit or roll back together. */
 export async function importVacanciesInTransaction(tx: ImportTransaction, items: VacancyImportItem[], options: ImportOptions = {}): Promise<VacancyImportResult[]> {
   items = vacancyImportRequestSchema.parse({ items }).items
+  if (!options.expectedRevision) await requirePreviewDatasetTarget(items, tx)
   if (options.sourceFetchedAt && !Number.isFinite(options.sourceFetchedAt.getTime())) throw createError({ statusCode: 400, statusMessage: 'Invalid source observation date' })
   // Bounded batches share a lock; preview confirmation and writes are one transaction.
   await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended('talentbay:vacancy-import', 0))`)
+  if (options.editorTarget) {
+    if (items.length !== 1 || !options.actorUserID) throw createError({ statusCode: 400, statusMessage: 'Expected one operator vacancy' })
+    items = [await resolveEditorItem(tx, items[0]!, options.editorTarget, options.actorUserID)]
+  }
   if (options.expectedRevision) {
     const preview = await prepareVacancyImport(items, tx, true)
     if (!preview.valid || preview.revision !== options.expectedRevision) {
@@ -58,6 +65,9 @@ export async function importVacanciesInTransaction(tx: ImportTransaction, items:
         statusCode: 500,
         statusMessage: 'Failed to import organisation',
       })
+    }
+    if (organisation.status === 'ARCHIVED') {
+      throw createError({ statusCode: 422, statusMessage: 'Company is archived. Resolve its status before importing.' })
     }
 
     const organisationChanged = organisation.name !== item.company.name

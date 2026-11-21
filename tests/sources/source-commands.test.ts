@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import { sourceCommandSchema } from '#server/services/sources/commands'
 import { approvedSourceSchema, listApprovedSources, sourceConfigRevision } from '#server/services/sources/registry'
+import { contactRule } from './lever-contact.fixture'
 
 describe('source operation input and default-off registry', () => {
   it('accepts only fixed source keys and action-specific bounded commands', () => {
@@ -23,10 +24,11 @@ describe('source operation input and default-off registry', () => {
   })
   it('requires explicit anonymous ATS access and facts-only reuse, not a generic approval or API availability', () => {
     const input = {
-      adapter: 'LEVER', config: { site: 'fixture', region: 'GLOBAL', company: { name: 'Fictional Company', slug: 'fixture' } },
+      adapter: 'LEVER', config: { site: 'fixture', region: 'GLOBAL', company: { name: 'Fictional Company', slug: 'fixture' }, contactRule },
       approval: { reference: 'Synthetic permission fixture only', contentOwner: 'Fictional Owner', approvedAt: '2026-11-16T00:00:00Z', accessMethod: 'PUBLIC_ATS_API', allowedUse: 'FACTS_ONLY', termsUrl: 'https://example.com/ats-terms' },
     }
     expect(approvedSourceSchema.safeParse(input).success).toBe(true)
+    expect(approvedSourceSchema.safeParse({ ...input, config: { ...input.config, contactRule: undefined } }).success).toBe(false)
     for (const key of ['reference', 'contentOwner', 'approvedAt', 'accessMethod', 'allowedUse', 'termsUrl']) {
       const approval = Object.fromEntries(Object.entries(input.approval).filter(([field]) => field !== key))
       expect(approvedSourceSchema.safeParse({ ...input, approval }).success).toBe(false)

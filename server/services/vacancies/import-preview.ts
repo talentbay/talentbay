@@ -6,11 +6,13 @@ import type { ImportIssue, VacancyImportPreview } from '#shared/types/vacancy-im
 import { importedVacancyContent, reviewedVacancyState, sameImportedContent } from './import-content'
 import { vacancyImportRequestSchema } from './import-schema'
 import type { VacancyImportItem } from './import-schema'
+import { requirePreviewDatasetTarget } from './preview-dataset'
 
-type ImportReader = Pick<Database, 'select'>
+type ImportReader = Pick<Database, 'select' | 'execute'>
 const sourceKey = (name: string | null, id: string | null) => JSON.stringify([name, id])
 
 export async function prepareVacancyImport(items: VacancyImportItem[], db: ImportReader, lock = false): Promise<VacancyImportPreview> {
+  await requirePreviewDatasetTarget(items, db)
   const companyQuery = db.select().from(schema.organisations)
     .where(inArray(schema.organisations.slug, items.map(item => item.company.slug))).orderBy(asc(schema.organisations.id))
   // Mutating imports lock companies before vacancies, matching the review lock order.

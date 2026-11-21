@@ -22,3 +22,15 @@ test('unknown browser failures, failed installation and failed retry stay failur
   await assert.rejects(ensureBrowser({ platform: 'linux', launch: missing, install: () => { throw Error('Installation failed') } }), /Installation failed/)
   await assert.rejects(ensureBrowser({ platform: 'linux', launch: missing, install: () => {} }), /shared libraries/)
 })
+test('WebKit probes and installs for its own engine; an unknown engine cannot run the installer', async () => {
+  const targets = []
+  let launches = 0
+  const probe = { platform: 'linux', install: target => targets.push(target), launch: async () => {
+    if (++launches === 1) throw Error('Host system is missing dependencies')
+    return { close: async () => {} }
+  } }
+  assert.equal(await ensureBrowser({ ...probe, engine: 'webkit' }), 'installed-system-dependencies')
+  await assert.rejects(ensureBrowser({ ...probe, engine: 'unknown' }), /Unsupported browser/)
+  assert.deepEqual(targets, ['webkit'])
+  assert.equal(launches, 2)
+})

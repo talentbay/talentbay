@@ -7,9 +7,9 @@ Last updated: 2026-11-20
 | Surface | Observed state | Next acceptance |
 | --- | --- | --- |
 | Primary website | Public API returns a verified catalogue with zero published jobs. Relocation returns 4 locations and 12 destination entries. An empty catalogue is not a database outage. | One current employer-authorized listing, reviewed and published through the operator workflow. |
-| Candidate web / Mini App | One responsive Nuxt app covers Jobs, Saved (device-local), relocation, profile and managed applications. Native Profile/Applications were previously confirmed on the **tester** bot. | Verify the **primary** bot separately. No inference about native login from a public capabilities flag. |
-| Operator | CSV validation, draft import, review/publish and candidate application handling exist. No new parser is required for the first authorized listing. | Rehearse one approved listing and the operator review before the public pilot; no production candidate data for testing. |
-| Release | Consolidated MVP PR #65 was merged. A clean frozen install at main `a34d59a` failed on a duplicate YAML key, and its general build called a schema migration. | Review the reconciled security/build fix, run clean CI, and obtain a separate release decision. |
+| Candidate web / Mini App | One responsive Nuxt app covers Jobs, Saved (device-local), relocation, profile and managed applications. Tester-bot login was confirmed; the owner reported a **failed sign-in on the primary bot**. The pilot branch carries sign-in diagnostics and a vacancy-specific Telegram handoff. | On the serving build, verify the primary bot through Profile and Applications, then the same role via the website Apply button. A capability flag or a local browser fixture does not prove native login. |
+| Operator | CSV validation, draft import, review/publish and candidate application handling exist. The pilot branch adds a single-record editor and exact company grouping in both queues. No new parser is required for the first authorized listing. | Demonstrate with fictional roles. Before a real pilot, rehearse one approved listing and operator review; no production candidate data for testing. |
+| Release | Consolidated MVP PR #65 was merged. A clean frozen install at main `a34d59a` failed on a duplicate YAML key, and its general build called a schema migration. Reviewed auto-merge is authorized; #67 awaits the required reviewer. | Follow [the review route](06-infrastructure-and-process.md#current-review-route): land #67 normally, reconcile pilot #69 to the resulting main, verify and review that head. |
 
 The dated sections below are history, not instructions to deploy or reset any environment.
 
@@ -106,7 +106,8 @@ Implemented:
   Vercel Preview use `preview`.
 - Separate Neon `integration` branch with self-cleaning service-level workflow
   tests.
-- Idempotent `pnpm db:seed:preview` workflow with five preview vacancies.
+- Historical five-vacancy preview seed (retired). For the current offline CSV and
+  operator review workflow see the [deployment runbook](11-deployment-runbook.md#postgresql).
 - Dry-run-first `pnpm db:promote-admin` operation for an existing OAuth user.
 - CI, typecheck, ESLint, Vitest and production build.
 - Nuxt 4.5.1, Vue 3.5.40 and a refreshed lockfile without the removed

@@ -74,9 +74,13 @@ describe('operator preview and versioned review', () => {
     expect((await previewVacancyImport([conflicting])).issues[0]?.field).toBe('vacancy_slug')
     await sql`update organisations set status = 'ARCHIVED' where slug = ${input.company.slug}`
     expect((await previewVacancyImport([input])).valid).toBe(false)
+    const companion = item('before-archive')
+    await expect(importVacancies([companion, { ...input, company: { ...input.company, name: 'Must not overwrite archive' } }]))
+      .rejects.toMatchObject({ statusCode: 422 })
+    expect(await sql`select id from organisations where slug = ${companion.company.slug}`).toHaveLength(0)
     const detail = await getAdminVacancy(record!.id)
     await expect(reviewVacancy(record!.id, published, detail.revision)).rejects.toMatchObject({ statusCode: 422 })
-    expect((await getAdminVacancy(record!.id)).company.status).toBe('ARCHIVED')
+    expect(detail.company).toMatchObject({ status: 'ARCHIVED', name: input.company.name })
   })
 
   it('compares actual content even when timestamps are identical', async () => {
@@ -98,6 +102,36 @@ describe('operator preview and versioned review', () => {
     await expect(importVacancies([extra, { ...item('bad-slug'), vacancy: first.vacancy }])).rejects.toThrow()
     expect(await sql`select id from vacancies where slug = ${extra.vacancy.slug}`).toHaveLength(0)
     expect(await sql`select id from organisations where slug = ${extra.company.slug}`).toHaveLength(0)
+  })
+
+  it('single-record authoring isolates sibling listings, preserves applications and rejects stale forms', async () => {
+    const [admin] = await sql`insert into users(name,role) values('Editor fixture','ADMIN') returning id`
+    const actorUserID = admin!.id as number
+    const create = { actorUserID, editorTarget: { mode: 'create' as const } }
+    const first = item('form')
+    first.company.websiteUrl = 'https://example.invalid'
+    try {
+      const [record] = await importVacancies([first], create)
+      const sibling = { ...item('form-sibling'), company: { ...first.company, websiteUrl: undefined } }
+      const [other] = await importVacancies([sibling], create)
+      await expect(importVacancies([first], create)).rejects.toMatchObject({ statusCode: 409 })
+      for (const id of [record!.id, other!.id]) await reviewVacancy(id, published)
+      await sql`insert into applications(user_id,vacancy_id) values(${actorUserID},${record!.id})`
+      const detail = await getAdminVacancy(record!.id)
+      const edit = { actorUserID, editorTarget: { mode: 'edit' as const, id: record!.id, revision: detail.revision } }
+      await expect(importVacancies([{ ...first, source: { ...first.source, externalId: 'another' } }], edit)).rejects.toMatchObject({ statusCode: 409 })
+      await expect(importVacancies([{ ...first, company: { ...first.company, name: 'Renamed' } }], edit)).rejects.toMatchObject({ statusCode: 422 })
+      const next = { ...first, vacancy: { ...first.vacancy, title: 'Corrected role' } }
+      expect((await importVacancies([next], edit))[0]).toMatchObject({ id: record!.id, operation: 'UPDATED' })
+      await expect(importVacancies([first], edit)).rejects.toMatchObject({ statusCode: 409 })
+      expect((await getAdminVacancy(record!.id)).vacancy).toMatchObject({ status: 'DRAFT', reviewStatus: 'UNREVIEWED', title: 'Corrected role' })
+      const siblingDetail = await getAdminVacancy(other!.id)
+      expect(siblingDetail.vacancy.status).toBe('PUBLISHED')
+      expect(siblingDetail.company.websiteUrl).toBe('https://example.invalid')
+      expect(await sql`select id from applications where vacancy_id=${record!.id} and user_id=${actorUserID}`).toHaveLength(1)
+      await sql`update users set role='USER' where id=${actorUserID}`
+      await expect(importVacancies([item('form-denied')], create)).rejects.toMatchObject({ statusCode: 403 })
+    } finally { await sql`delete from users where id=${actorUserID}` }
   })
 
   it('dashboard counts agree with actual public visibility and application statuses', async () => {

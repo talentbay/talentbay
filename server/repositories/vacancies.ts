@@ -10,6 +10,8 @@ import { decodeVacancyCursor, encodeVacancyCursor, parseVacancySearch } from '#s
 import { olderVacancies, pageDate, salaryPresent, vacancyOrder } from './vacancy-page'
 import { applicationContextRevision, applicationContextSelection } from '#server/services/vacancies/application-context'
 import type { ApplicationContextRow } from '#server/services/vacancies/application-context'
+import { makeVacancyStart } from '#shared/utils/telegram-vacancy-entry'
+import { previewDatasetName } from '#server/services/vacancies/preview-dataset'
 import type {
   VacancyDataStatus,
   VacancyListItem,
@@ -18,6 +20,14 @@ import type {
 } from '#shared/types/vacancies'
 
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
+
+export async function publicVacancySlugForStart(id: number, payload: string): Promise<string | null> {
+  const [row] = await useDatabase().select(applicationContextSelection).from(schema.vacancies)
+    .innerJoin(schema.organisations, eq(schema.vacancies.organisationID, schema.organisations.id))
+    .where(and(eq(schema.vacancies.id, id), publicVacancyConditions(),
+      sql`${schema.vacancies.sourceName} is distinct from ${previewDatasetName}`)).limit(1)
+  return row && makeVacancyStart(row.id, applicationContextRevision(row)) === payload ? row.slug : null
+}
 
 export async function resolveVacancies(slugs: string[]): Promise<VacancyResolveResponse> {
   const unique = [...new Set(slugs)]
@@ -60,6 +70,7 @@ export async function listVacancies(input: VacancySearch): Promise<VacancySearch
     sql<boolean>`to_tsvector('simple', array_to_string(${schema.vacancies.skills}, ' ')) @@ websearch_to_tsquery('simple', ${query.q})`)!)
   }
 
+  if (query.company) conditions.push(eq(schema.organisations.slug, query.company))
   if (query.countryCode) {
     conditions.push(eq(schema.vacancies.countryCode, query.countryCode))
   }
@@ -137,6 +148,7 @@ export async function getVacancyBySlug(slug: string): Promise<VacancyListItem | 
 
 const vacancySelection = {
   ...applicationContextSelection,
+  companySlug: schema.organisations.slug,
   talentbayPublishedAt: schema.vacancies.talentbayPublishedAt,
   sourcePublishedAt: schema.vacancies.sourcePublishedAt,
   sourceFetchedAt: schema.vacancies.sourceFetchedAt,
@@ -146,7 +158,7 @@ const vacancySelection = {
 }
 
 type VacancyRecord = typeof schema.vacancies.$inferSelect
-type VacancyRow = ApplicationContextRow & Pick<
+type VacancyRow = ApplicationContextRow & { companySlug: string } & Pick<
   VacancyRecord,
   | 'talentbayPublishedAt'
   | 'sourcePublishedAt'
@@ -158,7 +170,7 @@ type VacancyRow = ApplicationContextRow & Pick<
 
 function toVacancyListItem(row: VacancyRow): VacancyListItem {
   const sourceStatus: VacancyDataStatus = row.reviewStatus === 'VERIFIED'
-    && row.sourceName !== 'TalentBay preview dataset'
+    && row.sourceName !== previewDatasetName
     ? 'VERIFIED'
     : 'DEMO'
 
@@ -171,6 +183,7 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
     description: row.description,
     company: {
       name: row.companyName,
+      slug: row.companySlug,
       initials: getInitials(row.companyName),
     },
     location: {
@@ -204,7 +217,7 @@ function toVacancyListItem(row: VacancyRow): VacancyListItem {
     },
     source: {
       name: row.sourceName ?? 'TalentBay',
-      url: row.sourceUrl,
+      url: sourceStatus === 'DEMO' ? null : row.sourceUrl,
       status: sourceStatus,
     },
   }

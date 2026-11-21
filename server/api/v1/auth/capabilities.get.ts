@@ -1,12 +1,22 @@
+import { defineEventHandler, setHeader } from 'h3'
 import { isDatabaseConfigured } from '#server/db'
+import { runtimeBotEntryConfig } from '#server/services/bot/entry-contract'
+
+function publicBotUrl(value: unknown) {
+  if (typeof value !== 'string') return null
+  const username = value.trim().replace(/^@/, '')
+  return /^[a-z][a-z0-9_]{1,28}bot$/i.test(username) ? `https://t.me/${username}` : null
+}
 
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig(event)
   const database = isDatabaseConfigured()
+  const google = database && Boolean(config.oauth?.google?.clientId && config.oauth?.google?.clientSecret)
+  const github = database && Boolean(config.oauth?.github?.clientId && config.oauth?.github?.clientSecret)
+  const telegram = database && Boolean(config.telegramBotToken)
+  const botUrl = telegram && !google && !github ? publicBotUrl(config.telegramBotUsername) : null
+  const entry = botUrl ? runtimeBotEntryConfig(config) : null
+  const vacancyEntry = entry && /^[1-9]\d*:[A-Za-z0-9_-]+$/.test(entry.token) && entry.token.startsWith(`${entry.botID}:`)
   setHeader(event, 'cache-control', 'no-store')
-  return {
-    google: database && Boolean(config.oauth?.google?.clientId && config.oauth?.google?.clientSecret),
-    github: database && Boolean(config.oauth?.github?.clientId && config.oauth?.github?.clientSecret),
-    telegram: database && Boolean(config.telegramBotToken),
-  }
+  return { google, github, telegram, ...(botUrl ? { telegramBotUrl: botUrl } : {}), ...(vacancyEntry ? { telegramVacancyEntry: true as const } : {}) }
 })

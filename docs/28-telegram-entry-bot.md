@@ -3,6 +3,53 @@
 I01 implementation contract, 2026-10-27. One Nuxt application and existing server-validated
 Mini App identity flow. No Pre-ICO bot, chat support inbox, CV intake or proactive delivery.
 
+## Check one vacancy on a phone
+
+1. On the website, open an approved public vacancy while signed out and choose **Apply**.
+   With Telegram as the only provider and the entry bot configured, follow the bot link.
+2. Press **Start** if prompted, then the vacancy button **in the reply**, not the generic
+   bot menu. Confirm the same job and company open in the Mini App. The browser remains
+   signed out. Opening either link must not submit an application.
+3. Check **Profile** and **Applications** without a second sign-in. On a failure report
+   the time, timezone, displayed stage and request ID if present. Never send the launch
+   URL, a screenshot containing profile information, or a bot token.
+
+This uses Telegram's [private-chat start parameter](https://core.telegram.org/bots/features#deep-linking)
+and [inline Web App button](https://core.telegram.org/bots/webapps#launching-mini-apps-from-inline-keyboard-buttons).
+Only the public numeric job ID and a short version tag for its public contents enter
+the chat link. The webhook resolves both against the currently public catalogue and returns
+a URL on the configured app origin, not a URL from the message. A changed, removed or
+nonpublic job gets the same unavailable reply and a catalogue button. When opening a
+previously delivered vacancy button, the page rechecks the same public version; an outdated
+button shows an unavailable page, even if a different vacancy is now at that slug. A normal
+catalogue link still shows today's listing. The ID is navigation, never proof of identity, consent or submission. A delivered
+webhook response or a passing browser fixture does not verify the real Telegram client.
+
+## Main bot: distinguish launch, sign-in and session (20 November 2026)
+
+The owner saw the generic sign-in warning in the main bot. A successful tester-bot
+login or a public `telegram: true` capability is not a successful production login.
+In the pilot code, an unavailable SDK does not prevent validation of a nonempty
+current launch fragment. It does prevent use of native controls. An absent fragment
+and cache hint alone cannot establish a session without the SDK. Signature and age
+validation remain on the server; no new data is stored.
+Open the main bot's menu once and note the time and timezone. In the serving Vercel
+project, filter Runtime Logs for `/api/v1/auth/telegram` around that minute:
+
+| Observation | Next check |
+| --- | --- |
+| No POST | Check the actual Mini App URL from the bot menu, the environment, and launch/SDK loading. Do not rotate a token based on this observation. |
+| POST failed | Collect HTTP status, request ID and the allowlisted `telegramAuthFailure` reason **if present**. An HMAC failure suggests verifying the configured token is for the bot used to open the app; a 5xx is not evidence of a bad signature. |
+| POST succeeded, profile still shows guest | Check the next session refresh and cookie behavior in that client. The sign-in response alone is not the acceptance test. |
+
+Pilot builds can display a reference prefixed with `TG-SDK`, `TG-LAUNCH`,
+`TG-SIGNIN` or `TG-SESSION`. These identify a stage, not a root cause. No token,
+URL fragment, raw launch body, cookie, full HAR or candidate profile is needed in chat.
+If a failed sign-in POST returned the application's UUID request ID, match it to
+`requestId` in the runtime log. A failure before any request may have no ID.
+Acceptance is a fresh native launch followed by the same signed-in profile in
+Applications, without a second login.
+
 ## Native Auth Recovery - 2026-10-28
 
 Owner's initial native Profile/Applications stayed guest with401 even after reopening.
@@ -41,7 +88,7 @@ of these records; don't rotate them merely to reconstruct a setup command.
 ## Architecture and Delivery Meaning
 
 Use an HTTPS Nitro webhook and Telegram's documented JSON webhook-reply mechanism for
-one static `sendMessage` response. No polling daemon, queue, extra Redis, multi-platform
+one bounded `sendMessage` response. No polling daemon, queue, extra Redis, multi-platform
 Chat SDK or new bot framework is needed for these fixed commands. Existing Zod/H3/Drizzle
 provide parsing, input bounds and durable duplicate suppression. This does not replace
 a proper delivery service if notifications are later approved.
@@ -56,8 +103,9 @@ no automatic resend of ambiguous outcomes. No network call is held under a SQL l
 ## Boundary
 
 - Default off unless exact server-only bot identity, token, HTTPS app origin and webhook
-  secret are configured. App origin has no user info/path/query/fragment; links use fixed
-  routes on that origin. No input URL redirects or identity/credential query parameters.
+  secret are configured. App origin has no user info/path/query/fragment; buttons use fixed
+  routes or the verified public vacancy slug on that origin. No input URL redirects or
+  identity/credential query parameters.
 - Authenticate the webhook secret before reading JSON or accessing the DB. This is not
   a browser same-origin endpoint. The secret is separate from the bot/session password.
 - Existing bounded JSON reader,64KiB/uncompressed UTF-8; safe integers and short message
@@ -66,7 +114,7 @@ no automatic resend of ambiguous outcomes. No network call is held under a SQL l
 - `/start`, `/jobs`, `/applications`, `/help`, `/privacy`; unknown text gives a fixed
   navigation/help answer, not an acknowledgment of a monitored support ticket. Media is
   not stored/processed. Addressed commands for a different bot are ignored.
-- Inline Web App buttons open existing jobs/applications routes. Privacy is an ordinary
+- Inline Web App buttons open existing catalogue, public job or applications routes. Privacy is an ordinary
   same-origin notice link. A bot update/username never creates a web identity/session;
   private records still require signed initData and normal server authorization.
 - Additive receipts contain only bot/update IDs and preparation time, not names, chat IDs,
