@@ -4,7 +4,7 @@ import { schema, useDatabase } from '#server/db'
 import { importVacanciesInTransaction, vacancyImportRequestSchema } from '#server/services/vacancies/import-vacancies'
 import { prepareVacancyImport } from '#server/services/vacancies/import-preview'
 import type { ApprovedSource } from './registry'
-import { sourceKey } from './registry'
+import { matchesContactOnlyReport, sourceKey } from './registry'
 import { currentSourceOperator, lockSource, requireReady, requireRun, sameRun, sourceProgress } from './run-state'
 
 const checkpointSchema = z.object({ runID: z.uuid(), offset: z.number().int().min(0).max(199), revision: z.string().regex(/^[a-f0-9]{64}$/) }).strict()
@@ -59,6 +59,8 @@ export async function getSourceProgress(source: ApprovedSource, actorUserID: num
     await currentSourceOperator(tx, actorUserID)
     const row = await lockSource(tx, sourceKey(source))
     if (!row) return null
+    // Old terminal reports contain useful exclusion IDs, but never authorize another batch.
+    if ((row.state === 'IMPORTED' || row.state === 'FAILED') && matchesContactOnlyReport(source, row.configRevision)) return sourceProgress(row)
     requireRun(row, source, row.runID)
     if ((row.state === 'FETCHING' || row.state === 'READY') && row.expiresAt <= new Date() && row.items) {
       await tx.update(schema.sourceImports).set({ items: null, previewRevision: null }).where(sameRun(row.sourceKey, row.runID))

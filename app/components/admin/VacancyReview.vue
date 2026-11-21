@@ -91,7 +91,7 @@ Salary
 <dt class="text-muted">
 Support
 </dt><dd>
-Relocation: {{ data.vacancy.relocationOffered ? 'Yes' : 'No' }} · Visa: {{ data.vacancy.visaSponsorship ? 'Yes' : 'No' }}
+Relocation: {{ data.vacancy.relocationOffered ? 'Yes' : 'Not confirmed' }} · Visa sponsorship: {{ data.vacancy.visaSponsorship ? 'Yes' : 'Not confirmed' }}
 </dd>
 </div>
       <div>

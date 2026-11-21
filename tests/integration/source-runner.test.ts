@@ -166,6 +166,31 @@ describe('bounded source runner with durable batch checkpoints', () => {
     expect((await sql`select items from source_imports where source_key=${key}`)[0]!.items).toBeNull()
   })
 
+  it('allows an admin to read a terminal contact-only report, never to replay a v2 snapshot', async () => {
+    const excluded = { ...raw(), lists: [] }
+    const runID = randomUUID()
+    await fetchSourceRun(source, runID, admin, transportFor([excluded]))
+    const fingerprint = createHash('sha256').update(JSON.stringify({ policy: 'facts-only-posting-contact-v2', source })).digest('hex')
+    await sql`update source_imports set config_revision=${fingerprint}, report=report-'mobilitySkippedIds' where source_key=${key}`
+    try {
+      for (const state of ['IMPORTED', 'FAILED']) {
+        await sql`update source_imports set state=${state} where source_key=${key}`
+        const progress = await getSourceProgress(source, admin)
+        expect(progress).toMatchObject({ state, report: { contactSkippedIds: [excluded.id] } })
+        expect(progress).not.toHaveProperty('items')
+        expect(progress!.report).not.toHaveProperty('mobilitySkippedIds')
+        await expect(getSourceProgress(source, candidate)).rejects.toMatchObject({ statusCode: 403 })
+        await expect(getSourceProgress({ ...source, approval: { ...source.approval, reference: 'different grant' } }, admin)).rejects.toMatchObject({ statusCode: 409 })
+        await expect(previewSourceBatch(source, runID, admin)).rejects.toMatchObject({ statusCode: 409 })
+        await expect(importSourceBatch(source, { runID, offset: 0, revision: 'a'.repeat(64) }, admin)).rejects.toMatchObject({ statusCode: 409 })
+      }
+      for (const state of ['READY', 'FETCHING']) {
+        await sql`update source_imports set state=${state} where source_key=${key}`
+        await expect(getSourceProgress(source, admin)).rejects.toMatchObject({ statusCode: 409 })
+      }
+    } finally { await sql`update source_imports set state='IMPORTED',config_revision=${sourceConfigRevision(source)} where source_key=${key}` }
+  })
+
   it('rejects oversized normalized snapshots and a role revoked while the source request was in flight', async () => {
     // Exercise the runner's independent last-resort bound, even if an adapter regresses.
     const item = normalizeLeverJobs(source.config, [raw()]).items[0]!

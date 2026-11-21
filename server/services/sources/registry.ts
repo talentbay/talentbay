@@ -21,7 +21,12 @@ export const approvedSourceSchema = z.object({
 }).strict()
 export type ApprovedSource = z.infer<typeof approvedSourceSchema>
 export const sourceKey = (source: ApprovedSource) => `Lever:${source.config.region.toLowerCase()}:${source.config.site}`
-export const sourceConfigRevision = (source: ApprovedSource) => createHash('sha256').update(JSON.stringify({ policy: 'facts-only-posting-contact-mobility-v3', source: approvedSourceSchema.parse(source) })).digest('hex')
+function revision(source: ApprovedSource, policy: string) {
+  return createHash('sha256').update(JSON.stringify({ policy, source: approvedSourceSchema.parse(source) })).digest('hex')
+}
+export const sourceConfigRevision = (source: ApprovedSource) => revision(source, 'facts-only-posting-contact-mobility-v3')
+export const matchesContactOnlyReport = (source: ApprovedSource, fingerprint: string) =>
+  fingerprint === revision(source, 'facts-only-posting-contact-v2')
 
 // Adding a board requires a reviewed exact company/site/region and rights reference.
 // Never populate this from a request body, an arbitrary URL or a pasted credential.

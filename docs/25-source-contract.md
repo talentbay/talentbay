@@ -62,8 +62,10 @@ Public access/API availability alone is not a blanket copyright/contract/privacy
   `accessMethod: PUBLIC_ATS_API` and `allowedUse: FACTS_ONLY`; no default acceptance of old
   generic records. Schema checks the record, not its truth/legal sufficiency. Review the
   exact employer/board, applicable terms, permission scope, volume and stop/removal procedure.
-- The run fingerprint includes `facts-only-posting-contact-v2`, the exact contact rule and the complete approval record. Old-policy
-  or changed-permission snapshots cannot be resumed/imported. This does not erase historical
+- The run fingerprint includes `facts-only-posting-contact-mobility-v3`, the exact contact rule and the complete approval record.
+  An admin can read the latest completed or failed v2 report for the identical configuration
+  (including permissions); this only returns progress and exclusion IDs, never the stored batch.
+  Old-policy or changed-permission snapshots cannot be resumed/imported. This does not erase historical
   payloads or withdraw old listings automatically; approved operators must review those if
   any exist. No real source had been enabled in the known registry at this checkpoint.
 - Output uses the existing import schema and separates valid items/issues/counts/provenance.

@@ -11,15 +11,19 @@ environments. See [current handoff](09-current-state.md) for the verified scope.
 Separate from release PRs #67/#69. Lever requires source approval, a matching
 role-specific contact, and explicit relocation or corroborated worldwide remote
 evidence; see [operator rules](25-source-contract.md#mobility-evidence). No real
-feed registered, no schema migration, no automatic publication or withdrawal.
+feed registered, no schema migration, no automatic publication. Fetch does not withdraw
+excluded listings; confirming changed records returns published listings to review.
 
 Local checks: `pnpm lint`, `pnpm typecheck`, `pnpm exec vitest run --maxWorkers=2`
-(312), `pnpm test:integration` (111 on disposable PG18, migration replay passed),
+(312), `pnpm test:integration` (112 on disposable PG18, migration replay passed),
 `pnpm build` and `pnpm test:smoke` passed. Playwright: Chromium source exclusion
 report (mock transport), and real local CSV -> review -> candidate estimate/application
 -> operator contact on Chromium and mobile WebKit, with fictional records. The mobile
 run needed the matching Playwright WebKit binary before it could start. No external
-company was contacted. Independent review of this change is pending; not released.
+company was contacted. Independent pre-merge review closed four findings after a
+second pass: old terminal reports are readable only for the same source approval,
+absent support is "Not confirmed", and the two policy descriptions are corrected.
+The registry remains empty; this is not a release or primary bot acceptance.
 
 ## Replace hosted review with a local native Telegram bridge (21 November)
 
