@@ -5,6 +5,13 @@ Implementation/design contract: [18-admin-import-contract.md](18-admin-import-co
 
 ## Pick a source before entering any jobs
 
+**Pilot selection, 21 November (product decision, not an implemented filter):**
+in addition to source permission and a direct recruiting contact, select jobs that
+explicitly offer relocation or explicitly allow worldwide remote work. A "remote"
+label alone is not proof: remote within one country/region is not worldwide. Missing
+or contradictory evidence should stay out of the public pilot until reviewed. This
+does not authorize a new feed. Fictional fixtures remain for demos only.
+
 **Decision, 20 November: show the product first.** A client is not required for the
 demo. Use [the isolated fictional catalogue and operator walkthrough](21-local-product-review.md#walkthrough).
 The demo exercises a real application receipt and operator queue without contacting

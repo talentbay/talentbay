@@ -1,10 +1,44 @@
 # MVP Execution Log
 
-Updated: 2026-11-20
+Updated: 2026-11-21
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 Consolidated PR #65 is merged. The security review is PR #67 against main; old cumulative
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
+
+## Replace hosted review with a local native Telegram bridge (21 November)
+
+The dedicated Vercel review project was paused, not deleted (retain ownership of the
+hostname referenced in older chats). Its public jobs route returned HTTP 503 with
+`DEPLOYMENT_PAUSED`. The tester bot's old webhook was removed without dropping pending
+updates. A subsequent Telegram read returned a commands menu and no webhook. The
+production site, primary bot, DNS and Neon were not changed.
+
+The [local review guide](21-local-product-review.md) separates the loopback role
+chooser from a compiled Node app and disposable PostgreSQL exposed through a
+TalentBay-only ngrok agent. The installer checks the local fixture and public edge
+before changing bot bindings. Free ngrok may show a Visit Site screen on first use.
+No native pass is claimed until an actual Apply link reopens that same vacancy in
+Telegram on the new tunnel. Source policy and relocation scope: [content](19-content-operations.md)
+and [estimate](27-relocation-candidate-workflow.md). No production content was added.
+
+Verified locally on the uncommitted pilot checkout: isolated Node 22.23.5 / Nuxt
+4.6.4 build; 35/35 native tooling tests; scoped ESLint; installed ngrok v3 config
+check without credentials. A real loopback run verified the exact tester with
+Telegram getMe, migrated a disposable PostgreSQL 18, rendered the fictional job
+page, returned tester capabilities and prepared the correct same-job Mini App URL
+for a synthetic /start update. No message was sent. Child exited cleanly and port
+4317 was free afterward. The dedicated ngrok credential/domain were not yet
+configured, so no public edge or actual Telegram-client pass on this build.
+
+Follow-up, 21 November: with a dedicated TalentBay dev domain, the public edge
+returned this run's local Node health and exact synthetic vacancy. Telegram confirmed
+the tester's default menu and webhook point to this edge; its pending queue was
+empty and it reported no delivery error at the check. In the first device walkthrough
+the browser opened the bot but the Mini App showed the paused Vercel deployment.
+This is a failed end-to-end attempt, not proof of a broken production login or a
+completed native check. Retest with the new reply's **Open vacancy** button. No
+public beta or catalogue seed is planned; the old project remains paused.
 
 ## Reconcile the data-model reference with the migrations (20 November)
 

@@ -4,6 +4,13 @@
 !.env.example
 .nuxt
 .output
+.output-native-review
+.native-review-publish
+.codex-attachments
+scripts/native-review
+tests/tooling/native-review-*.test.mjs
+playwright-report
+test-results
 .data
 .nitro
 .cache

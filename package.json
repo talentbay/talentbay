@@ -8,9 +8,11 @@
   },
   "scripts": {
     "build": "nuxt build",
+    "build:telegram": "node scripts/native-review/build.mjs",
     "build:cloudflare": "nuxt build --preset=cloudflare_module",
     "dev": "nuxt dev",
     "dev:review": "node scripts/local-review/start.mjs",
+    "dev:telegram": "node --env-file-if-exists=.env.talentbay-native.local scripts/native-review/bridge.mjs",
     "demo:vacancies:csv": "node scripts/export-preview-vacancies.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

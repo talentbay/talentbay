@@ -1,5 +1,15 @@
 # Relocation Outcome Working Contract
 
+**Pilot scope, 21 November:** use indicative, sourced costs, not live prices. The
+reviewed one-time schema already separates flight, visa fees, housing deposit,
+temporary accommodation and other moving costs from monthly rent and living
+expenses. An unknown is not zero, and visa cost is not visa eligibility. Do not
+present demo values as reviewed city estimates. The CEO's numerical example is
+illustrative only. Later candidates for design: route-specific travel, baggage
+or moving a household, live fares/rent, nationality-based eligibility, employer-paid
+items and origin-aware destination/employer rankings. No provider or delivery date
+has been chosen for those features.
+
 Privacy update (20 November): the candidate UI sends the estimate inputs in a same-origin
 JSON POST after hydration, including vacancy-prefilled estimates and retries. The request
 URL contains no salary. Form controls still render on the server, and the in-memory draft
