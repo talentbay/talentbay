@@ -98,6 +98,28 @@ An ID that disappears from the board entirely is not a contact exclusion: use th
 separate closure/withdrawal procedure, not this report, to reconcile missing postings.
 Don't enable live polling without a named operator and an agreed removal process.
 
+### Mobility evidence
+
+The [Lever schema](https://github.com/lever/postings-api#get-a-list-of-job-postings) describes
+workplace, locations and employer-authored list sections; it does not certify worldwide
+eligibility or relocation. Our pilot contract uses **one** employer-agreed `Role mobility`
+section with one plain list item. Case and surrounding whitespace do not matter.
+
+| Item | Additional evidence | Imported fact |
+| --- | --- | --- |
+| `Relocation offered` | A valid job with a resolved country and an approved contact | Relocation offered, not visa sponsorship or an employer-paid budget |
+| `Worldwide remote without country restrictions` | Remote workplace, primary location `Worldwide`, no conflicting entries in `allLocations`, and a provider-supplied country | Remote, no inferred city or relocation support |
+
+Before enabling a source, confirm with the employer that the section is authoritative;
+the adapter never infers eligibility from free text. Region-only, missing, ambiguous or
+unrecognized evidence does not qualify. Invalid facts still fail the whole snapshot,
+including a worldwide job with no country (the current vacancy schema requires one).
+The report separates posting IDs excluded for contact from IDs excluded for mobility;
+each is counted once, with contact checked first. Older reports have no mobility count.
+A previously published job that loses eligibility **is not automatically withdrawn**:
+use the exclusion link to flag/archive it before the next run. A skipped job is not
+refreshed or deleted. No new public worldwide badge, live source or CSV rule is implied.
+
 ## Runner (TB-C07)
 
 `/ktulhu/v1/sources` uses current-admin, no-store APIs at `/api/v1/admin/sources`.

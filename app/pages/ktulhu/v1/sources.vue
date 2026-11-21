@@ -12,6 +12,7 @@ const message = ref('')
 const sources = computed(() => (data.value?.items ?? []).map(source => ({ label: source.company, value: source.key })))
 const active = computed(() => progress.value?.state === 'FETCHING' || progress.value?.state === 'READY')
 const excludedIds = computed(() => progress.value?.report.contactSkippedIds ?? [])
+const mobilityIds = computed(() => progress.value?.report.mobilitySkippedIds ?? [])
 
 async function loadProgress() {
   if (!selected.value) return
@@ -81,11 +82,12 @@ async function run(action: 'FETCH' | 'PREVIEW' | 'IMPORT') {
           <span>Scanned: {{ progress.report.recordCount }}</span>
           <span>Processed: {{ progress.nextOffset }}</span>
           <span>Excluded by contact rule: {{ excludedIds.length }}</span>
+          <span v-if="progress.report.mobilitySkippedIds">Excluded by mobility rule: {{ mobilityIds.length }}</span>
         </p>
-        <details v-if="excludedIds.length" class="mt-2 text-sm">
-          <summary class="cursor-pointer text-primary focus-visible:outline-2">Excluded posting IDs</summary>
+        <details v-for="group in [{ label: 'Excluded posting IDs', ids: excludedIds }, { label: 'Mobility exclusions', ids: mobilityIds }].filter(group => group.ids.length)" :key="group.label" class="mt-2 text-sm">
+          <summary class="cursor-pointer text-primary focus-visible:outline-2">{{ group.label }}</summary>
           <ul class="mt-2 space-y-1">
-            <li v-for="id in excludedIds" :key="id" class="break-all font-mono">
+            <li v-for="id in group.ids" :key="id" class="break-all font-mono">
               <NuxtLink :to="{ path: '/ktulhu/v1/vacancies', query: { q: id } }" class="text-primary underline focus-visible:outline-2">{{ id }}</NuxtLink>
             </li>
           </ul>
