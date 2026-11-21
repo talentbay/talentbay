@@ -1,7 +1,37 @@
 # Release Readiness
 
-Updated: 2026-10-28. This is an engineering checklist, not production acceptance.
+Updated: 2026-11-20. This is an engineering checklist, not production acceptance.
 The active scope is one responsive Nuxt web/mobile/Telegram product, not token/payments.
+
+For the current code, content and primary Telegram gates see the
+[20 November handoff](09-current-state.md) and [release/build evidence](14-mvp-execution.md).
+The snapshots below retain the exact source and dates actually tested.
+
+## Historical Code Gates - 2026-11-17
+
+Security topic from integration57441af has Nuxt4.6.4/Nitro2.13.6, patched schema and Node
+floor22.23.5. Final local types/lint/206unit/44tooling/95SQL+legacy upgrade/replay/20public+
+46DB-browser/Node+Vercel+optionalCloudflare builds/HTTP smoke/public-secret canaries and
+synthetic12-table/52-row recovery PASS. Raw HTTP regression first reproduced a cache/error
+classification gap, now fixed with unit+compiled checks and independent review. All/prod
+registry audits and the exact-exception CI guard PASS;4full-tree findings remain visible
+(3moderate/1low tooling,0high/critical), not silently suppressed. Independent final review
+has no findings; it is not a pentest or an independent full-suite rerun. Evidence: docs14/16.
+
+Primary delivery changed externally: GitHub shows Vercel Production SUCCESS for main99b2f0c
+at11:00UTC. Actual primary /302→/jobs, /jobs200, health200/runtimevercel and DEMO catalogue
+were verified11:18–11:19UTC. Thus the former DEPLOYMENT_NOT_FOUND is not current. Repo is
+now PUBLIC; primary Hobby/Gitconnection/mainProduction are owner-screenshot evidence.
+No paid invitation is required just to observe these public facts. Exact historical root
+cause/private provider settings remain unknown. The agent did not merge63/main, deploy,
+change visibility/provider/domain/secrets/schema or billing. Main is not the full MVP PR65.
+
+Remaining release gates: integrate/review the new topic and current main without losing
+MVP work, exact-head CI, explicit go/no-go/rollback for production, deployed artifact and
+provider configuration/abuse/backup checks, approved real vacancy sources and relocation
+data, privacy/retention/support policy, and human Candidate→operator/real-provider/native
+acceptance. Demo Apply stays off. Local checks close code gates, not these external gates.
+The dated sections below remain historical; do not reopen their superseded pending items.
 
 ## Native Auth Recovery - 2026-10-28
 

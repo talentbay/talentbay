@@ -1,11 +1,93 @@
 # MVP Execution Log
 
-Updated: 2026-11-17
+Updated: 2026-11-20
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Current work branch: `codex/mvp-integration`; consolidated review route in
-`docs/06-infrastructure-and-process.md`. Superseded PRs are history, not separate release steps.
-Existing test deployment still runs `15b8ca3`; new source safeguards are not deployed or merged into main.
-Historical foundation/security PRs: #25/#26 (included in the reconciled integration stack).
+Consolidated PR #65 is merged. The security review is PR #67 against main; old cumulative
+PRs are history, not separate merges. The reviewer site and production are different
+environments. See [current handoff](09-current-state.md) for the verified scope.
+
+## Release build and dependency reconciliation: 20 November
+
+Migration credential guard, local verification on PR #67 base `129234a`:
+`pnpm run db:migrate` with only a synthetic runtime URL exited 1 at config load.
+Against a new, empty, owned PostgreSQL 18 cluster, the same command with an explicit
+`DATABASE_MIGRATION_URL` and an unreachable runtime URL applied all 10 committed
+migrations; replay kept the journal at 10. The cluster was stopped and removed.
+The actual `drizzle-kit generate` CLI produced SQL for a fixture without either URL.
+No shared database, release, or deployment was involved.
+
+- From main `a34d59a`, the clean frozen install failed before the build: duplicate
+  `@esbuild/aix-ppc64@0.28.2` mapping at lockfile line 394. Do not delete the lockfile,
+  hand-deduplicate YAML or use an unfrozen install in CI. Reconciled against the reviewed
+  manifest and lockfile from `464a0f7`; kept the owner's later Git ignore change.
+- A regression test failed against main's `drizzle-kit migrate && nuxt build` command.
+  The build invokes only Nuxt again; the lifecycle guard runs before CI installs packages.
+  See [release runbook](11-deployment-runbook.md) for the explicit schema step.
+- Verified in a temporary checkout without project dotenv: official Node 22.23.5,
+  pnpm 10.33.0 frozen offline install, typecheck, lint, 206 unit and 46 tooling tests.
+  Both dependency audit scopes passed their exact policy (full: 1 low and 3 moderate;
+  production graph: 1 low and 1 moderate; no high or critical findings at check time).
+- Building with both DB URLs set to an unreachable loopback port succeeded; compiled HTTP
+  smoke then passed without a DB. With an explicit local locale, the disposable Postgres
+  run passed the 0001-to-0009 upgrade/replay and all 95 integration tests and stopped.
+- This records local checks, not a new deployment or an approval to migrate. Public GETs
+  returned an empty verified catalogue and location data; real content and native
+  production acceptance remain separate.
+
+## Security Verification and Primary Recovery - 2026-11-17
+
+Owner requested all code-side release/security checks. Dependency topic starts at57441af,
+not the older main graph. Nuxt4.6.4/Nitro2.13.6/Vite8.3.8 and patched Nuxt/schema subtree
+reduce full-tree audit43findings(8high/26moderate/9low) to4(0high/0critical/3moderate/1low).
+Production-only audit reports2tooling findings; it is not a deployed-code reachability audit.
+Remaining exact esbuild/minimatch exceptions and primary references are in docs16. No
+blanket major override, suppression or zero-vulnerability claim. Node security floor and
+all CI selectors now require22.23.5..22.x. The verified official temporary runtime and
+Gitleaks8.30.1 archives matched their published SHA256 checksums; no system runtime change.
+
+Independent reviewer found no dependency-diff defect, but identified two pre-existing
+gate gaps. New audit:dependencies evaluates BOTH full/prod reports, exact reviewed GHSA/
+version/severity/reported paths and consistent counts; registry failures fail closed.
+An initial implementation checked only full-tree; reviewer demonstrated the production-only
+Nitro archive path was missed. Explicit archive exception plus two-scope collection and
+production-path regression close that P2; independent replay/four tooling tests PASS.
+It is not an exhaustive proof of every possible dependency path.
+
+New raw HTTP smoke revealed //api/v1/profile returned404/application-json/no-cache rather
+than the private no-store/safe error contract. Unit raw-path matrix failed before the fix.
+Conservative origin-form separator/dot classification in private-api now covers those paths;
+no router/auth proof or actual request target is rewritten. Unit and compiled raw HTTP
+tests now PASS:11API separator/dot/encoded-slash paths plus4external-redirect probes.
+Reviewer independently checked15private variants,7negative/public cases and safe errors,
+with no final findings. This is not evidence of a reproduced account/data exposure.
+
+Final unchanged code candidate on Node22.23.5: frozen offline install/explicit no-dotenv
+prepare, Nuxt+operations typechecks, lint,206unit,44tooling,95SQL+legacy0001→0009 upgrade/
+replay,20public browser and46DB-browser PASS (48.3s for the full DB run). Node build/compiled
+HTTP smoke, synthetic recovery12tables/52rows, Vercel1Node22function/74routes and both
+public-output guards80files/69scripts PASS. Optional Cloudflare build PASS; Node output
+restored and owned DB/server processes stopped. Latest full logs: private temporary
+tb-repository-checks-uzJiQh. Earlier full22.23.1 pass,22.23.5 raw-path RED and a later lint
+failure are historical attempts, not retroactively all-green. An ad-hoc smoke also raced
+a rebuild/missing artifact; the sequential final run is the acceptance evidence.
+
+Gitleaks all-ref scan109reachable commits has one generic-api-key false positive: a fixed
+unit-fixture UUID commandKey. No credential detected by these rules; report fully redacted.
+GitHub secret-scanning API reports disabled, not a clean alert list; no setting changed.
+Screenshots of mobile Candidate and wide operator were inspected after framework update.
+Independent reviewer did not repeat the entire coordinator build/browser/SQL suite.
+
+External state changed during this work, not by the agent: repository now PUBLIC,
+Dependabot63 merged to main99b2f0c, PR65 remains OPEN and is no longer draft. GitHub exposes
+a new Production deployment7851282427 at11:00UTC, Vercel status SUCCESS/"Deployment has
+completed". Primary11:18UTC: /302→/jobs and /jobs200;11:19health200/runtimevercel and public
+catalogueDEMO returned. Previous primary404 no longer reproduces. Exact cause of the earlier
+failure was not isolated; do not claim visibility/reconnect alone proved its cause.
+Owner screenshots show Hobby/Gitconnected/mainProduction; team invitation unavailable
+without Pro. The present public repo is not blocked by private-org Hobby rules. Actual
+private provider logs/settings remain inaccessible; no bypass, account switch or token
+handoff. No agent main merge/deploy/env/domain/DB/billing mutation. Primary main deployment
+is NOT the pending full MVP source. Topic PR/CI publication is recorded separately below.
 
 ## Repository Consolidation — 2026-11-17
 
