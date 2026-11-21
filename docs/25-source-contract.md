@@ -62,8 +62,10 @@ Public access/API availability alone is not a blanket copyright/contract/privacy
   `accessMethod: PUBLIC_ATS_API` and `allowedUse: FACTS_ONLY`; no default acceptance of old
   generic records. Schema checks the record, not its truth/legal sufficiency. Review the
   exact employer/board, applicable terms, permission scope, volume and stop/removal procedure.
-- The run fingerprint includes `facts-only-posting-contact-v2`, the exact contact rule and the complete approval record. Old-policy
-  or changed-permission snapshots cannot be resumed/imported. This does not erase historical
+- The run fingerprint includes `facts-only-posting-contact-mobility-v3`, the exact contact rule and the complete approval record.
+  An admin can read the latest completed or failed v2 report for the identical configuration
+  (including permissions); this only returns progress and exclusion IDs, never the stored batch.
+  Old-policy or changed-permission snapshots cannot be resumed/imported. This does not erase historical
   payloads or withdraw old listings automatically; approved operators must review those if
   any exist. No real source had been enabled in the known registry at this checkpoint.
 - Output uses the existing import schema and separates valid items/issues/counts/provenance.
@@ -97,6 +99,28 @@ Reconcile the latest report before starting another run; it is not a permanent l
 An ID that disappears from the board entirely is not a contact exclusion: use the
 separate closure/withdrawal procedure, not this report, to reconcile missing postings.
 Don't enable live polling without a named operator and an agreed removal process.
+
+### Mobility evidence
+
+The [Lever schema](https://github.com/lever/postings-api#get-a-list-of-job-postings) describes
+workplace, locations and employer-authored list sections; it does not certify worldwide
+eligibility or relocation. Our pilot contract uses **one** employer-agreed `Role mobility`
+section with one plain list item. Case and surrounding whitespace do not matter.
+
+| Item | Additional evidence | Imported fact |
+| --- | --- | --- |
+| `Relocation offered` | A valid job with a resolved country and an approved contact | Relocation offered, not visa sponsorship or an employer-paid budget |
+| `Worldwide remote without country restrictions` | Remote workplace, primary location `Worldwide`, no conflicting entries in `allLocations`, and a provider-supplied country | Remote, no inferred city or relocation support |
+
+Before enabling a source, confirm with the employer that the section is authoritative;
+the adapter never infers eligibility from free text. Region-only, missing, ambiguous or
+unrecognized evidence does not qualify. Invalid facts still fail the whole snapshot,
+including a worldwide job with no country (the current vacancy schema requires one).
+The report separates posting IDs excluded for contact from IDs excluded for mobility;
+each is counted once, with contact checked first. Older reports have no mobility count.
+A previously published job that loses eligibility **is not automatically withdrawn**:
+use the exclusion link to flag/archive it before the next run. A skipped job is not
+refreshed or deleted. No new public worldwide badge, live source or CSV rule is implied.
 
 ## Runner (TB-C07)
 

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { leverSourceSchema } from '#server/services/sources/lever-contract'
 import { normalizeLeverJobs } from '#server/services/sources/lever-normalize'
 import { fetchLeverJobs } from '#server/services/sources/lever-fetch'
-import { contactRule, contactSection, fixtureMailbox } from './lever-contact.fixture'
+import { contactRule, contactSection, fixtureMailbox, relocationSection, worldwideSection } from './lever-contact.fixture'
 
 const source = leverSourceSchema.parse({ site: 'fixture-company', region: 'GLOBAL', company: { name: 'Fictional Source Company', slug: 'fixture-source-company' }, locations: { Berlin: { city: 'Berlin', countryCode: 'DE' } }, contactRule })
 function posting() {
@@ -12,7 +12,7 @@ function posting() {
     id, text: 'Synthetic TypeScript Engineer', country: 'DE', workplaceType: 'hybrid',
     categories: { commitment: 'Full-time', location: 'Berlin' },
     descriptionPlain: 'A fictional engineering role used only for isolated source tests.',
-    lists: [contactSection, { text: 'Requirements', content: '<ul><li>TypeScript &amp; PostgreSQL</li><li>Testing</li></ul><script>do not retain this script</script><img src="https://attacker.invalid/track">' }],
+    lists: [contactSection, relocationSection, { text: 'Requirements', content: '<ul><li>TypeScript &amp; PostgreSQL</li><li>Testing</li></ul><script>do not retain this script</script><img src="https://attacker.invalid/track">' }],
     hostedUrl: `https://jobs.lever.co/fixture-company/${id}`,
     salaryRange: { min: 70_000, max: 90_000, currency: 'EUR', interval: 'per-year' },
   }
@@ -25,7 +25,7 @@ describe('Lever source normalization', () => {
     Object.assign(raw, { additionalPlain: 'PRIVATE_ADDITIONAL_PROSE', salaryDescriptionPlain: 'PRIVATE_SALARY_COMMENTARY' })
     const result = normalizeLeverJobs(source, [raw])
     expect(result.issues).toEqual([])
-    expect(result.items[0]).toMatchObject({ source: { externalId: raw.id, name: 'Lever:global:fixture-company' }, vacancy: { city: 'Berlin', countryCode: 'DE', workplaceType: 'HYBRID', employmentType: 'FULL_TIME', salary: { min: 70000, max: 90000, currency: 'EUR', period: 'YEAR' }, skills: [], relocationOffered: false, visaSponsorship: false } })
+    expect(result.items[0]).toMatchObject({ source: { externalId: raw.id, name: 'Lever:global:fixture-company' }, vacancy: { city: 'Berlin', countryCode: 'DE', workplaceType: 'HYBRID', employmentType: 'FULL_TIME', salary: { min: 70000, max: 90000, currency: 'EUR', period: 'YEAR' }, skills: [], relocationOffered: true, visaSponsorship: false } })
     expect(result.items[0]!.vacancy.description).toBe('The full job description is available on the original employer page.')
     expect(JSON.stringify(result.items)).not.toMatch(/fictional engineering role|TypeScript & PostgreSQL|<li>|<script>|do not retain|attacker.invalid|PRIVATE_/)
     expect(result.items[0]!.vacancy.sourcePublishedAt).toBeUndefined()
@@ -64,7 +64,7 @@ describe('Lever source normalization', () => {
     const result = normalizeLeverJobs(source, [{ ...raw, descriptionPlain: undefined, description: '<div>'.repeat(200) + raw.descriptionPlain + '</div>'.repeat(200) }])
     expect(result.items).toHaveLength(1)
     expect(result.issues).toEqual([])
-    const withoutProse = { ...raw, descriptionPlain: undefined, description: undefined, lists: [contactSection] }
+    const withoutProse = { ...raw, descriptionPlain: undefined, description: undefined, lists: [contactSection, relocationSection] }
     expect(normalizeLeverJobs(source, [withoutProse]).items[0]).toEqual(result.items[0])
     expect(normalizeLeverJobs(source, [{ ...withoutProse, description: 'x'.repeat(100_001) }]).items[0]).toEqual(result.items[0])
   })
@@ -82,10 +82,28 @@ describe('Lever source normalization', () => {
       const result = normalizeLeverJobs(source, [{ ...raw, lists, descriptionPlain: fixtureMailbox, applyUrl: raw.hostedUrl + '/apply' }])
       expect(result).toMatchObject({ items: [], contactSkippedIds: [raw.id], issues: [] })
     }
-    const eligible = normalizeLeverJobs(source, [{ ...raw, lists: [{ ...contactSection, content: '<li>recruiting@EXAMPLE.INVALID</li>' }] }])
+    const eligible = normalizeLeverJobs(source, [{ ...raw, lists: [relocationSection, { ...contactSection, content: '<li>recruiting@EXAMPLE.INVALID</li>' }] }])
     expect(eligible.items).toHaveLength(1)
     expect(eligible.contactSkippedIds).toEqual([])
     expect(JSON.stringify(eligible)).not.toContain(fixtureMailbox)
+  })
+  it('only admits explicit relocation or corroborated worldwide remote, without guessing visa support or a destination', () => {
+    const raw = posting()
+    const global = { ...raw, workplaceType: 'remote', categories: { ...raw.categories, location: 'Worldwide', allLocations: ['Worldwide'] }, lists: [contactSection, worldwideSection] }
+    for (const override of [
+      { lists: [contactSection] }, { lists: [contactSection, relocationSection, worldwideSection] },
+      { lists: [contactSection, { ...relocationSection, content: '<li>No relocation offered</li>' }] },
+      { lists: [contactSection, { ...relocationSection, content: '<li>Visa sponsorship</li>' }] },
+      { workplaceType: 'hybrid' }, { categories: { ...global.categories, location: 'Remote in EU' } },
+      { categories: { ...global.categories, allLocations: ['Worldwide', 'US only'] } },
+    ]) {
+      const result = normalizeLeverJobs(source, [{ ...global, ...override, descriptionPlain: 'Worldwide remote without country restrictions. Relocation offered.' }])
+      expect(result).toMatchObject({ items: [], issues: [], contactSkippedIds: [], mobilitySkippedIds: [raw.id] })
+    }
+    const result = normalizeLeverJobs(source, [global])
+    expect(result.items[0]?.vacancy).toMatchObject({ countryCode: 'DE', workplaceType: 'REMOTE', relocationOffered: false, visaSponsorship: false })
+    expect(result.items[0]?.vacancy.city).toBeUndefined()
+    expect(normalizeLeverJobs(source, [{ ...global, country: null }]).issues[0]?.code).toBe('UNRESOLVED_LOCATION')
   })
 })
 

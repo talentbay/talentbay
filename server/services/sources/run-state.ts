@@ -6,7 +6,7 @@ import { approvedSourceSchema, sourceConfigRevision, sourceKey } from './registr
 import type { ApprovedSource } from './registry'
 
 export type SourceRun = typeof schema.sourceImports.$inferSelect
-export const emptyReport = (): SourceRunReport => ({ fetchedAt: null, pageCount: 0, recordCount: 0, contactSkippedIds: [], created: 0, updated: 0, unchanged: 0, failure: null, issues: [] })
+export const emptyReport = (): SourceRunReport => ({ fetchedAt: null, pageCount: 0, recordCount: 0, contactSkippedIds: [], mobilitySkippedIds: [], created: 0, updated: 0, unchanged: 0, failure: null, issues: [] })
 
 export async function currentSourceOperator(tx: ImportTransaction, id: number) {
   await tx.execute(sql`set local lock_timeout = '5s'`)

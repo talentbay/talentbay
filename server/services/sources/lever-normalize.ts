@@ -2,6 +2,7 @@ import type { VacancyImportItem } from '#server/services/vacancies/import-schema
 import { vacancyImportItemSchema } from '#server/services/vacancies/import-schema'
 import { leverPostingSchema, leverSourceSchema } from './lever-contract'
 import { matchesPostingContact } from './lever-contact'
+import { postingMobility } from './lever-mobility'
 import type { LeverPosting, LeverSource, SourceRecordIssue } from './lever-contract'
 
 // TalentBay-authored notice, not a copied or machine-paraphrased source description.
@@ -17,7 +18,7 @@ const periods: Record<string, 'YEAR' | 'MONTH' | 'HOUR'> = {
 }
 const recordIssueCodes = new Set(['UNSUPPORTED_EMPLOYMENT', 'UNSPECIFIED_WORKPLACE', 'UNRESOLVED_LOCATION', 'INVALID_SOURCE_URL', 'UNSUPPORTED_SALARY_PERIOD', 'INVALID_IMPORT_FIELDS', 'CHECK_TITLE'])
 
-function normalizePosting(source: LeverSource, job: LeverPosting): VacancyImportItem {
+function normalizePosting(source: LeverSource, job: LeverPosting, mobility: ReturnType<typeof postingMobility>): VacancyImportItem {
   const id = job.id.toLowerCase()
   // Only the title is provider free text in the public DTO; don't forward embedded mailboxes.
   if (job.text.includes('@')) throw new Error('CHECK_TITLE')
@@ -25,7 +26,7 @@ function normalizePosting(source: LeverSource, job: LeverPosting): VacancyImport
   const employmentType = Object.hasOwn(employment, commitment) ? employment[commitment] : undefined
   if (!employmentType) throw new Error('UNSUPPORTED_EMPLOYMENT')
   if (job.workplaceType === 'unspecified') throw new Error('UNSPECIFIED_WORKPLACE')
-  const location = job.categories.location && Object.hasOwn(source.locations, job.categories.location) ? source.locations[job.categories.location] : undefined
+  const location = mobility !== 'WORLDWIDE_REMOTE' && job.categories.location && Object.hasOwn(source.locations, job.categories.location) ? source.locations[job.categories.location] : undefined
   const countryCode = job.country?.toUpperCase() || location?.countryCode
   if (!countryCode || (location && location.countryCode !== countryCode)) throw new Error('UNRESOLVED_LOCATION')
   const url = new URL(job.hostedUrl)
@@ -45,7 +46,7 @@ function normalizePosting(source: LeverSource, job: LeverPosting): VacancyImport
       countryCode, city: location?.city,
       salary: salary ? { min: salary.min, max: salary.max, currency: salary.currency.toUpperCase(), period } : undefined,
       // Missing support fields are unconfirmed, not inferred from geography or prose.
-      skills: [], relocationOffered: false, visaSponsorship: false,
+      skills: [], relocationOffered: mobility === 'RELOCATION', visaSponsorship: false,
     },
   })
   if (!result.success) throw new Error('INVALID_IMPORT_FIELDS')
@@ -57,6 +58,7 @@ export function normalizeLeverJobs(config: LeverSource, records: unknown[]) {
   const items: VacancyImportItem[] = []
   const issues: SourceRecordIssue[] = []
   const contactSkippedIds: string[] = []
+  const mobilitySkippedIds: string[] = []
   const seen = new Set<string>()
   if (records.length > 200) throw new Error('Source normalization is limited to 200 records')
   records.forEach((record, index) => {
@@ -66,11 +68,13 @@ export function normalizeLeverJobs(config: LeverSource, records: unknown[]) {
     if (seen.has(id)) { issues.push({ index, id, code: 'DUPLICATE_ID' }); return }
     seen.add(id)
     try {
-      const item = normalizePosting(source, parsed.data)
-      if (matchesPostingContact(parsed.data.lists, source.contactRule)) items.push(item)
-      else contactSkippedIds.push(id)
+      const mobility = postingMobility(parsed.data)
+      const item = normalizePosting(source, parsed.data, mobility)
+      if (!matchesPostingContact(parsed.data.lists, source.contactRule)) contactSkippedIds.push(id)
+      else if (!mobility) mobilitySkippedIds.push(id)
+      else items.push(item)
     }
     catch (error) { issues.push({ index, id: parsed.data.id, code: error instanceof Error && recordIssueCodes.has(error.message) ? error.message : 'INVALID_RECORD' }) }
   })
-  return { source: `Lever:${source.region.toLowerCase()}:${source.site}`, items, issues, contactSkippedIds, recordCount: records.length }
+  return { source: `Lever:${source.region.toLowerCase()}:${source.site}`, items, issues, contactSkippedIds, mobilitySkippedIds, recordCount: records.length }
 }

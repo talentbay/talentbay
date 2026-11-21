@@ -253,13 +253,15 @@ test('source operator UI retains contact exclusions when recovering a mixed impo
   await signIn(context, subject + 3)
   const sourceKey = 'Lever:global:fictional-ui-fixture'
   const excludedId = '00000000-0000-4000-8000-000000000002'
-  const report = { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 2, created: 0, updated: 0, unchanged: 0, failure: null, issues: [] }
+  const mobilityId = '00000000-0000-4000-8000-000000000003'
+  const report = { fetchedAt: '2026-10-27T00:00:00Z', pageCount: 1, recordCount: 3, created: 0, updated: 0, unchanged: 0, failure: null, issues: [] }
+  const filteredReport = { ...report, contactSkippedIds: [excludedId], mobilitySkippedIds: [mobilityId] }
   const checkpoint = { sourceKey, nextOffset: 0, expiresAt: '2099-01-01T00:00:00Z', retryAfterAt: null }
   // Older reports have no contactSkippedIds; rejected records are not contact exclusions.
   let progress: object = { ...checkpoint, runID: randomUUID(), state: 'FAILED', report: { ...report, failure: 'INVALID_RECORDS', issues: [{ index: 1, id: null, code: 'INVALID_RECORD' }] } }
   let imported = 0
   async function expectCounts(processed: number, excluded: number) {
-    for (const text of ['Scanned: 2', `Processed: ${processed}`, `Excluded by contact rule: ${excluded}`])
+    for (const text of ['Scanned: 3', `Processed: ${processed}`, `Excluded by contact rule: ${excluded}`])
       await expect(page.getByText(text, { exact: true })).toBeVisible()
   }
   await page.route('**/api/v1/admin/sources', route => route.fulfill({ json: { items: [{ key: sourceKey, company: 'Fictional UI Fixture', approval: {} }] } }))
@@ -267,12 +269,12 @@ test('source operator UI retains contact exclusions when recovering a mixed impo
   await page.route('**/api/v1/admin/sources/run', async (route) => {
     const command = route.request().postDataJSON()
     if (command.action === 'FETCH') {
-      progress = { ...checkpoint, runID: command.runID, state: 'READY', report: { ...report, contactSkippedIds: [excludedId] } }
+      progress = { ...checkpoint, runID: command.runID, state: 'READY', report: filteredReport }
       return route.fulfill({ json: { progress } })
     }
     if (command.action === 'PREVIEW') return route.fulfill({ json: { progress, offset: 0, preview: { valid: true, rowCount: 1, issues: [], summary: { created: 1, updated: 0, unchanged: 0, withdrawnPublished: 0 }, revision: 'a'.repeat(64), rows: [{ row: 2, title: 'Fictional Source Engineer', company: 'Fictional UI Fixture', operation: 'CREATED' }] } } })
     imported++
-    progress = { ...progress, state: 'IMPORTED', nextOffset: 1, report: { ...report, contactSkippedIds: [excludedId], created: 1 } }
+    progress = { ...progress, state: 'IMPORTED', nextOffset: 1, report: { ...filteredReport, created: 1 } }
     await route.abort('failed')
   })
   const errors: string[] = []
@@ -283,9 +285,13 @@ test('source operator UI retains contact exclusions when recovering a mixed impo
   await page.getByRole('option', { name: 'Fictional UI Fixture' }).click()
   await expect(page.getByRole('heading', { name: 'FAILED', exact: true })).toBeVisible()
   await expectCounts(0, 0)
+  await expect(page.getByText('Excluded by mobility rule:', { exact: false })).toHaveCount(0)
   await page.getByRole('button', { name: 'Fetch source', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'READY', exact: true })).toBeVisible()
   await expectCounts(0, 1)
+  await expect(page.getByText('Excluded by mobility rule: 1', { exact: true })).toBeVisible()
+  await page.getByText('Mobility exclusions', { exact: true }).press('Enter')
+  await expect(page.getByRole('link', { name: mobilityId })).toHaveAttribute('href', `/ktulhu/v1/vacancies?q=${mobilityId}`)
   await page.getByText('Excluded posting IDs', { exact: true }).press('Enter')
   await expect(page.getByRole('link', { name: excludedId })).toHaveAttribute('href', `/ktulhu/v1/vacancies?q=${excludedId}`)
   await page.getByRole('button', { name: 'Preview next batch', exact: true }).click()

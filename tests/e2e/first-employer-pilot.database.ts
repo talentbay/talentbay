@@ -92,6 +92,7 @@ test('first employer pilot: reviewed CSV to candidate receipt and recorded compa
       const review = operator.getByRole('dialog')
       await expect(review.getByText('DRAFT', { exact: true })).toBeVisible()
       await expect(review.getByText('UNREVIEWED', { exact: true })).toBeVisible()
+      await expect(review).toContainText('Relocation: Yes · Visa sponsorship: Not confirmed')
       const publish = review.getByRole('button', { name: 'Verify & publish' })
       await expect(publish).toBeDisabled()
       await review.getByRole('checkbox', { name: 'I checked the content, source and permission to publish.' }).check()

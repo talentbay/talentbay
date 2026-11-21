@@ -4,6 +4,7 @@ export type SourceRunReport = {
   pageCount: number
   recordCount: number
   contactSkippedIds: string[]
+  mobilitySkippedIds?: string[] // Absent from older JSON reports.
   created: number
   updated: number
   unchanged: number

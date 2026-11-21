@@ -10,7 +10,7 @@ import { reviewVacancy } from '#server/services/vacancies/review-vacancy'
 import { getVacancyBySlug } from '#server/repositories/vacancies'
 import { createApplication } from '#server/services/candidates/applications'
 import { applicationInputFor } from './helpers/application-input'
-import { contactRule, contactSection } from '../sources/lever-contact.fixture'
+import { contactRule, contactSection, relocationSection } from '../sources/lever-contact.fixture'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
 const site = `fixture-${randomUUID()}`
@@ -34,7 +34,7 @@ describe('Lever adapter → existing import/review boundary', () => {
       categories: { commitment: 'Full-time', location: 'Germany' },
       descriptionPlain: 'A fictional role testing the existing import contract and publication boundary.',
       hostedUrl: `https://jobs.lever.co/${site}/${id}`,
-      lists: [contactSection],
+      lists: [contactSection, relocationSection],
     }
     const normalized = normalizeLeverJobs(source, [raw])
     expect(normalized.issues).toEqual([])

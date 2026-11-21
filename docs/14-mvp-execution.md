@@ -6,6 +6,25 @@ Consolidated PR #65 is merged. The security review is PR #67 against main; old c
 PRs are history, not separate merges. The reviewer site and production are different
 environments. See [current handoff](09-current-state.md) for the verified scope.
 
+## Local pilot eligibility check (21 November)
+
+Separate from release PRs #67/#69. Lever requires source approval, a matching
+role-specific contact, and explicit relocation or corroborated worldwide remote
+evidence; see [operator rules](25-source-contract.md#mobility-evidence). No real
+feed registered, no schema migration, no automatic publication. Fetch does not withdraw
+excluded listings; confirming changed records returns published listings to review.
+
+Local checks: `pnpm lint`, `pnpm typecheck`, `pnpm exec vitest run --maxWorkers=2`
+(312), `pnpm test:integration` (112 on disposable PG18, migration replay passed),
+`pnpm build` and `pnpm test:smoke` passed. Playwright: Chromium source exclusion
+report (mock transport), and real local CSV -> review -> candidate estimate/application
+-> operator contact on Chromium and mobile WebKit, with fictional records. The mobile
+run needed the matching Playwright WebKit binary before it could start. No external
+company was contacted. Independent pre-merge review closed four findings after a
+second pass: old terminal reports are readable only for the same source approval,
+absent support is "Not confirmed", and the two policy descriptions are corrected.
+The registry remains empty; this is not a release or primary bot acceptance.
+
 ## Replace hosted review with a local native Telegram bridge (21 November)
 
 The dedicated Vercel review project was paused, not deleted (retain ownership of the

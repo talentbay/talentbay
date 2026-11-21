@@ -9,7 +9,7 @@ import { getSourceProgress, importSourceBatch, previewSourceBatch } from '#serve
 import { approvedSourceSchema, sourceConfigRevision, sourceKey } from '#server/services/sources/registry'
 import { reviewVacancy } from '#server/services/vacancies/review-vacancy'
 import { listAdminVacancies } from '#server/services/vacancies/list-admin-vacancies'
-import { contactRule, contactSection, fixtureMailbox } from '../sources/lever-contact.fixture'
+import { contactRule, contactSection, fixtureMailbox, worldwideSection } from '../sources/lever-contact.fixture'
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
 const site = `runner-${randomUUID()}`
@@ -18,7 +18,7 @@ const source = approvedSourceSchema.parse({
   approval: { reference: 'local synthetic fixture only, not real approval', contentOwner: 'Fictional Test Operator', approvedAt: '2026-10-27T00:00:00Z', accessMethod: 'PUBLIC_ATS_API', allowedUse: 'FACTS_ONLY', termsUrl: 'https://example.com/fixture-terms' },
 })
 const key = sourceKey(source)
-const raw = (id = randomUUID()) => ({ id, text: 'Fictional Runner Engineer', country: 'GB', workplaceType: 'remote', categories: { commitment: 'Full-time' }, descriptionPlain: 'A complete fictional role used to exercise durable import checkpoints.', hostedUrl: `https://jobs.lever.co/${site}/${id}`, lists: [contactSection] })
+const raw = (id = randomUUID()) => ({ id, text: 'Fictional Runner Engineer', country: 'GB', workplaceType: 'remote', categories: { commitment: 'Full-time', location: 'Worldwide' }, descriptionPlain: 'A complete fictional role used to exercise durable import checkpoints.', hostedUrl: `https://jobs.lever.co/${site}/${id}`, lists: [contactSection, worldwideSection] })
 const json = (data: unknown) => new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json' } })
 const transportFor = (records: unknown[]) => vi.fn<typeof fetch>().mockImplementation(async (url) => {
   const start = Number(new URL(String(url)).searchParams.get('skip'))
@@ -146,11 +146,14 @@ describe('bounded source runner with durable batch checkpoints', () => {
     const legacyItem = normalizeLeverJobs(source.config, [raw()]).items[0]!
     const legacyPayload = [{ ...legacyItem, vacancy: { ...legacyItem.vacancy, description: 'Legacy copied prose must not be imported by the new policy.' } }]
     const [current] = await sql`select items from source_imports where source_key=${key}`
-    await sql`update source_imports set config_revision=${legacyRevision}, items=${sql.json(legacyPayload)} where source_key=${key}`
+    const contactOnlyRevision = createHash('sha256').update(JSON.stringify({ policy: 'facts-only-posting-contact-v2', source })).digest('hex')
     try {
       const mismatch = { statusCode: 409, statusMessage: 'Source configuration or run changed. Reload source progress.' }
-      await expect(previewSourceBatch(source, runID, admin)).rejects.toMatchObject(mismatch)
-      await expect(importSourceBatch(source, { runID, offset: 0, revision: 'a'.repeat(64) }, admin)).rejects.toMatchObject(mismatch)
+      for (const revision of [legacyRevision, contactOnlyRevision]) {
+        await sql`update source_imports set config_revision=${revision}, items=${sql.json(legacyPayload)} where source_key=${key}`
+        await expect(previewSourceBatch(source, runID, admin)).rejects.toMatchObject(mismatch)
+        await expect(importSourceBatch(source, { runID, offset: 0, revision: 'a'.repeat(64) }, admin)).rejects.toMatchObject(mismatch)
+      }
       expect(await sql`select id from vacancies where source_name=${key} and description=${legacyPayload[0]!.vacancy.description}`).toHaveLength(0)
     } finally { await sql`update source_imports set config_revision=${sourceConfigRevision(source)},items=${sql.json(current!.items)} where source_key=${key}` }
     await sql`update users set role='USER' where id=${admin}`
@@ -163,12 +166,37 @@ describe('bounded source runner with durable batch checkpoints', () => {
     expect((await sql`select items from source_imports where source_key=${key}`)[0]!.items).toBeNull()
   })
 
+  it('allows an admin to read a terminal contact-only report, never to replay a v2 snapshot', async () => {
+    const excluded = { ...raw(), lists: [] }
+    const runID = randomUUID()
+    await fetchSourceRun(source, runID, admin, transportFor([excluded]))
+    const fingerprint = createHash('sha256').update(JSON.stringify({ policy: 'facts-only-posting-contact-v2', source })).digest('hex')
+    await sql`update source_imports set config_revision=${fingerprint}, report=report-'mobilitySkippedIds' where source_key=${key}`
+    try {
+      for (const state of ['IMPORTED', 'FAILED']) {
+        await sql`update source_imports set state=${state} where source_key=${key}`
+        const progress = await getSourceProgress(source, admin)
+        expect(progress).toMatchObject({ state, report: { contactSkippedIds: [excluded.id] } })
+        expect(progress).not.toHaveProperty('items')
+        expect(progress!.report).not.toHaveProperty('mobilitySkippedIds')
+        await expect(getSourceProgress(source, candidate)).rejects.toMatchObject({ statusCode: 403 })
+        await expect(getSourceProgress({ ...source, approval: { ...source.approval, reference: 'different grant' } }, admin)).rejects.toMatchObject({ statusCode: 409 })
+        await expect(previewSourceBatch(source, runID, admin)).rejects.toMatchObject({ statusCode: 409 })
+        await expect(importSourceBatch(source, { runID, offset: 0, revision: 'a'.repeat(64) }, admin)).rejects.toMatchObject({ statusCode: 409 })
+      }
+      for (const state of ['READY', 'FETCHING']) {
+        await sql`update source_imports set state=${state} where source_key=${key}`
+        await expect(getSourceProgress(source, admin)).rejects.toMatchObject({ statusCode: 409 })
+      }
+    } finally { await sql`update source_imports set state='IMPORTED',config_revision=${sourceConfigRevision(source)} where source_key=${key}` }
+  })
+
   it('rejects oversized normalized snapshots and a role revoked while the source request was in flight', async () => {
     // Exercise the runner's independent last-resort bound, even if an adapter regresses.
     const item = normalizeLeverJobs(source.config, [raw()]).items[0]!
     const oversized = vi.spyOn(leverFetch, 'fetchLeverJobs').mockResolvedValueOnce({
       source: key, items: Array.from({ length: 110 }, () => ({ ...item, vacancy: { ...item.vacancy, description: 'x'.repeat(20_000) } })),
-      issues: [], contactSkippedIds: [], recordCount: 110, pageCount: 3, fetchedAt: new Date().toISOString(),
+      issues: [], contactSkippedIds: [], mobilitySkippedIds: [], recordCount: 110, pageCount: 3, fetchedAt: new Date().toISOString(),
     })
     try {
       expect(await fetchSourceRun(source, randomUUID(), admin, transportFor([]))).toMatchObject({ state: 'FAILED', report: { failure: 'SNAPSHOT_LIMIT' } })
@@ -210,8 +238,9 @@ describe('bounded source runner with durable batch checkpoints', () => {
   it('imports only eligible drafts and reports excluded IDs without persisting raw contacts', async () => {
     const allowed = raw(), missing = { ...raw(), lists: [], applyUrl: 'https://example.invalid/apply' }
     const runID = randomUUID()
-    const mixed = await fetchSourceRun(source, runID, admin, transportFor([missing, allowed]))
-    expect(mixed).toMatchObject({ state: 'READY', report: { recordCount: 2, contactSkippedIds: [missing.id], issues: [] } })
+    const restricted = { ...raw(), lists: [contactSection] }
+    const mixed = await fetchSourceRun(source, runID, admin, transportFor([missing, allowed, restricted]))
+    expect(mixed).toMatchObject({ state: 'READY', report: { recordCount: 3, contactSkippedIds: [missing.id], mobilitySkippedIds: [restricted.id], issues: [] } })
     const changedRule = { ...source, config: { ...source.config, contactRule: { ...contactRule, mailboxSha256: '1'.repeat(64) } } }
     await expect(previewSourceBatch(changedRule, runID, admin)).rejects.toMatchObject({ statusCode: 409 })
     const [row] = await sql`select items,report from source_imports where source_key=${key}`
@@ -221,7 +250,7 @@ describe('bounded source runner with durable batch checkpoints', () => {
     const command = { runID, offset: plan.offset, revision: plan.preview.revision! }
     await expect(importSourceBatch(changedRule, command, admin)).rejects.toMatchObject({ statusCode: 409 })
     expect(await importSourceBatch(source, command, admin)).toMatchObject({ state: 'IMPORTED', nextOffset: 1, report: { created: 1, contactSkippedIds: [missing.id] } })
-    const rows = await sql`select id,source_external_id,status from vacancies where source_name=${key} and source_external_id in (${missing.id},${allowed.id})`
+    const rows = await sql`select id,source_external_id,status from vacancies where source_name=${key} and source_external_id in (${missing.id},${allowed.id},${restricted.id})`
     expect(rows).toEqual([{ id: expect.any(Number), source_external_id: allowed.id, status: 'DRAFT' }])
     await reviewVacancy(rows[0]!.id, { status: 'PUBLISHED', reviewStatus: 'VERIFIED' })
     const observed = () => sql`select status,source_fetched_at,last_imported_at from vacancies where id=${rows[0]!.id}`
@@ -229,6 +258,9 @@ describe('bounded source runner with durable batch checkpoints', () => {
     const none = await fetchSourceRun(source, randomUUID(), admin, transportFor([{ ...allowed, lists: [] }, missing]))
     expect(none).toMatchObject({ state: 'IMPORTED', nextOffset: 0, report: { recordCount: 2, created: 0, contactSkippedIds: [allowed.id, missing.id] } })
     expect((await sql`select items from source_imports where source_key=${key}`)[0]!.items).toBeNull()
+    expect(await observed()).toEqual(before)
+    const lostMobility = await fetchSourceRun(source, randomUUID(), admin, transportFor([{ ...allowed, lists: [contactSection] }]))
+    expect(lostMobility).toMatchObject({ state: 'IMPORTED', nextOffset: 0, report: { mobilitySkippedIds: [allowed.id], contactSkippedIds: [] } })
     expect(await observed()).toEqual(before)
     expect((await listAdminVacancies({ q: allowed.id })).items).toMatchObject([{ id: rows[0]!.id, status: 'PUBLISHED', sourceName: key }])
     expect((await listAdminVacancies({ q: missing.id })).items).toEqual([])

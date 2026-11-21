@@ -13,10 +13,13 @@ export const leverSourceSchema = z.object({
 }).strict()
 export type LeverSource = z.infer<typeof leverSourceSchema>
 
-// lists is inspected only for contact eligibility; source text never enters the import DTO.
+// Inspect lists only for the contact and mobility checks; do not copy source prose.
 export const leverPostingSchema = z.object({
   id: z.uuid(), text: z.string().trim().min(2).max(180),
-  categories: z.object({ location: z.string().max(500).nullable().optional(), commitment: z.string().max(100) }),
+  categories: z.object({
+    location: z.string().max(500).nullable().optional(), commitment: z.string().max(100),
+    allLocations: z.array(z.string().max(500)).max(200).optional(),
+  }),
   country: z.string().regex(/^[a-z]{2}$/i).nullish(),
   workplaceType: z.enum(['on-site', 'hybrid', 'remote', 'unspecified']),
   hostedUrl: z.url().max(2048),
