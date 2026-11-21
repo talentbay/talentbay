@@ -21,12 +21,27 @@ test('rejects a new advisory, changed severity, version or dependency path', () 
   ]) assert.equal(evaluateAudit(report({ one: { ...known(), ...change } }, { moderate: 1 })).result, 'FAIL')
 })
 
-test('reviews the production-only archive path without allowing another production parent', () => {
-  const path = '.>nuxt>@nuxt/nitro-server>nitropack>archiver>readdir-glob>minimatch'
-  const advisory = { module_name: 'minimatch', severity: 'moderate', url: 'https://github.com/advisories/GHSA-g3hv-75wg-m249', findings: [{ version: '10.2.6', paths: [path] }] }
-  assert.equal(evaluateAudit(report({ one: advisory }, { moderate: 1 })).result, 'PASS')
-  advisory.findings[0].paths.push('.>runtime>minimatch')
-  assert.equal(evaluateAudit(report({ one: advisory }, { moderate: 1 })).result, 'FAIL')
+const eslint = '.>eslint>minimatch'
+const tsEstree = '.>@nuxt/eslint>@nuxt/eslint-config>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/typescript-estree>minimatch'
+const archive = '.>nuxt>@nuxt/nitro-server>nitropack>archiver>readdir-glob>minimatch'
+function minimatchReport(findings) {
+  return report({ one: { module_name: 'minimatch', severity: 'moderate', url: 'https://github.com/advisories/GHSA-g3hv-75wg-m249', findings } }, { moderate: findings.length })
+}
+
+test('accepts only the reviewed minimatch version/path combinations for full and prod reports', () => {
+  const full = [{ version: '10.2.5', paths: [tsEstree] }, { version: '10.2.6', paths: [eslint] }]
+  assert.equal(evaluateAudit(minimatchReport(full)).result, 'PASS')
+  assert.equal(evaluateAudit(minimatchReport([{ version: '10.2.6', paths: [archive] }])).result, 'PASS')
+  assert.equal(evaluateAudit(minimatchReport([{ version: '10.2.6', paths: [eslint, archive] }])).result, 'PASS')
+})
+
+test('rejects recombined reviewed versions and paths, even alongside valid findings and paths', () => {
+  for (const [version, wrongPath] of [
+    ['10.2.5', eslint], ['10.2.5', archive], ['10.2.6', tsEstree], ['10.2.6', '.>runtime>minimatch'],
+  ]) {
+    const findings = [{ version: '10.2.6', paths: [archive] }, { version, paths: [version === '10.2.5' ? tsEstree : eslint, wrongPath] }]
+    assert.equal(evaluateAudit(minimatchReport(findings)).result, 'FAIL', `${version} via ${wrongPath}`)
+  }
 })
 
 test('does not accept registry errors, malformed data or hidden high/critical results', () => {
