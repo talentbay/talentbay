@@ -2,9 +2,18 @@
 
 Updated: 2026-11-21
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
-Consolidated PR #65 is merged. The security review is PR #67 against main; old cumulative
-PRs are history, not separate merges. The reviewer site and production are different
-environments. See [current handoff](09-current-state.md) for the verified scope.
+PRs #65, #67, #69 and #71 are merged. Older checkpoints below describe the state at
+the time, not outstanding merge instructions. See the [current handoff](09-current-state.md).
+
+## Engineering release (21 November)
+
+#69's reconciled head `2fbb03b` and #71's `210aa54` exactly matched their independently
+reviewed Git trees. Both passed build, PostgreSQL integration and Vercel Preview on the
+updated main; each DB-backed browser suite passed 88 tests. [#69 CI](https://github.com/talentbay/talentbay/actions/runs/44932936791)
+and [#71 CI](https://github.com/talentbay/talentbay/actions/runs/44933503884). Production
+reported success for squash commits `fbf28c7` and `f83a3a0`, respectively. After #71,
+anonymous GETs for Jobs, health, vacancies, relocation locations and auth capabilities
+all returned HTTP 200. No source registration, production test writes or public pilot.
 
 ## Local pilot eligibility check (21 November)
 

@@ -1,8 +1,26 @@
 # Current State
 
-Last updated: 2026-11-20
+Last updated: 2026-11-21
 
-## Current handoff: 20 November
+## Current handoff: 21 November
+
+- **Live code:** #67, #69 and #71 merged in order. Vercel reported Production success
+  for `f83a3a0` (#71). The main site serves Jobs, health and the public database APIs.
+  The catalogue returned no jobs; the relocation API returned 4 items and 12 destination
+  entries. Neither the empty catalogue nor an illustrative estimate is a live hiring offer.
+- **Candidate and operator:** use the [five-step local walkthrough](14-founder-demo-checklist.md)
+  on fictional data. [CI for #71](https://github.com/talentbay/talentbay/actions/runs/44933503884)
+  passed, including 88 database-backed browser tests. A synthetic receipt or recorded
+  handoff is not an employer delivery or a real operator's acceptance.
+- **Telegram:** the primary site's capabilities response named `@TalentBayBot` and
+  advertised Telegram sign-in, but did not advertise vacancy-specific bot entry.
+  Confirm native sign-in on the serving build; neither the capability flag nor the test
+  bot proves that Profile and Applications share a session in the primary bot.
+- **Public pilot:** not opened. Real sources, reviewed costs, handling/retention terms
+  and human acceptance remain distinct from the [engineering release](15-mvp-acceptance-record.md).
+  Use [issue #70](https://github.com/talentbay/talentbay/issues/70) for the outstanding decisions.
+
+## Historical handoff: 20 November
 
 | Surface | Observed state | Next acceptance |
 | --- | --- | --- |

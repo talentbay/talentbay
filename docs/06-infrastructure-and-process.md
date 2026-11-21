@@ -1,16 +1,16 @@
 # Infrastructure and Process
 
-Last updated: 2026-11-20
+Last updated: 2026-11-21
 
 ## Current Review Route
 
-Consolidation PR #65 already merged. Dependency/security [PR #67](https://github.com/talentbay/talentbay/pull/67)
-has auto-merge enabled and still needs the required reviewer. [Pilot PR #69](https://github.com/talentbay/talentbay/pull/69)
-includes that baseline. After #67 merges, reconcile #69 with the resulting `main` and verify
-its exact head locally and in CI before normal approval and auto-merge. The owner permits
-this reviewed path; do not bypass rules or deploy to production manually. Building the
-app must not migrate a shared database. See [execution log](14-mvp-execution.md) and
-[deployment runbook](11-deployment-runbook.md).
+Use a PR to `main`. With the two-person team, a second human approval is optional;
+the normal merge requires up-to-date GitHub Actions checks `build` and `PostgreSQL integration`.
+Review the exact candidate and squash without bypass. The usual main integration can
+deploy to Production; it does not authorize publishing data or opening a pilot.
+Do not run a manual production deploy or migrate a shared database from a build.
+PRs #67, #69 and #71 have already merged. See the [execution log](14-mvp-execution.md)
+and [deployment runbook](11-deployment-runbook.md).
 
 ## Historical Integration Route
 
