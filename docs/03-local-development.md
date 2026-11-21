@@ -72,7 +72,7 @@ After provisioning PostgreSQL:
 pnpm db:migrate
 ```
 
-For Neon, set the pooled connection string as `DATABASE_URL` and the direct connection string as `DATABASE_MIGRATION_URL`. The application uses the pooler; Drizzle Kit prefers the direct URL for schema migrations.
+For Neon, set the pooled connection string as `DATABASE_URL` and the direct connection string as `DATABASE_MIGRATION_URL`. Migrations require the explicit migration URL and never fall back to the runtime URL. Offline schema generation (`pnpm db:generate`) needs neither.
 
 Useful development commands:
 

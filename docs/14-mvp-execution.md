@@ -330,6 +330,14 @@ This is a test-transport change, not a diagnosis of the main bot.
 
 ## Release build and dependency reconciliation: 20 November
 
+Migration credential guard, local verification on PR #67 base `129234a`:
+`pnpm run db:migrate` with only a synthetic runtime URL exited 1 at config load.
+Against a new, empty, owned PostgreSQL 18 cluster, the same command with an explicit
+`DATABASE_MIGRATION_URL` and an unreachable runtime URL applied all 10 committed
+migrations; replay kept the journal at 10. The cluster was stopped and removed.
+The actual `drizzle-kit generate` CLI produced SQL for a fixture without either URL.
+No shared database, release, or deployment was involved.
+
 - From main `a34d59a`, the clean frozen install failed before the build: duplicate
   `@esbuild/aix-ppc64@0.28.2` mapping at lockfile line 394. Do not delete the lockfile,
   hand-deduplicate YAML or use an unfrozen install in CI. Reconciled against the reviewed

@@ -3,9 +3,17 @@ import { pathToFileURL } from 'node:url'
 
 // Reviewed 2026-11-17 in docs/16-security-review.md; never exempt a whole package/severity.
 const exceptions = [
-  { id: 'GHSA-67mh-4wv8-2f99', module: 'esbuild', severity: 'moderate', versions: ['0.18.20'], paths: ['.>drizzle-kit>@esbuild-kit/esm-loader>@esbuild-kit/core-utils>esbuild'] },
-  { id: 'GHSA-g7r4-m6w7-qqqr', module: 'esbuild', severity: 'low', versions: ['0.27.7'], paths: ['.>@nuxt/ui>@nuxt/fonts>fontless>esbuild'] },
-  { id: 'GHSA-g3hv-75wg-m249', module: 'minimatch', severity: 'moderate', versions: ['10.2.5', '10.2.6'], paths: ['.>eslint>minimatch', '.>@nuxt/eslint>@nuxt/eslint-config>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/typescript-estree>minimatch', '.>nuxt>@nuxt/nitro-server>nitropack>archiver>readdir-glob>minimatch'] },
+  { id: 'GHSA-67mh-4wv8-2f99', module: 'esbuild', severity: 'moderate', pairs: [
+    ['0.18.20', '.>drizzle-kit>@esbuild-kit/esm-loader>@esbuild-kit/core-utils>esbuild'],
+  ] },
+  { id: 'GHSA-g7r4-m6w7-qqqr', module: 'esbuild', severity: 'low', pairs: [
+    ['0.27.7', '.>@nuxt/ui>@nuxt/fonts>fontless>esbuild'],
+  ] },
+  { id: 'GHSA-g3hv-75wg-m249', module: 'minimatch', severity: 'moderate', pairs: [
+    ['10.2.5', '.>@nuxt/eslint>@nuxt/eslint-config>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/typescript-estree>minimatch'],
+    ['10.2.6', '.>eslint>minimatch'],
+    ['10.2.6', '.>nuxt>@nuxt/nitro-server>nitropack>archiver>readdir-glob>minimatch'],
+  ] },
 ]
 
 export function evaluateAudit(report) {
@@ -20,9 +28,10 @@ export function evaluateAudit(report) {
     const exception = exceptions.find(item => advisory?.url === `https://github.com/advisories/${item.id}` && advisory.module_name === item.module && advisory.severity === item.severity)
     const findings = advisory?.findings
     if (Object.hasOwn(observed, advisory?.severity) && Array.isArray(findings)) observed[advisory.severity] += findings.length
-    if (!exception || !Array.isArray(findings) || findings.length === 0 || findings.some(finding =>
-      !exception.versions.includes(finding?.version) || !Array.isArray(finding.paths) || finding.paths.length === 0
-      || finding.paths.some(path => !exception.paths.includes(path)))) {
+    const covered = exception && Array.isArray(findings) && findings.length > 0 && findings.every(finding =>
+      Array.isArray(finding?.paths) && finding.paths.length > 0 && finding.paths.every(path =>
+        exception.pairs.some(([version, reviewedPath]) => version === finding.version && reviewedPath === path)))
+    if (!covered) {
       blocked.push(typeof advisory?.module_name === 'string' ? advisory.module_name.slice(0, 100) : 'unknown')
     } else reviewed.push(exception.id)
   }
