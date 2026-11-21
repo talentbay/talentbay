@@ -3,6 +3,23 @@
 This file is a reusable review record. Duplicate the result section for each
 review rather than overwriting earlier evidence.
 
+## Engineering checkpoint: 21 November 2026
+
+**Code released; public pilot not approved.** Vercel Production deployment `7967324581`
+completed for [#71](https://github.com/talentbay/talentbay/pull/71), commit `f83a3a0`.
+The two engineering items in [#70](https://github.com/talentbay/talentbay/issues/70)
+are complete. Native primary-bot sign-in, approved content and privacy arrangements,
+real candidate/operator acceptance, and the final operational go/no-go remain separate.
+For internal review, follow the [fictional walkthrough](14-founder-demo-checklist.md);
+do not write to a hosted database to test it.
+
+Chromium also completed that walkthrough on a fresh local instance of the same Git
+tree, using the chooser and normal UI only. Switching salary scenario changed the
+illustrative remainder; one synthetic application persisted after reload. Consent
+was required before submission. Preparing the package did not record a handoff;
+recording the simulated handoff changed candidate progress without exposing the
+operator's private note or reference. No external delivery and no human sign-off.
+
 ## Pilot checkpoint: 20 November 2026
 
 Evidence for `1e4adba12d4c17698e56e527b7380c87bd15e198` in [pilot PR #69](https://github.com/talentbay/talentbay/pull/69). This is an engineering rehearsal, not founder or candidate acceptance. One commit may pass CI and still fail on a different host or bot.
