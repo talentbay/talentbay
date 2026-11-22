@@ -13,6 +13,7 @@ const { haptic } = useProductHost()
 const toast = useToast()
 const open = ref(false)
 const draft = ref('')
+useKeyboardForm()
 const submitting = ref(false)
 const error = ref('')
 const unconfirmedReceipt = 'We could not confirm receipt. Your cover note is still here. Check Applications before trying again.'
@@ -370,6 +371,7 @@ async function submit() {
         <form
           v-else
           id="vacancy-application"
+          ref="keyboardForm"
           class="space-y-5"
           @submit.prevent="submit"
         >

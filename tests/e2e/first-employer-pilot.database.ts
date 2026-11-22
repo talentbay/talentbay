@@ -1,10 +1,11 @@
 import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
-import type { BrowserContext, Request } from '@playwright/test'
+import type { BrowserContext, Locator, Request } from '@playwright/test'
 import postgres from 'postgres'
 import { vacancyCsvColumns } from '../../shared/types/vacancy-import'
 import type { VacancyCsvColumn } from '../../shared/types/vacancy-import'
 import { signedLaunch } from './support/telegram'
+import { checkKeyboardReveal } from './support/keyboard'
 
 const key = randomUUID().slice(0, 8)
 const slug = `pilot-role-${key}`, companySlug = `pilot-works-${key}`
@@ -13,6 +14,12 @@ const candidateName = `Pilot Candidate ${key}`, contact = `@pilot_${key}`
 const source = `Synthetic pilot ${key}`, note = `Internal review ${key}`, reference = `Internal contact ${key}`
 const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
 const users = new Set<number>()
+
+async function expectTouchField(field: Locator) {
+  await expect(field).toBeVisible()
+  const size = await field.evaluate(el => parseFloat(getComputedStyle(el).fontSize))
+  expect(size, 'Touch keyboards must not focus undersized text').toBeGreaterThanOrEqual(16)
+}
 
 function vacancyFile() {
   const row: Partial<Record<VacancyCsvColumn, string>> = {
@@ -45,7 +52,7 @@ test.afterAll(async () => {
   } finally { await sql.end() }
 })
 
-test('first employer pilot: reviewed CSV to candidate receipt and recorded company contact', { tag: '@mobile-pilot' }, async ({ browser, context, page: candidate, baseURL, ignoreHTTPSErrors }) => {
+test('first employer pilot: reviewed CSV to candidate receipt and recorded company contact', { tag: '@mobile-pilot' }, async ({ browser, context, page: candidate, baseURL, ignoreHTTPSErrors, isMobile }) => {
   test.slow()
   const origin = baseURL!
   const operatorContext = await browser.newContext({ baseURL: origin, ignoreHTTPSErrors })
@@ -125,12 +132,26 @@ test('first employer pilot: reviewed CSV to candidate receipt and recorded compa
       await expect(submit).toBeDisabled()
       await apply.getByRole('button', { name: 'Review your profile' }).click()
       const editor = candidate.getByRole('dialog', { name: 'Edit profile' })
+      if (isMobile) {
+        await expect(candidate.locator('meta[name="viewport"]')).not.toHaveAttribute('content', /user-scalable\s*=\s*no|maximum-scale\s*=\s*1(?:[.,\s]|$)/i)
+        const phone = editor.getByLabel('Phone', { exact: true })
+        await expectTouchField(phone)
+        await phone.tap()
+        await expect(phone).toBeFocused()
+        for (const field of await editor.getByRole('textbox').all()) await expectTouchField(field)
+        await checkKeyboardReveal(editor.getByLabel('About', { exact: true }), 420)
+        await checkKeyboardReveal(phone, 240)
+      }
       await editor.getByLabel('Telegram', { exact: true }).fill(contact)
       await editor.getByRole('button', { name: 'Save profile' }).click()
       await expect(apply.getByText(contact, { exact: true })).toBeVisible()
       await expect(apply).toContainText('Your current profile and cover note go to the TalentBay team, not directly to the employer.')
       const consent = apply.getByRole('checkbox', { name: `I ask TalentBay to contact ${company} and share this application with them for this role.` })
       const coverNote = apply.getByRole('textbox', { name: 'Cover note' })
+      if (isMobile) {
+        await expectTouchField(coverNote)
+        await checkKeyboardReveal(coverNote, 400)
+      }
       await coverNote.fill(`Initial pilot cover note ${key}`)
       await expect(consent).not.toBeChecked()
       await expect(submit).toBeDisabled()

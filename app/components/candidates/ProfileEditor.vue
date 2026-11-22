@@ -11,6 +11,7 @@ const emit = defineEmits<{ saved: [value: ReviewedCandidateProfileResponse]; own
 const { user, session } = useUserSession()
 const open = defineModel<boolean>('open', { default: false })
 const form = reactive(emptyCandidateProfile())
+useKeyboardForm()
 const saving = ref(false)
 const error = ref('')
 const dirty = ref(false)
@@ -93,6 +94,7 @@ async function save() {
     <template #body>
       <form
         id="candidate-profile-form"
+        ref="keyboardForm"
         class="grid gap-5 sm:grid-cols-2"
         @input="dirty = true"
         @submit.prevent="save"
