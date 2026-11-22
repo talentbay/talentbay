@@ -34,6 +34,13 @@ ngrok profile or bot. Do **not** expose the role chooser or the Nuxt dev server.
 The old Vercel review hostname is paused. Historical links in this repository are
 not test instructions. The following offline mode is for local role switching only.
 
+**Application smoke check:** after a Node build (`pnpm build`), run
+`pnpm test:native-apply` with PostgreSQL 18 installed. It provisions the same
+restricted login as the tester bridge in a separate loopback database; it never
+uses the bot, tunnel, or an existing profile. It verifies profile saving, submission,
+the receipt in Applications and duplicate rejection. On startup the bridge also
+checks that this login can take the catalogue row locks used during submission.
+
 ## Offline role chooser
 
 Use the locked pnpm dependencies, Node 22 and an already installed PostgreSQL 18.

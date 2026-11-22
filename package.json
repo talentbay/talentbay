@@ -25,6 +25,7 @@
     "audit:dependencies": "node scripts/ci/dependency-audit.mjs",
     "test": "vitest run",
     "test:integration": "node scripts/testing/integration.mjs",
+    "test:native-apply": "node --test tests/native-review/application.test.mjs",
     "test:smoke": "node scripts/smoke-production.mjs",
     "test:recovery": "node scripts/recovery/rehearse.mjs",
     "test:e2e": "playwright test",
