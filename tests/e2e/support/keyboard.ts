@@ -1,11 +1,27 @@
 import { expect } from '@playwright/test'
 import type { Locator } from '@playwright/test'
 
+async function settleDialog(dialog: Locator) {
+  await dialog.evaluate(async el => {
+    const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    // The modal enters with a scale animation. Its transient bounding box is not
+    // the baseline for either viewport restoration or a repeated resize.
+    await frame()
+    await frame()
+    const transitions = el.getAnimations().filter(animation =>
+      animation.playState === 'running' && Number.isFinite(animation.effect?.getComputedTiming().endTime),
+    )
+    await Promise.allSettled(transitions.map(animation => animation.finished))
+    await frame()
+  })
+}
+
 // WebKit emulation has no software keyboard. Change only visual viewport metrics
 // so the real focus handler and the actual modal layout handle the obstruction.
 export async function checkKeyboardReveal(field: Locator, height: number) {
   await field.focus()
   const page = field.page(), dialog = page.getByRole('dialog').filter({ has: field.page().locator(':focus') })
+  await settleDialog(dialog)
   const original = await dialog.boundingBox()
   const pageY = await page.evaluate(() => window.scrollY)
   try {
@@ -21,6 +37,7 @@ export async function checkKeyboardReveal(field: Locator, height: number) {
     }, height)).toBe(true)
     await expect(field).toBeFocused()
     expect(await page.evaluate(() => window.scrollY)).toBe(pageY)
+    await settleDialog(dialog)
     const y = (await field.boundingBox())!.y
     await page.evaluate(async () => {
       window.visualViewport!.dispatchEvent(new Event('resize'))
