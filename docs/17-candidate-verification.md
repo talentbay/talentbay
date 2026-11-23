@@ -1,5 +1,12 @@
 # Candidate Browser Verification
 
+**Touch targets and keyboard (23 November).** In Jobs and Saved the title link
+extends over the entire card except the bookmark. It is still one keyboard link,
+followed by the separate save button. For touch forms the dialog tracks available
+space, but an already-visible field requires no app-driven scrolling. After the
+keyboard settles, a clipped field is revealed inside the dialog, with reduced
+motion respected. These are changes to the implementation, not a new Figma freeze.
+
 **Exact company filter (20 November).** Jobs → Filters → Company searches company
 labels with published roles. Each suggestion shows the name and unique key to
 distinguish employers with the same name. The applied filter survives reload and

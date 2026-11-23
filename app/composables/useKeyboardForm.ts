@@ -9,6 +9,7 @@ export function useKeyboardForm() {
     const viewport = window.visualViewport
     if (!viewport) return
     let frame = 0
+    let revealTimer = 0
 
     function update() {
       frame = 0
@@ -25,22 +26,36 @@ export function useKeyboardForm() {
       // In landscape the fixed header and footer can consume all available space.
       const compact = height < 300
       dialog.toggleAttribute('data-short-form', compact)
+    }
+
+    function reveal() {
+      if (!viewport || !dialog || !element || !body || Math.abs(viewport.scale - 1) > 0.01
+        || !dialog.hasAttribute('data-form-viewport')) return
       const field = document.activeElement
       if (!(field instanceof HTMLElement) || !element.contains(field) || !field.matches('input:not([type="checkbox"]), textarea')) return
-      const scroller = compact ? dialog : body
+      const scroller = dialog.hasAttribute('data-short-form') ? dialog : body
       const bounds = scroller.getBoundingClientRect()
       const rect = field.getBoundingClientRect()
-      const start = bounds.top + 8, end = bounds.bottom - 8
-      if (rect.top < start && rect.bottom < end) scroller.scrollTop += rect.top - start
-      else if (rect.bottom > end && rect.top > start) scroller.scrollTop += Math.min(rect.top - start, rect.bottom - end)
+      const start = Math.max(bounds.top, viewport.offsetTop)
+      const end = Math.min(bounds.bottom, viewport.offsetTop + viewport.height)
+      if (end <= start || (rect.top >= start && rect.bottom <= end) || (rect.top <= start && rect.bottom >= end)) return
+      const inset = Math.min(8, Math.max(0, (end - start - rect.height) / 2))
+      const delta = rect.top < start ? rect.top - start - inset : Math.min(rect.top - start, rect.bottom - end + inset)
+      scroller.scrollBy({ top: delta, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
     }
-    const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+      // Let WebKit finish its own keyboard pan before correcting the inner scroller.
+      window.clearTimeout(revealTimer)
+      revealTimer = window.setTimeout(reveal, 100)
+    }
     element.addEventListener('focusin', schedule)
     viewport.addEventListener('resize', schedule)
     viewport.addEventListener('scroll', schedule)
     schedule()
     onCleanup(() => {
       cancelAnimationFrame(frame)
+      window.clearTimeout(revealTimer)
       viewport.removeEventListener('resize', schedule)
       viewport.removeEventListener('scroll', schedule)
       element.removeEventListener('focusin', schedule)

@@ -69,6 +69,52 @@ test('SSR first page → older pages → detail/back preserves query, cursor and
   expect(errors).toEqual([])
 })
 
+test('card opens from its padding in Jobs and Saved; bookmark and keyboard remain independent @mobile-pilot', async ({ page, isMobile }) => {
+  const path = '/jobs?q=' + token
+  await page.goto(path)
+  const card = page.locator('article').first()
+  const link = card.getByRole('link')
+  const target = await link.getAttribute('href')
+  const title = await link.innerText()
+  expect(target).toMatch(/^\/jobs\/.+/)
+  const save = card.getByRole('button', { name: 'Save vacancy', exact: true })
+  await save.click()
+  await expect(card.getByRole('button', { name: 'Remove saved vacancy' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page).toHaveURL(url => url.pathname === '/jobs')
+  const openFromPadding = async () => {
+    await card.scrollIntoViewIfNeeded()
+    const textTargets = await card.locator('p').evaluateAll(paragraphs =>
+      paragraphs.filter(p => p.textContent?.trim()).map(p => {
+        const r = p.getBoundingClientRect()
+        return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('a')?.getAttribute('href')
+      }),
+    )
+    expect(textTargets.length).toBeGreaterThan(1)
+    expect(textTargets.every(href => href === target)).toBe(true)
+    const position = { x: 8, y: 8 }
+    if (isMobile) await card.tap({ position })
+    else await card.click({ position })
+    await expect(page).toHaveURL(url => url.pathname === target)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(title)
+  }
+  await openFromPadding()
+  await page.goto('/saved')
+  await expect(link).toHaveAttribute('href', target!)
+  await openFromPadding()
+  await page.goto('/saved')
+  const remove = card.getByRole('button', { name: 'Remove saved vacancy' })
+  if (isMobile) {
+    await remove.tap()
+  } else {
+    await link.focus()
+    await page.keyboard.press('Tab')
+    await expect(remove).toBeFocused()
+    await page.keyboard.press('Space')
+  }
+  await expect(page.getByText('Your shortlist starts here', { exact: true })).toBeVisible()
+  await expect(page).toHaveURL(url => url.pathname === '/saved')
+})
+
 test('invalid public query/cursor has a restart path instead of silently resetting results', async ({ page, context }) => {
   for (const query of ['limit=51', 'limit=0', 'sort=salary-desc', 'before=bad', `before=${'x'.repeat(513)}`]) {
     expect((await context.request.get(`/api/v1/vacancies?${query}`)).status()).toBe(400)

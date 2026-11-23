@@ -5,7 +5,7 @@ import postgres from 'postgres'
 import { vacancyCsvColumns } from '../../shared/types/vacancy-import'
 import type { VacancyCsvColumn } from '../../shared/types/vacancy-import'
 import { signedLaunch } from './support/telegram'
-import { checkKeyboardReveal } from './support/keyboard'
+import { checkKeyboardReveal, checkVisibleFocusTransfer } from './support/keyboard'
 
 const key = randomUUID().slice(0, 8)
 const slug = `pilot-role-${key}`, companySlug = `pilot-works-${key}`
@@ -141,6 +141,7 @@ test('first employer pilot: reviewed CSV to candidate receipt and recorded compa
         for (const field of await editor.getByRole('textbox').all()) await expectTouchField(field)
         await checkKeyboardReveal(editor.getByLabel('About', { exact: true }), 420)
         await checkKeyboardReveal(phone, 240)
+        await checkVisibleFocusTransfer(editor, phone, editor.getByLabel('Telegram', { exact: true }))
       }
       await editor.getByLabel('Telegram', { exact: true }).fill(contact)
       await editor.getByRole('button', { name: 'Save profile' }).click()
