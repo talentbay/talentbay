@@ -1,5 +1,12 @@
 # Candidate Browser Verification
 
+**Touch targets and keyboard (23 November).** In Jobs and Saved the title link
+extends over the entire card except the bookmark. It is still one keyboard link,
+followed by the separate save button. For touch forms the dialog tracks available
+space, but an already-visible field requires no app-driven scrolling. After the
+keyboard settles, a clipped field is revealed inside the dialog, with reduced
+motion respected. These are changes to the implementation, not a new Figma freeze.
+
 **Exact company filter (20 November).** Jobs → Filters → Company searches company
 labels with published roles. Each suggestion shows the name and unique key to
 distinguish employers with the same name. The applied filter survives reload and
@@ -378,3 +385,21 @@ the two-role application path. Emulation does not run the iOS Telegram client or
 Real Google/GitHub callbacks, mobile Safari/WebView behavior, provider entitlement, domain/bot configuration,
 approved content/legal copy and release verification remain required before public beta.
 No passing build or local browser test means merged, deployed or live-provider verified.
+
+**Touch form focus (22 November).** The previous build rendered the profile phone
+field at 14 CSS px in the iPhone 13 WebKit profile. The mobile pilot now checks a
+16 px minimum for profile text fields and the cover note, phone focus after a tap,
+and that the viewport does not disable pinch zoom. Both Chromium and mobile WebKit
+completed the synthetic application flow locally after the CSS change. On the
+restarted tester bot the CTO confirmed on a physical iPhone that focusing fields
+no longer zoomed the page and that an application receipt was shown. The keyboard
+could still cover the focused field; keyboard visibility is a separate check.
+
+Profile and apply dialogs now fit the visual viewport during touch editing and
+scroll their own content only as far as needed. The prior build failed the
+obstruction check. In a local WebKit iPhone profile, simulated viewport heights
+of 420, 240 and 400 CSS px covered About, Phone and Cover note respectively;
+the active control stayed visible without scrolling the background, repeated
+resize was stable and the original dialog height returned after dismissal.
+The mobile and desktop application scenarios passed. Physical-device keyboard
+placement on this change is pending; the active tester was not restarted.

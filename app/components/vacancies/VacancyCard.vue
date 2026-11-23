@@ -43,7 +43,7 @@ const published = computed(() => vacancyPublicationAge(props.vacancy.publishedAt
 </script>
 
 <template>
-  <article class="rounded-lg border border-default bg-elevated p-4 transition hover:border-primary sm:p-5">
+  <article class="relative isolate rounded-lg border border-default bg-elevated p-4 transition hover:border-primary sm:p-5">
     <div class="flex items-start gap-3 sm:gap-4">
       <UAvatar
         :text="vacancy.company.initials"
@@ -57,18 +57,20 @@ const published = computed(() => vacancyPublicationAge(props.vacancy.publishedAt
           <div class="min-w-0">
             <NuxtLink
               :to="`/jobs/${vacancy.slug}`"
-              class="break-words text-base font-semibold text-highlighted hover:text-primary focus-visible:outline-2 focus-visible:outline-primary sm:text-lg"
+              class="break-words text-base font-semibold text-highlighted after:absolute after:inset-0 after:z-1 after:rounded-lg hover:text-primary focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-primary sm:text-lg"
             >
               {{ vacancy.title }}
             </NuxtLink>
             <p class="mt-0.5 text-sm font-medium text-default">{{ vacancy.company.name }}</p>
           </div>
 
-          <VacanciesSaveButton
-            :saved="saved"
-            :disabled="!initialized"
-            @click="save"
-          />
+          <div class="relative z-10 shrink-0">
+            <VacanciesSaveButton
+              :saved="saved"
+              :disabled="!initialized"
+              @click="save"
+            />
+          </div>
         </div>
 
         <p class="mt-1 text-xs text-muted sm:text-sm">{{ location }}</p>

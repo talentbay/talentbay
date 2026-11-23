@@ -85,3 +85,22 @@ select,
 textarea {
   font: inherit;
 }
+
+/* iOS zooms small text fields on focus. Keep pinch zoom and larger user fonts. */
+@media (pointer: coarse) {
+  [role="dialog"][data-form-viewport] {
+    top: var(--form-visible-center);
+    max-height: calc(var(--form-visible-height) - 1rem);
+  }
+  [role="dialog"][data-short-form] {
+    display: block;
+    overflow-y: auto;
+  }
+  [role="dialog"][data-short-form] > [data-slot="body"] { overflow: visible; }
+
+  input:is(:not([type]), [type="text"], [type="email"], [type="tel"], [type="url"], [type="search"], [type="password"], [type="number"]),
+  textarea,
+  select {
+    font-size: max(16px, 1rem, 1em);
+  }
+}

@@ -1,10 +1,11 @@
 import { randomInt, randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
-import type { BrowserContext } from '@playwright/test'
+import type { BrowserContext, Locator, Request } from '@playwright/test'
 import postgres from 'postgres'
 import { vacancyCsvColumns } from '../../shared/types/vacancy-import'
 import type { VacancyCsvColumn } from '../../shared/types/vacancy-import'
 import { signedLaunch } from './support/telegram'
+import { checkKeyboardReveal, checkVisibleFocusTransfer } from './support/keyboard'
 
 const key = randomUUID().slice(0, 8)
 const slug = `pilot-role-${key}`, companySlug = `pilot-works-${key}`
@@ -13,6 +14,12 @@ const candidateName = `Pilot Candidate ${key}`, contact = `@pilot_${key}`
 const source = `Synthetic pilot ${key}`, note = `Internal review ${key}`, reference = `Internal contact ${key}`
 const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false })
 const users = new Set<number>()
+
+async function expectTouchField(field: Locator) {
+  await expect(field).toBeVisible()
+  const size = await field.evaluate(el => parseFloat(getComputedStyle(el).fontSize))
+  expect(size, 'Touch keyboards must not focus undersized text').toBeGreaterThanOrEqual(16)
+}
 
 function vacancyFile() {
   const row: Partial<Record<VacancyCsvColumn, string>> = {
@@ -45,12 +52,12 @@ test.afterAll(async () => {
   } finally { await sql.end() }
 })
 
-test('first employer pilot: reviewed CSV to candidate receipt and recorded company contact', { tag: '@mobile-pilot' }, async ({ browser, context, page: candidate, baseURL, ignoreHTTPSErrors }) => {
+test('first employer pilot: reviewed CSV to candidate receipt and recorded company contact', { tag: '@mobile-pilot' }, async ({ browser, context, page: candidate, baseURL, ignoreHTTPSErrors, isMobile }) => {
   test.slow()
   const origin = baseURL!
   const operatorContext = await browser.newContext({ baseURL: origin, ignoreHTTPSErrors })
   try {
-    // Deny off-site browser traffic; no local request is intercepted or fulfilled.
+    // Deny off-site browser traffic; local responses come from the real backend.
     for (const actor of [context, operatorContext]) {
       await actor.route(url => /^https?:$/.test(url.protocol) && url.origin !== origin, route => route.abort('blockedbyclient'))
     }
@@ -117,26 +124,65 @@ test('first employer pilot: reviewed CSV to candidate receipt and recorded compa
       await estimate.getByRole('button', { name: 'Close', exact: true }).click()
     })
 
-    const applicationID: number = await test.step('Save a contact, consent and obtain a TalentBay receipt', async () => {
+    const finalNote = `Revised pilot cover note ${key}`
+    const applicationID: number = await test.step('Save a contact, re-acknowledge the edited note and obtain a TalentBay receipt', async () => {
       await candidate.getByRole('button', { name: 'Apply', exact: true }).click()
       const apply = candidate.getByRole('dialog', { name: `Apply for ${title}` })
       const submit = apply.getByRole('button', { name: 'Submit application' })
       await expect(submit).toBeDisabled()
       await apply.getByRole('button', { name: 'Review your profile' }).click()
       const editor = candidate.getByRole('dialog', { name: 'Edit profile' })
+      if (isMobile) {
+        await expect(candidate.locator('meta[name="viewport"]')).not.toHaveAttribute('content', /user-scalable\s*=\s*no|maximum-scale\s*=\s*1(?:[.,\s]|$)/i)
+        const phone = editor.getByLabel('Phone', { exact: true })
+        await expectTouchField(phone)
+        await phone.tap()
+        await expect(phone).toBeFocused()
+        for (const field of await editor.getByRole('textbox').all()) await expectTouchField(field)
+        await checkKeyboardReveal(editor.getByLabel('About', { exact: true }), 420)
+        await checkKeyboardReveal(phone, 240)
+        await checkVisibleFocusTransfer(editor, phone, editor.getByLabel('Telegram', { exact: true }))
+      }
       await editor.getByLabel('Telegram', { exact: true }).fill(contact)
       await editor.getByRole('button', { name: 'Save profile' }).click()
       await expect(apply.getByText(contact, { exact: true })).toBeVisible()
       await expect(apply).toContainText('Your current profile and cover note go to the TalentBay team, not directly to the employer.')
       const consent = apply.getByRole('checkbox', { name: `I ask TalentBay to contact ${company} and share this application with them for this role.` })
+      const coverNote = apply.getByRole('textbox', { name: 'Cover note' })
+      if (isMobile) {
+        await expectTouchField(coverNote)
+        await checkKeyboardReveal(coverNote, 400)
+      }
+      await coverNote.fill(`Initial pilot cover note ${key}`)
       await expect(consent).not.toBeChecked()
       await expect(submit).toBeDisabled()
       await consent.check()
-      const receipt = candidate.waitForResponse(r => r.request().method() === 'POST' && /\/api\/v1\/vacancies\/\d+\/applications$/.test(new URL(r.url()).pathname))
-      await submit.click()
-      const response = await receipt
-      expect(response.status()).toBe(200)
-      const body = await response.json()
+      await expect(submit).toBeEnabled()
+      await coverNote.fill(finalNote)
+      await expect(consent).not.toBeChecked()
+      await expect(submit).toBeDisabled()
+      await consent.check()
+      await expect(submit).toBeEnabled()
+
+      const matchesSubmission = (url: URL) => url.origin === origin && /^\/api\/v1\/vacancies\/\d+\/applications$/.test(url.pathname)
+      let release!: () => void
+      const held = new Promise<void>(resolve => { release = resolve })
+      await candidate.route(matchesSubmission, async route => {
+        if (route.request().method() === 'POST') await held
+        await route.continue()
+      }, { times: 1 })
+      let submission: Request
+      try {
+        const [request] = await Promise.all([
+          candidate.waitForRequest(req => req.method() === 'POST' && matchesSubmission(new URL(req.url()))),
+          submit.click(),
+        ])
+        submission = request
+        await expect(coverNote).toHaveJSProperty('readOnly', true)
+      } finally { release() }
+      const response = await submission.response()
+      expect(response?.status()).toBe(200)
+      const body = await response?.json()
       expect(body).toMatchObject({ id: expect.any(Number), status: 'NEW' })
       await expect(candidate.getByText('Application received by TalentBay', { exact: true })).toBeVisible()
       await expect(candidate.getByText("Track our team's review in Applications. You'll see when we record contact with the company.", { exact: true })).toBeVisible()
@@ -174,13 +220,14 @@ test('first employer pilot: reviewed CSV to candidate receipt and recorded compa
       expect(receipt.status()).toBe(200)
       expect(await receipt.headerValue('cache-control')).toContain('no-store')
       expect(await receipt.json()).toEqual({
-        id: applicationID, status: 'NEW', coverLetter: null, createdAt: expect.any(String),
+        id: applicationID, status: 'NEW', coverLetter: finalNote, createdAt: expect.any(String),
         handling: { stage: 'CONTACTED' }, publicVacancySlug: slug,
         vacancy: { slug, title, companyName: company, city: 'London', countryCode: 'GB' },
       })
       await expect(candidate).toHaveURL(url => url.pathname === '/applications' && url.searchParams.get('receipt') === String(applicationID))
       const detail = candidate.getByRole('dialog', { name: title, exact: true })
       await expect(detail).toContainText(company)
+      await expect(detail.getByText(finalNote, { exact: true })).toBeVisible()
       const history = detail.getByRole('region', { name: 'Application progress' }).getByRole('list')
       for (const fact of ['Received by TalentBay', 'TalentBay started reviewing', 'Company contact recorded']) {
         await expect(history.getByText(fact, { exact: true })).toBeVisible()

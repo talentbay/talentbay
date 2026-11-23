@@ -61,7 +61,7 @@ export function runtimeEnvironment(database, config, botID) {
   }
 }
 
-async function prepareDatabase(cluster, folder) {
+export async function prepareDatabase(cluster, folder) {
   const sql = cluster.sql()
   const [owner] = await sql`select current_setting('data_directory') as data,
     current_database() as db, current_user as role`
@@ -73,10 +73,12 @@ async function prepareDatabase(cluster, folder) {
   const [vacancy] = await sql`with org as (
     insert into organisations (slug,name,status) values (${companySlug},${company},'ACTIVE') returning id
   ) insert into vacancies (organisation_id,slug,title,summary,description,status,review_status,
-    employment_type,workplace_type,country_code,source_name,published_at,talentbay_published_at,reviewed_at)
+    employment_type,workplace_type,country_code,city,salary_min,salary_max,salary_currency,salary_period,
+    relocation_offered,source_name,published_at,talentbay_published_at,reviewed_at)
     select id,${slug},${title},'Fictional role for a native client check.',
     'This fictional employer is not hiring. Applications are not sent to an employer.',
-    'PUBLISHED','VERIFIED','FULL_TIME','REMOTE','GB',${source},now(),now(),now() from org returning id`
+    'PUBLISHED','VERIFIED','FULL_TIME','HYBRID','GB','London',95000,125000,'GBP','YEAR',
+    true,${source},now(),now(),now() from org returning id`
 
   const password = randomBytes(32).toString('hex')
   // CREATE ROLE does not accept a bind parameter. Only the generated hex literal enters SQL.
@@ -84,9 +86,20 @@ async function prepareDatabase(cluster, folder) {
   await sql`revoke temporary on database talentbay_ci from public`
   await sql`revoke create on schema public from public`
   await sql`grant select on all tables in schema public to native_review_runtime`
+  // FOR SHARE needs UPDATE on one column of each locked table. Use inert,
+  // fixture-only columns so the exposed runtime cannot change catalogue fields.
+  await sql`alter table vacancies add column native_review_lock boolean generated always as (true) stored`
+  await sql`alter table organisations add column native_review_lock boolean generated always as (true) stored`
+  await sql`grant update (native_review_lock) on vacancies, organisations to native_review_runtime`
   await sql`grant insert, update, delete on users, oauth_accounts, candidate_profiles,
     applications, application_handling_events, bot_entry_receipts to native_review_runtime`
   await sql`grant usage on all sequences in schema public to native_review_runtime`
+  await sql.begin(async tx => {
+    await tx`set local role native_review_runtime`
+    const rows = await tx`select v.id from vacancies v join organisations o on o.id = v.organisation_id
+      where v.id = ${vacancy.id} for share of v, o`
+    if (rows.length !== 1) throw new Error('Fixture unavailable for application intake')
+  })
   // The recovery helper bootstraps with trust. Close owner logins and require
   // SCRAM before exposing the app; do not persist request/statement errors.
   await sql`alter system set log_min_messages = 'panic'`

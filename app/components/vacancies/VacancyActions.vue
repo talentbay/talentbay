@@ -13,6 +13,7 @@ const { haptic } = useProductHost()
 const toast = useToast()
 const open = ref(false)
 const draft = ref('')
+useKeyboardForm()
 const submitting = ref(false)
 const error = ref('')
 const unconfirmedReceipt = 'We could not confirm receipt. Your cover note is still here. Check Applications before trying again.'
@@ -91,7 +92,7 @@ function resetDraft() {
   sessionExpired.value = false
 }
 watch([ownerId, () => props.vacancy.id], resetDraft, { flush: 'sync' })
-watch([() => props.vacancy.applicationContext, () => profile.value?.candidateContext], () => {
+watch([() => props.vacancy.applicationContext, () => profile.value?.candidateContext, draft], () => {
   consent.value = null
 }, { flush: 'sync' })
 watch([open, sessionExpired], ([value, expired]) => {
@@ -278,7 +279,7 @@ async function submit() {
       await refresh()
     } else {
       error.value = failure.statusCode === 422
-        ? 'Add a valid email, phone number or Telegram username to your profile, then try again. Your cover note is still here.'
+        ? 'Review your profile and contact details, then try again. Your cover note is still here.'
         : 'Your application could not be submitted. Your cover note is still here. Try again.'
       await refreshProfile()
     }
@@ -370,6 +371,7 @@ async function submit() {
         <form
           v-else
           id="vacancy-application"
+          ref="keyboardForm"
           class="space-y-5"
           @submit.prevent="submit"
         >
@@ -395,7 +397,7 @@ async function submit() {
               </div>
             </details>
           </div>
-          <UAlert v-if="profile && !profileReady" title="Add a contact to your profile" description="Save your profile with an email, phone number or Telegram username so our team can reach you." color="warning" variant="soft" />
+          <UAlert v-if="profile && !profileReady" title="Add a contact to your profile" description="Save your profile with a phone number or Telegram username, or use the email already on your account." color="warning" variant="soft" />
           <UButton label="Review your profile" icon="i-lucide-user-pen" color="neutral" variant="outline" :disabled="submitting || !profile || profileReview === 'required'" @click="editProfile" />
           <UFormField
             label="Cover note"
@@ -403,6 +405,7 @@ async function submit() {
           >
             <UTextarea
               v-model="draft"
+              :readonly="submitting"
               :rows="6"
               maxlength="5000"
               class="w-full"

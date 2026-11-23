@@ -1,11 +1,30 @@
 # MVP Execution Log
 
-Updated: 2026-11-21
+Updated: 2026-11-23
 Active decision: `docs/adr/0006-mvp-first-vercel-neon.md`.
 PRs #65, #67, #69 and #71 are merged. Older checkpoints below describe the state at
 the time, not outstanding merge instructions. See the [current handoff](09-current-state.md).
 
+## Candidate interaction follow-up (23 November, PR #73)
+
+Local Node build, typecheck, lint and two repeated browser runs of the card and
+candidate pilot in Chromium and mobile WebKit passed (8/8) with disposable
+PostgreSQL. Both Jobs and Saved use one full-card vacancy link and an independent
+bookmark. Keyboard tests cover an already-visible field near the body edge as well
+as a clipped field, viewport restoration and a repeated resize. The owner accepted
+the previous iPhone build with remaining motion; this is browser coverage of the
+new adjustment, not a second physical-device acceptance.
+
 ## Engineering release (21 November)
+
+**Follow-up: application note review.** Changing the optional cover note clears the
+candidate's previous acknowledgment. The note stays readable but cannot be edited
+while submission is pending. The contact hint distinguishes an existing account
+email from the editable phone and Telegram fields. No API, migration, legal notice
+or external delivery change. Lint, typecheck, Node build and the synthetic
+candidate/operator Playwright scenario passed locally in Chromium and mobile WebKit
+with disposable PostgreSQL. The receipt contained the re-acknowledged note. This is
+an engineering check, not native-bot or public-pilot acceptance.
 
 #69's reconciled head `2fbb03b` and #71's `210aa54` exactly matched their independently
 reviewed Git trees. Both passed build, PostgreSQL integration and Vercel Preview on the
